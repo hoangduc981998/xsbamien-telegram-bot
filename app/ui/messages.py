@@ -1,5 +1,5 @@
 """Message templates - Các thông báo đẹp mắt với emoji"""
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from app.config import PROVINCES, SCHEDULE, DRAW_TIMES
 
 
@@ -109,36 +109,131 @@ def get_schedule_message() -> str:
 
 
 def get_today_schedule_message() -> str:
-    """Lịch quay hôm nay"""
-    today = datetime.now()
-    weekday = today.weekday()
-    days = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"]
+    """
+    Lịch quay HÔM NAY - Động theo ngày hiện tại
     
-    message = f"📅 <b>LỊCH QUAY HÔM NAY - {days[weekday].upper()}</b>\n"
-    message += f"📆 <i>{today.strftime('%d/%m/%Y')}</i>\n\n"
+    Returns:
+        Message hiển thị các đài quay hôm nay với format đẹp
+    """
+    now = datetime.now(timezone.utc)  # UTC time
+    weekday = now.weekday()  # 0=Monday, 6=Sunday
+    date_str = now.strftime("%d/%m/%Y")
     
-    # Miền Bắc
-    mb_provinces = SCHEDULE["MB"].get(weekday, [])
-    if mb_provinces:
-        names = [PROVINCES[p]['name'] for p in mb_provinces if p in PROVINCES]
-        message += f"🔴 <b>Miền Bắc</b> ({DRAW_TIMES['MB']['start']} - {DRAW_TIMES['MB']['end']})\n"
-        message += f"   • {', '.join(names)}\n\n"
+    # Day names tiếng Việt
+    day_names = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"]
+    day_name = day_names[weekday]
     
-    # Miền Trung
-    mt_provinces = SCHEDULE["MT"].get(weekday, [])
-    if mt_provinces:
-        names = [PROVINCES[p]['name'] for p in mt_provinces if p in PROVINCES]
-        message += f"🟠 <b>Miền Trung</b> ({DRAW_TIMES['MT']['start']} - {DRAW_TIMES['MT']['end']})\n"
-        message += f"   • {', '.join(names)}\n\n"
+    # Chuyển Python weekday (0=Mon) sang SCHEDULE format (0=Sun, 1=Mon...)
+    schedule_day = (weekday + 1) % 7
+    
+    message = f"🔥 <b>HÔM NAY - {day_name}, {date_str}</b>\n\n"
+    
+    # Miền Nam (16:15 - 16:45)
+    mn_codes = SCHEDULE["MN"][schedule_day]
+    mn_names = [PROVINCES[code]["name"] for code in mn_codes if code in PROVINCES]
+    message += "🟢 <b>Miền Nam</b> (16:15 - 16:45)\n"
+    if mn_names:
+        message += "  ✅ " + "\n  ✅ ".join(mn_names) + "\n\n"
+    else:
+        message += "  • Không có\n\n"
+    
+    # Miền Trung (17:15 - 17:45)
+    mt_codes = SCHEDULE["MT"][schedule_day]
+    mt_names = [PROVINCES[code]["name"] for code in mt_codes if code in PROVINCES]
+    message += "🟠 <b>Miền Trung</b> (17:15 - 17:45)\n"
+    if mt_names:
+        message += "  ✅ " + "\n  ✅ ".join(mt_names) + "\n\n"
+    else:
+        message += "  • Không có\n\n"
+    
+    # Miền Bắc (18:15 - 18:30)
+    message += "🔴 <b>Miền Bắc</b> (18:15 - 18:30)\n"
+    message += "  ✅ Miền Bắc (hàng ngày)\n\n"
+    
+    message += "━━━━━━━━━━━━━━━━━━━━\n"
+    message += "💡 <i>Nhấn nút bên dưới để xem kết quả</i>"
+    
+    return message
+
+
+def get_tomorrow_schedule_message() -> str:
+    """
+    Lịch quay NGÀY MAI - Động theo ngày mai
+    
+    Returns:
+        Message hiển thị các đài quay ngày mai
+    """
+    tomorrow = datetime.now(timezone.utc) + timedelta(days=1)
+    weekday = tomorrow.weekday()
+    date_str = tomorrow.strftime("%d/%m/%Y")
+    
+    day_names = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"]
+    day_name = day_names[weekday]
+    
+    schedule_day = (weekday + 1) % 7
+    
+    message = f"📆 <b>NGÀY MAI - {day_name}, {date_str}</b>\n\n"
     
     # Miền Nam
-    mn_provinces = SCHEDULE["MN"].get(weekday, [])
-    if mn_provinces:
-        names = [PROVINCES[p]['name'] for p in mn_provinces if p in PROVINCES]
-        message += f"🟢 <b>Miền Nam</b> ({DRAW_TIMES['MN']['start']} - {DRAW_TIMES['MN']['end']})\n"
-        message += f"   • {', '.join(names)}\n\n"
+    mn_codes = SCHEDULE["MN"][schedule_day]
+    mn_names = [PROVINCES[code]["name"] for code in mn_codes if code in PROVINCES]
+    message += "🟢 <b>Miền Nam</b> (16:15 - 16:45)\n"
+    if mn_names:
+        message += "  • " + "\n  • ".join(mn_names) + "\n\n"
+    else:
+        message += "  • Không có\n\n"
     
-    message += "💡 <i>Chọn tỉnh bên dưới để xem kết quả ngay!</i>"
+    # Miền Trung
+    mt_codes = SCHEDULE["MT"][schedule_day]
+    mt_names = [PROVINCES[code]["name"] for code in mt_codes if code in PROVINCES]
+    message += "🟠 <b>Miền Trung</b> (17:15 - 17:45)\n"
+    if mt_names:
+        message += "  • " + "\n  • ".join(mt_names) + "\n\n"
+    else:
+        message += "  • Không có\n\n"
+    
+    # Miền Bắc
+    message += "🔴 <b>Miền Bắc</b> (18:15 - 18:30)\n"
+    message += "  • Miền Bắc (hàng ngày)\n\n"
+    
+    message += "━━━━━━━━━━━━━━━━━━━━\n"
+    message += "💡 <i>Chuẩn bị sẵn số may mắn!</i>"
+    
+    return message
+
+
+def get_full_week_schedule_message() -> str:
+    """
+    Lịch quay CẢ TUẦN - Static, hiển thị đầy đủ
+    
+    Returns:
+        Message lịch quay cả tuần với format đẹp
+    """
+    message = "📅 <b>LỊCH QUAY THƯỞNG CẢ TUẦN</b>\n\n"
+    
+    message += "<b>🟢 Miền Nam (16:15 - 16:45)</b>\n"
+    message += "• <b>Chủ Nhật:</b> Tiền Giang, Kiên Giang, Đà Lạt\n"
+    message += "• <b>Thứ Hai:</b> TP.HCM, Đồng Tháp, Cà Mau\n"
+    message += "• <b>Thứ Ba:</b> Bến Tre, Vũng Tàu, Bạc Liêu\n"
+    message += "• <b>Thứ Tư:</b> Đồng Nai, Cần Thơ, Sóc Trăng\n"
+    message += "• <b>Thứ Năm:</b> Tây Ninh, An Giang, Bình Thuận\n"
+    message += "• <b>Thứ Sáu:</b> Vĩnh Long, Bình Dương, Trà Vinh\n"
+    message += "• <b>Thứ Bảy:</b> TP.HCM, Long An, Bình Phước, Hậu Giang\n\n"
+    
+    message += "<b>🟠 Miền Trung (17:15 - 17:45)</b>\n"
+    message += "• <b>Chủ Nhật:</b> Huế, Khánh Hòa, Kon Tum\n"
+    message += "• <b>Thứ Hai:</b> Huế, Phú Yên\n"
+    message += "• <b>Thứ Ba:</b> Quảng Nam, Đắk Lắk\n"
+    message += "• <b>Thứ Tư:</b> Đà Nẵng, Khánh Hòa\n"
+    message += "• <b>Thứ Năm:</b> Bình Định, Quảng Bình, Quảng Trị\n"
+    message += "• <b>Thứ Sáu:</b> Gia Lai, Ninh Thuận\n"
+    message += "• <b>Thứ Bảy:</b> Đà Nẵng, Quảng Ngãi, Đắk Nông\n\n"
+    
+    message += "<b>🔴 Miền Bắc (18:15 - 18:30)</b>\n"
+    message += "• <b>Hàng ngày</b> (trừ Tết)\n\n"
+    
+    message += "━━━━━━━━━━━━━━━━━━━━\n"
+    message += "💡 <i>Chúc bạn may mắn!</i>"
     
     return message
 

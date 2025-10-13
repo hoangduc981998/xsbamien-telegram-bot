@@ -141,3 +141,60 @@ def get_schedule_today_keyboard() -> InlineKeyboardMarkup:
     keyboard.append([InlineKeyboardButton("◀️ Quay Lại", callback_data="main_menu")])
     
     return InlineKeyboardMarkup(keyboard)
+
+
+def get_schedule_menu() -> InlineKeyboardMarkup:
+    """
+    Menu lịch quay với 3 lựa chọn
+    
+    Returns:
+        Keyboard menu lịch quay
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton("🔥 Hôm Nay", callback_data="schedule_today"),
+            InlineKeyboardButton("📆 Ngày Mai", callback_data="schedule_tomorrow"),
+        ],
+        [
+            InlineKeyboardButton("📅 Cả Tuần", callback_data="schedule_week"),
+        ],
+        [
+            InlineKeyboardButton("◀️ Quay Lại", callback_data="main_menu"),
+        ],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_today_schedule_actions() -> InlineKeyboardMarkup:
+    """
+    Action buttons sau khi xem lịch hôm nay
+    
+    Returns:
+        Keyboard với nút xem kết quả và quay lại
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton("🎯 Xem Kết Quả Hôm Nay", callback_data="today"),
+        ],
+        [
+            InlineKeyboardButton("📅 Xem Lịch Cả Tuần", callback_data="schedule_week"),
+            InlineKeyboardButton("◀️ Quay Lại", callback_data="main_menu"),
+        ],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_schedule_back_button() -> InlineKeyboardMarkup:
+    """
+    Nút quay lại cho các màn hình lịch
+    
+    Returns:
+        Keyboard với nút quay lại menu lịch
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton("◀️ Quay Lại Menu Lịch", callback_data="schedule_menu"),
+            InlineKeyboardButton("🏠 Menu Chính", callback_data="main_menu"),
+        ],
+    ]
+    return InlineKeyboardMarkup(keyboard)

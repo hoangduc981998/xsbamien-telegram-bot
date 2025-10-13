@@ -10,12 +10,17 @@ from app.ui.keyboards import (
     get_stats_menu_keyboard,
     get_back_to_menu_keyboard,
     get_schedule_today_keyboard,
+    get_schedule_menu,
+    get_today_schedule_actions,
+    get_schedule_back_button,
 )
 from app.ui.messages import (
     WELCOME_MESSAGE,
     HELP_MESSAGE,
     get_schedule_message,
     get_today_schedule_message,
+    get_tomorrow_schedule_message,
+    get_full_week_schedule_message,
     get_region_message,
 )
 from app.ui.formatters import (
@@ -62,7 +67,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="HTML"
             )
         
-        # Lịch quay hôm nay
+        # Lịch quay hôm nay (OLD - giữ để backward compatible với keyboard cũ)
         elif callback_data == "today":
             message = get_today_schedule_message()
             await query.edit_message_text(
@@ -71,13 +76,46 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="HTML"
             )
         
-        # Lịch quay trong tuần
+        # Lịch quay trong tuần - Hiển thị menu chọn
         elif callback_data == "schedule":
-            message = get_schedule_message()
             await query.edit_message_text(
-                message,
-                reply_markup=get_back_to_menu_keyboard(),
-                parse_mode="HTML"
+                "📅 <b>Chọn Xem Lịch Quay</b>\n\n"
+                "Bạn muốn xem lịch của ngày nào?",
+                reply_markup=get_schedule_menu(),
+                parse_mode="HTML",
+            )
+        
+        # Quay lại menu lịch
+        elif callback_data == "schedule_menu":
+            await query.edit_message_text(
+                "📅 <b>Chọn Xem Lịch Quay</b>\n\n"
+                "Bạn muốn xem lịch của ngày nào?",
+                reply_markup=get_schedule_menu(),
+                parse_mode="HTML",
+            )
+        
+        # Lịch hôm nay (động)
+        elif callback_data == "schedule_today":
+            await query.edit_message_text(
+                get_today_schedule_message(),
+                reply_markup=get_today_schedule_actions(),
+                parse_mode="HTML",
+            )
+        
+        # Lịch ngày mai (động)
+        elif callback_data == "schedule_tomorrow":
+            await query.edit_message_text(
+                get_tomorrow_schedule_message(),
+                reply_markup=get_schedule_back_button(),
+                parse_mode="HTML",
+            )
+        
+        # Lịch cả tuần (static)
+        elif callback_data == "schedule_week":
+            await query.edit_message_text(
+                get_full_week_schedule_message(),
+                reply_markup=get_schedule_back_button(),
+                parse_mode="HTML",
             )
         
         # Chọn miền (region_MB, region_MT, region_MN)
