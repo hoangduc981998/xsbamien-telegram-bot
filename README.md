@@ -96,6 +96,38 @@ docker-compose up -d
 
 ---
 
+## 🧪 Running Tests
+
+### Install dev dependencies
+```bash
+pip install -r requirements-dev.txt
+```
+
+### Run all tests
+```bash
+pytest
+```
+
+### Run with coverage
+```bash
+pytest --cov=app --cov-report=html
+```
+
+### Run specific test file
+```bash
+pytest tests/test_keyboards.py -v
+```
+
+### View coverage report
+```bash
+open htmlcov/index.html  # macOS
+xdg-open htmlcov/index.html  # Linux
+```
+
+See [tests/README.md](tests/README.md) for detailed testing documentation.
+
+---
+
 ## 💡 Sử Dụng
 
 ### Lệnh Cơ Bản
