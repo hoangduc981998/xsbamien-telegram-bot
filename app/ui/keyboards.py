@@ -1,10 +1,9 @@
 """Inline keyboards - Menu và nút bấm đẹp mắt"""
 
-from datetime import datetime
-
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 from app.config import PROVINCES, SCHEDULE
+from app.utils.cache import get_cached_schedule_day
 
 
 def get_main_menu_keyboard() -> InlineKeyboardMarkup:
@@ -115,9 +114,8 @@ def get_back_to_menu_keyboard() -> InlineKeyboardMarkup:
 
 
 def get_schedule_today_keyboard() -> InlineKeyboardMarkup:
-    """Lịch quay hôm nay với quick access"""
-    # Chuyển Python weekday (0=Mon) sang SCHEDULE format (0=Sun, 1=Mon...)
-    schedule_day = (datetime.now().weekday() + 1) % 7
+    """Lịch quay hôm nay với quick access - Tạo nút ĐỘNG (with cache)"""
+    schedule_day = get_cached_schedule_day()
 
     keyboard = []
 
@@ -174,13 +172,12 @@ def get_schedule_menu() -> InlineKeyboardMarkup:
 
 def get_today_schedule_actions() -> InlineKeyboardMarkup:
     """
-    Tạo nút ĐỘNG dựa trên lịch quay thực tế của ngày hôm nay
+    Tạo nút ĐỘNG dựa trên lịch quay thực tế của ngày hôm nay (with cache)
 
     Returns:
         Keyboard với các nút tỉnh quay hôm nay và nút điều hướng
     """
-    # Chuyển Python weekday (0=Mon) sang SCHEDULE format (0=Sun, 1=Mon...)
-    schedule_day = (datetime.now().weekday() + 1) % 7
+    schedule_day = get_cached_schedule_day()
     keyboard = []
 
     # Tạo nút cho TẤT CẢ các tỉnh quay hôm nay
