@@ -10,27 +10,27 @@ def get_mock_lottery_result(province_key: str) -> Dict:
     Trả về kết quả xổ số giả (mock) cho demo
     """
     from app.data.mock_results import MOCK_RESULTS
-    
+
     # Return from MOCK_RESULTS if exists (already in correct format)
     if province_key in MOCK_RESULTS:
         result = MOCK_RESULTS[province_key]
         # Ensure flat structure (unwrap 'prizes' if nested)
-        if 'prizes' in result and isinstance(result['prizes'], dict):
+        if "prizes" in result and isinstance(result["prizes"], dict):
             # Flatten: move prizes content to top level
             flat_result = {
-                'date': result.get('date'),
-                'province': result.get('province_name', result.get('province', province_key))
+                "date": result.get("date"),
+                "province": result.get("province_name", result.get("province", province_key)),
             }
-            flat_result.update(result['prizes'])
+            flat_result.update(result["prizes"])
             return flat_result
         return result
-    
+
     # Fallback: Generate random
     from datetime import datetime
     import random
-    
+
     random.seed(hash(province_key + datetime.now().strftime("%Y%m%d")))
-    
+
     # Default to MN region
     result = {
         "date": datetime.now().strftime("%d/%m/%Y"),
@@ -43,10 +43,9 @@ def get_mock_lottery_result(province_key: str) -> Dict:
         "G3": [f"{random.randint(0, 99999):05d}" for _ in range(2)],
         "G2": [f"{random.randint(0, 99999):05d}"],
         "G1": [f"{random.randint(0, 99999):05d}"],
-        "DB": [f"{random.randint(0, 999999):06d}"]
+        "DB": [f"{random.randint(0, 999999):06d}"],
     }
     return result
-
 
 
 def get_mock_stats_2digit(region: str) -> Dict:
