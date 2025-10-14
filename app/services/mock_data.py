@@ -90,24 +90,16 @@ def get_mock_lottery_result(province_key: str) -> Dict:
         result = {
             "date": datetime.now().strftime("%d/%m/%Y"),
             "province": province_info.get("name", province_key),
-            
-            # Giải Tám (1 số, 2 chữ số) ← BỊ THIẾU!
+        
+            # ✅ CHECK: Đảm bảo TẤT CẢ các key này đều có!
             "G8": [str(random.randint(10, 99))],
-            
-            # Giải Bảy (1 số, 3 chữ số)
             "G7": [str(random.randint(100, 999))],
-            
-            # Giải Sáu (3 số, 4 chữ số) ← SỬA: 3 số x 4 chữ số
             "G6": [
                 str(random.randint(1000, 9999)),
                 str(random.randint(1000, 9999)),
                 str(random.randint(1000, 9999)),
             ],
-            
-            # Giải Năm (1 số, 4 chữ số)
             "G5": [str(random.randint(1000, 9999))],
-            
-            # Giải Tư (7 số, 5 chữ số) ← SỬA: 7 số!
             "G4": [
                 str(random.randint(10000, 99999)),
                 str(random.randint(10000, 99999)),
@@ -117,24 +109,16 @@ def get_mock_lottery_result(province_key: str) -> Dict:
                 str(random.randint(10000, 99999)),
                 str(random.randint(10000, 99999)),
             ],
-            
-            # Giải Ba (2 số, 5 chữ số) ← SỬA: Chỉ 2 số!
             "G3": [
                 str(random.randint(10000, 99999)),
                 str(random.randint(10000, 99999)),
             ],
-            
-            # Giải Nhì (1 số, 5 chữ số)
             "G2": [str(random.randint(10000, 99999))],
-            
-            # Giải Nhất (1 số, 5 chữ số)
             "G1": [str(random.randint(10000, 99999))],
-            
-            # Đặc Biệt (1 số, 6 chữ số)
             "DB": [str(random.randint(100000, 999999))],
         }
     
-    return result
+        return result
 
 
 def get_mock_stats_2digit(region: str) -> Dict:

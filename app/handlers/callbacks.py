@@ -145,7 +145,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 
                 await query.edit_message_text(
                     message,
-                    reply_markup=get_province_detail_keyboard(province_key),
+                    reply_markup=get_province_detail_menu(province_key),
                     parse_mode="HTML"
                 )
         
@@ -281,17 +281,24 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # ====== XỬ LÝ KẾT QUẢ ĐẦY ĐỦ ======
         elif callback_data.startswith("result_full_"):
             province_code = callback_data.replace("result_full_", "")
-            
+    
             # Lấy mock data
-            from app.data.mock_results import get_mock_result
-            result_data = get_mock_result(province_code)
-            
+            from app.services.mock_data import get_mock_lottery_result
+            result_data = get_mock_lottery_result(province_code)
+
+            # ✅ THÊM DEBUG:
+            logger.info(f"🔍 result_full_{province_code}")
+            logger.info(f"🔍 result_data keys: {result_data.keys()}")
+            logger.info(f"🔍 Has G8? {'G8' in result_data}")
+            logger.info(f"🔍 Has G7? {'G7' in result_data}")
+            logger.info(f"🔍 Has DB? {'DB' in result_data}")
+
             # Format theo miền
             if province_code == "MB":
                 message = format_result_mb_full(result_data)
             else:
                 message = format_result_mn_mt_full(result_data)
-            
+
             await query.edit_message_text(
                 message,
                 reply_markup=get_province_detail_menu(province_code),
@@ -302,8 +309,8 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif callback_data.startswith("lo2_"):
             province_code = callback_data.replace("lo2_", "")
             
-            from app.data.mock_results import get_mock_result
-            result_data = get_mock_result(province_code)
+            from app.services.mock_data import get_mock_lottery_result
+            result_data = get_mock_lottery_result(province_code)
             
             # Format theo miền
             if province_code == "MB":
@@ -321,8 +328,8 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif callback_data.startswith("lo3_"):
             province_code = callback_data.replace("lo3_", "")
             
-            from app.data.mock_results import get_mock_result
-            result_data = get_mock_result(province_code)
+            from app.services.mock_data import get_mock_lottery_result
+            result_data = get_mock_lottery_result(province_code)
             
             # Format theo miền
             if province_code == "MB":
@@ -340,8 +347,8 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif callback_data.startswith("daulo_"):
             province_code = callback_data.replace("daulo_", "")
             
-            from app.data.mock_results import get_mock_result
-            result_data = get_mock_result(province_code)
+            from app.services.mock_data import get_mock_lottery_result
+            result_data = get_mock_lottery_result(province_code)
             message = format_dau_lo(result_data)
             
             await query.edit_message_text(
@@ -354,8 +361,8 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif callback_data.startswith("duoilo_"):
             province_code = callback_data.replace("duoilo_", "")
             
-            from app.data.mock_results import get_mock_result
-            result_data = get_mock_result(province_code)
+            from app.services.mock_data import get_mock_lottery_result
+            result_data = get_mock_lottery_result(province_code)
             message = format_duoi_lo(result_data)
             
             await query.edit_message_text(
