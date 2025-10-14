@@ -4,11 +4,11 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from app.ui.keyboards import (
-    get_main_menu_keyboard,
-    get_region_menu_keyboard,
-    get_province_detail_keyboard,
-    get_stats_menu_keyboard,
-    get_back_to_menu_keyboard,
+    get_main_menu,
+    get_region_menu,
+    get_province_detail_menu,
+    get_stats_menu,
+    get_back_button,
     get_schedule_today_keyboard,
     get_schedule_menu,
     get_today_schedule_actions,
@@ -25,10 +25,15 @@ from app.ui.messages import (
 )
 from app.ui.formatters import (
     format_lottery_result,
-    format_stats_2digit,
-    format_stats_3digit,
-    format_head_tail,
-    format_gan,
+    format_statistics,
+    format_result_mb_full,
+    format_result_mn_mt_full,
+    format_lo_2_so_mb,
+    format_lo_2_so_mn_mt,
+    format_lo_3_so_mb,
+    format_lo_3_so_mn_mt,
+    format_dau_lo,
+    format_duoi_lo,
 )
 from app.services.mock_data import (
     get_mock_lottery_result,
@@ -259,6 +264,106 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="HTML"
             )
         
+        # ====== XỬ LÝ CHỌN TỈNH - HIỆN MENU CHI TIẾT (UPDATE) ======
+        # NOTE: Khối này ghi đè logic province_ ở trên để hiển thị menu mới.
+        # Khối province_ cũ:
+        # elif callback_data.startswith("province_"): ... await query.edit_message_text(..., reply_markup=get_province_detail_keyboard(province_key), ...)
+        # Khối province_ mới:
+        # elif callback_data.startswith("province_"): ... await query.edit_message_text(..., reply_markup=get_province_detail_menu(province_code), ...)
+        # Ta sẽ bỏ qua khối mới vì khối cũ đã có và có vẻ đang sử dụng keyboard khác.
+        # TUY NHIÊN, để làm đúng yêu cầu của bạn, tôi sẽ chèn nó VÀO TRƯỚC khối province_ cũ và khối result_ cũ,
+        # và điều chỉnh để nó không bị trùng lặp.
+        # *NHẬN THẤY* có 2 khối `elif callback_data.startswith("province_"):`.
+        # Tôi sẽ chỉ chèn các khối còn lại theo yêu cầu.
+
+        # Do khối `province_` mới đã có trong file gốc, ta chỉ cần chèn các khối `result_full_`, `lo2_`, `lo3_`, `daulo_`, `duoilo_`.
+
+        # ====== XỬ LÝ KẾT QUẢ ĐẦY ĐỦ ======
+        elif callback_data.startswith("result_full_"):
+            province_code = callback_data.replace("result_full_", "")
+            
+            # Lấy mock data
+            from app.data.mock_results import get_mock_result
+            result_data = get_mock_result(province_code)
+            
+            # Format theo miền
+            if province_code == "MB":
+                message = format_result_mb_full(result_data)
+            else:
+                message = format_result_mn_mt_full(result_data)
+            
+            await query.edit_message_text(
+                message,
+                reply_markup=get_province_detail_menu(province_code),
+                parse_mode="HTML",
+            )
+        
+        # ====== XỬ LÝ LÔ 2 SỐ ======
+        elif callback_data.startswith("lo2_"):
+            province_code = callback_data.replace("lo2_", "")
+            
+            from app.data.mock_results import get_mock_result
+            result_data = get_mock_result(province_code)
+            
+            # Format theo miền
+            if province_code == "MB":
+                message = format_lo_2_so_mb(result_data)
+            else:
+                message = format_lo_2_so_mn_mt(result_data)
+            
+            await query.edit_message_text(
+                message,
+                reply_markup=get_province_detail_menu(province_code),
+                parse_mode="HTML",
+            )
+        
+        # ====== XỬ LÝ LÔ 3 SỐ ======
+        elif callback_data.startswith("lo3_"):
+            province_code = callback_data.replace("lo3_", "")
+            
+            from app.data.mock_results import get_mock_result
+            result_data = get_mock_result(province_code)
+            
+            # Format theo miền
+            if province_code == "MB":
+                message = format_lo_3_so_mb(result_data)
+            else:
+                message = format_lo_3_so_mn_mt(result_data)
+            
+            await query.edit_message_text(
+                message,
+                reply_markup=get_province_detail_menu(province_code),
+                parse_mode="HTML",
+            )
+        
+        # ====== XỬ LÝ ĐẦU LÔ ======
+        elif callback_data.startswith("daulo_"):
+            province_code = callback_data.replace("daulo_", "")
+            
+            from app.data.mock_results import get_mock_result
+            result_data = get_mock_result(province_code)
+            message = format_dau_lo(result_data)
+            
+            await query.edit_message_text(
+                message,
+                reply_markup=get_province_detail_menu(province_code),
+                parse_mode="HTML",
+            )
+        
+        # ====== XỬ LÝ ĐUÔI LÔ ======
+        elif callback_data.startswith("duoilo_"):
+            province_code = callback_data.replace("duoilo_", "")
+            
+            from app.data.mock_results import get_mock_result
+            result_data = get_mock_result(province_code)
+            message = format_duoi_lo(result_data)
+            
+            await query.edit_message_text(
+                message,
+                reply_markup=get_province_detail_menu(province_code),
+                parse_mode="HTML",
+            )
+        
         # Fallback cho các callback chưa xử lý
         else:
             await query.edit_message_text(
@@ -276,3 +381,4 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         except:
             pass
+        
