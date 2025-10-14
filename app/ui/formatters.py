@@ -1,213 +1,490 @@
-"""Formatters - Format kết quả đẹp mắt với bảng Unicode"""
+"""Result formatters - Format kết quả xổ số với các kiểu hiển thị khác nhau"""
 from typing import Dict, List
-from datetime import datetime
-from app.config import PROVINCES
 
 
-def format_lottery_result(province_key: str, result_data: Dict) -> str:
-    """Format kết quả xổ số với bảng Unicode đẹp mắt"""
-    province = PROVINCES.get(province_key, {})
-    province_name = province.get("name", province_key)
-    emoji = province.get("emoji", "📍")
+def format_result_mb_full(result_data: dict) -> str:
+    """
+    Format kết quả XS Miền Bắc - 27 giải đầy đủ
     
-    # Header
-    date_str = result_data.get("date", datetime.now().strftime("%d/%m/%Y"))
-    message = f"{emoji} <b>{province_name.upper()}</b>\n"
-    message += f"📅 Ngày: <b>{date_str}</b>\n"
-    message += f"{'─' * 30}\n\n"
+    Args:
+        result_data: Dict chứa prizes và date
+        
+    Returns:
+        Message formatted với HTML
+    """
+    date = result_data.get("date", "")
     
-    # Giải đặc biệt
-    db = result_data.get("DB", "123456")
-    message += f"🎊 <b>Giải Đặc Biệt</b>\n"
-    message += f"   <code>{db}</code>\n\n"
+    # ✅ FIX: Lấy prizes trực tiếp từ result_data nếu không có key "prizes"
+    if "prizes" in result_data:
+        prizes = result_data["prizes"]
+    else:
+        prizes = result_data  # Mock data có G1, G2, ... trực tiếp trong root
     
-    # Giải nhất
-    g1 = result_data.get("G1", "12345")
-    message += f"🥇 <b>Giải Nhất</b>\n"
-    message += f"   <code>{g1}</code>\n\n"
+    message = "🎰 <b>KẾT QUẢ XỔ SỐ MIỀN BẮC 27 GIẢI</b>\n"
+    message += f"📅 Ngày: {date}\n\n"
     
-    # Giải nhì
-    g2_list = result_data.get("G2", ["12345", "67890"])
-    message += f"🥈 <b>Giải Nhì</b>\n"
-    message += f"   <code>{' - '.join(g2_list)}</code>\n\n"
+    # Đặc biệt (1 số, 5 chữ số)
+    if "DB" in prizes and prizes["DB"]:
+        message += f"🏆 <b>Đặc Biệt:</b> {prizes['DB'][0]}\n"
     
-    # Giải ba
-    g3_list = result_data.get("G3", ["12345", "67890", "11111", "22222", "33333", "44444"])
-    message += f"🥉 <b>Giải Ba</b>\n"
-    # Chia làm 2 dòng, mỗi dòng 3 số
-    for i in range(0, len(g3_list), 3):
-        chunk = g3_list[i:i+3]
-        message += f"   <code>{' - '.join(chunk)}</code>\n"
-    message += "\n"
+    # Giải Nhất (1 số, 5 chữ số)
+    if "G1" in prizes and prizes["G1"]:
+        message += f"🥇 <b>Giải Nhất:</b> {prizes['G1'][0]}\n"
     
-    # Giải tư
-    g4_list = result_data.get("G4", ["1234", "5678", "9012", "3456"])
-    message += f"🎁 <b>Giải Tư</b>\n"
-    message += f"   <code>{' - '.join(g4_list)}</code>\n\n"
+    # Giải Nhì (2 số, 5 chữ số)
+    if "G2" in prizes and prizes["G2"]:
+        message += f"🥈 <b>Giải Nhì:</b> {','.join(prizes['G2'])}\n"
     
-    # Giải năm
-    g5_list = result_data.get("G5", ["123", "456", "789", "012", "345", "678"])
-    message += f"🎯 <b>Giải Năm</b>\n"
-    for i in range(0, len(g5_list), 3):
-        chunk = g5_list[i:i+3]
-        message += f"   <code>{' - '.join(chunk)}</code>\n"
-    message += "\n"
+    # Giải Ba (6 số, 5 chữ số)
+    if "G3" in prizes and prizes["G3"]:
+        message += f"🥉 <b>Giải Ba:</b> {','.join(prizes['G3'])}\n"
     
-    # Giải sáu
-    g6_list = result_data.get("G6", ["12", "34", "56"])
-    message += f"🎈 <b>Giải Sáu</b>\n"
-    message += f"   <code>{' - '.join(g6_list)}</code>\n\n"
+    # Giải Tư (4 số, 4 chữ số)
+    if "G4" in prizes and prizes["G4"]:
+        message += f"🎖️ <b>Giải Tư:</b> {','.join(prizes['G4'])}\n"
     
-    # Giải bảy
-    g7_list = result_data.get("G7", ["1", "2", "3", "4"])
-    message += f"🎀 <b>Giải Bảy</b>\n"
-    message += f"   <code>{' - '.join(g7_list)}</code>\n\n"
+    # Giải Năm (6 số, 4 chữ số)
+    if "G5" in prizes and prizes["G5"]:
+        message += f"🏅 <b>Giải Năm:</b> {','.join(prizes['G5'])}\n"
     
-    # Footer
-    message += f"{'─' * 30}\n"
-    message += "✅ <i>Kết quả chính thức</i>"
+    # Giải Sáu (3 số, 3 chữ số)
+    if "G6" in prizes and prizes["G6"]:
+        message += f"🎗️ <b>Giải Sáu:</b> {','.join(prizes['G6'])}\n"
+    
+    # Giải Bảy (4 số, 2 chữ số)
+    if "G7" in prizes and prizes["G7"]:
+        message += f"🎪 <b>Giải Bảy:</b> {','.join(prizes['G7'])}\n"
     
     return message
 
 
-def format_stats_2digit(region: str, stats_data: Dict) -> str:
-    """Format thống kê lô 2 số"""
-    region_names = {
-        "MB": "🔴 Miền Bắc",
-        "MT": "🟠 Miền Trung", 
-        "MN": "🟢 Miền Nam"
-    }
+def format_result_mn_mt_full(result_data: dict) -> str:
+    """
+    Format kết quả XS Miền Nam/Trung - 18 giải đầy đủ
+    Thứ tự ngược: G8 → ĐB (từ dưới lên trên)
     
-    message = f"📊 <b>THỐNG KÊ LÔ 2 SỐ - {region_names.get(region, region)}</b>\n\n"
+    Args:
+        result_data: Dict chứa prizes, date, và province_name
+        
+    Returns:
+        Message formatted với HTML
+    """
+    date = result_data.get("date", "")
+    province_name = result_data.get("province", "MIỀN NAM")  # ← Sửa "province_name" thành "province"
     
-    # Top 10 số hay về
-    message += "🔥 <b>Top 10 Số Hay Về</b>\n"
-    message += "┌───┬────┬─────────┐\n"
-    message += "│ #  │ Số │ Số lần │\n"
-    message += "├───┼────┼─────────┤\n"
+    # ✅ FIX: Lấy prizes trực tiếp từ result_data
+    if "prizes" in result_data:
+        prizes = result_data["prizes"]
+    else:
+        prizes = result_data
     
-    top_numbers = stats_data.get("top_frequent", [
-        (27, 45), (38, 42), (56, 41), (12, 39), (89, 38),
-        (34, 37), (67, 36), (45, 35), (78, 34), (90, 33)
-    ])
+    message = f"🎰 <b>KẾT QUẢ XỔ SỐ {province_name.upper()} 18 GIẢI</b>\n"
+    message += f"📅 Ngày: {date}\n\n"
     
-    for idx, (num, count) in enumerate(top_numbers[:10], 1):
-        message += f"│ {idx:2d} │ {num:02d} │ {count:3d} lần │\n"
+    # Giải Tám (1 số, 2 chữ số)
+    if "G8" in prizes and prizes["G8"]:
+        message += f"🎊 <b>Giải Tám:</b> {prizes['G8'][0]}\n"
     
-    message += "└───┴────┴─────────┘\n\n"
+    # Giải Bảy (1 số, 3 chữ số)
+    if "G7" in prizes and prizes["G7"]:
+        message += f"🎪 <b>Giải Bảy:</b> {prizes['G7'][0]}\n"
     
-    # Số ít về
-    message += "❄️ <b>Top 5 Số Ít Về</b>\n"
-    rare_numbers = stats_data.get("rare", [(5, 12), (19, 13), (82, 14), (94, 15), (61, 16)])
-    message += "   "
-    message += " - ".join([f"<code>{num:02d}</code> ({count})" for num, count in rare_numbers])
-    message += "\n\n"
+    # Giải Sáu (3 số, 4 chữ số)
+    if "G6" in prizes and prizes["G6"]:
+        message += f"🎗️ <b>Giải Sáu:</b> {','.join(prizes['G6'])}\n"
     
-    # Thời gian cập nhật
-    message += f"🕐 <i>Thống kê 30 kỳ gần nhất</i>\n"
-    message += f"📅 <i>Cập nhật: {datetime.now().strftime('%d/%m/%Y %H:%M')}</i>"
+    # Giải Năm (1 số, 4 chữ số)
+    if "G5" in prizes and prizes["G5"]:
+        message += f"🏅 <b>Giải Năm:</b> {prizes['G5'][0]}\n"
     
-    return message
-
-
-def format_stats_3digit(province_key: str, stats_data: Dict) -> str:
-    """Format thống kê lô 3 số"""
-    province = PROVINCES.get(province_key, {})
-    province_name = province.get("name", province_key)
-    emoji = province.get("emoji", "📍")
+    # Giải Tư (7 số, 5 chữ số)
+    if "G4" in prizes and prizes["G4"]:
+        message += f"🎖️ <b>Giải Tư:</b> {','.join(prizes['G4'])}\n"
     
-    message = f"{emoji} <b>THỐNG KÊ LÔ 3 SỐ - {province_name}</b>\n\n"
+    # Giải Ba (2 số, 5 chữ số)
+    if "G3" in prizes and prizes["G3"]:
+        message += f"🥉 <b>Giải Ba:</b> {','.join(prizes['G3'])}\n"
     
-    # Giải đặc biệt hay về
-    message += "🎊 <b>Đặc Biệt Hay Về</b>\n"
-    db_stats = stats_data.get("db_frequent", [
-        (123, 5), (456, 4), (789, 4), (234, 3), (567, 3)
-    ])
-    message += "   "
-    message += " - ".join([f"<code>{num:03d}</code> ({count})" for num, count in db_stats])
-    message += "\n\n"
+    # Giải Nhì (1 số, 5 chữ số)
+    if "G2" in prizes and prizes["G2"]:
+        message += f"🥈 <b>Giải Nhì:</b> {prizes['G2'][0]}\n"
     
-    # Bộ 3 số hay về
-    message += "🎯 <b>Bộ 3 Số Hay Ra</b>\n"
-    triple_stats = stats_data.get("triples", [
-        ("12", "34", "56", 8),
-        ("23", "45", "67", 7),
-        ("34", "56", "78", 6),
-    ])
+    # Giải Nhất (1 số, 5 chữ số)
+    if "G1" in prizes and prizes["G1"]:
+        message += f"🥇 <b>Giải Nhất:</b> {prizes['G1'][0]}\n"
     
-    for idx, (n1, n2, n3, count) in enumerate(triple_stats, 1):
-        message += f"{idx}. <code>{n1}</code> - <code>{n2}</code> - <code>{n3}</code> ({count} lần)\n"
-    
-    message += "\n"
-    message += f"📅 <i>Thống kê 30 kỳ gần nhất</i>"
+    # Đặc Biệt (1 số, 6 chữ số)
+    if "DB" in prizes and prizes["DB"]:
+        message += f"🏆 <b>Đặc Biệt:</b> {prizes['DB'][0]}\n"
     
     return message
 
 
-def format_head_tail() -> str:
-    """Format thống kê đầu-đuôi giải đặc biệt"""
-    message = "📈 <b>THỐNG KÊ ĐẦU-ĐUÔI GIẢI ĐẶC BIỆT</b>\n\n"
+def format_lo_2_so_mb(result_data: dict) -> str:
+    """
+    Format Lô 2 số Miền Bắc - Lấy 2 chữ số cuối
     
-    # Đầu số
-    message += "🔢 <b>Thống Kê Đầu Số</b>\n"
-    message += "┌──────┬─────────┐\n"
-    message += "│ Đầu │ Số lần │\n"
-    message += "├──────┼─────────┤\n"
+    Logic:
+    - ĐB (5 số): Lấy 2 số cuối
+    - G1 (5 số): Lấy 2 số cuối
+    - G2-G6: Lấy 2 số cuối mỗi số
+    - G7 (2 số): Giữ nguyên (đã là 2 số)
+    """
+    date = result_data.get("date", "")
+    if "prizes" in result_data:
+        prizes = result_data["prizes"]
+    else:
+        prizes = result_data
     
-    head_stats = [(0, 32), (1, 28), (2, 35), (3, 31), (4, 29),
-                  (5, 27), (6, 33), (7, 30), (8, 26), (9, 34)]
+    message = "🎯 <b>KẾT QUẢ LÔ 2 SỐ</b>\n"
+    message += f"📅 Ngày: {date}\n\n"
     
-    for head, count in head_stats:
-        message += f"│  {head}   │  {count:2d}    │\n"
+    # ĐB
+    if "DB" in prizes and prizes["DB"]:
+        lo2 = prizes["DB"][0][-2:]
+        message += f"🏆 <b>ĐB:</b> {lo2}\n"
     
-    message += "└──────┴─────────┘\n\n"
+    # G1
+    if "G1" in prizes and prizes["G1"]:
+        lo2 = prizes["G1"][0][-2:]
+        message += f"🥇 <b>G1:</b> {lo2}\n"
     
-    # Đuôi số
-    message += "🔢 <b>Thống Kê Đuôi Số</b>\n"
-    message += "┌──────┬─────────┐\n"
-    message += "│ Đuôi │ Số lần │\n"
-    message += "├──────┼─────────┤\n"
+    # G2
+    if "G2" in prizes and prizes["G2"]:
+        lo2_list = [num[-2:] for num in prizes["G2"]]
+        message += f"🥈 <b>G2:</b> {' '.join(lo2_list)}\n"
     
-    tail_stats = [(0, 31), (1, 29), (2, 33), (3, 28), (4, 32),
-                  (5, 30), (6, 27), (7, 35), (8, 29), (9, 31)]
+    # G3
+    if "G3" in prizes and prizes["G3"]:
+        lo2_list = [num[-2:] for num in prizes["G3"]]
+        message += f"🥉 <b>G3:</b> {' '.join(lo2_list)}\n"
     
-    for tail, count in tail_stats:
-        message += f"│  {tail}   │  {count:2d}    │\n"
+    # G4
+    if "G4" in prizes and prizes["G4"]:
+        lo2_list = [num[-2:] for num in prizes["G4"]]
+        message += f"🎖️ <b>G4:</b> {' '.join(lo2_list)}\n"
     
-    message += "└──────┴─────────┘\n\n"
-    message += "📊 <i>Thống kê 100 kỳ gần nhất</i>"
+    # G5
+    if "G5" in prizes and prizes["G5"]:
+        lo2_list = [num[-2:] for num in prizes["G5"]]
+        message += f"🏅 <b>G5:</b> {' '.join(lo2_list)}\n"
+    
+    # G6
+    if "G6" in prizes and prizes["G6"]:
+        lo2_list = [num[-2:] for num in prizes["G6"]]
+        message += f"🎗️ <b>G6:</b> {' '.join(lo2_list)}\n"
+    
+    # G7
+    if "G7" in prizes and prizes["G7"]:
+        message += f"🎪 <b>G7:</b> {' '.join(prizes['G7'])}\n"
     
     return message
 
 
-def format_gan(region: str) -> str:
-    """Format lô gan - số lâu không về"""
-    region_names = {
-        "MB": "🔴 Miền Bắc",
-        "MT": "🟠 Miền Trung",
-        "MN": "🟢 Miền Nam"
-    }
+def format_lo_2_so_mn_mt(result_data: dict) -> str:
+    """
+    Format Lô 2 số Miền Nam/Trung - Lấy 2 chữ số cuối
+    Thứ tự: G8 → ĐB
+    """
+    date = result_data.get("date", "")
+    if "prizes" in result_data:
+        prizes = result_data["prizes"]
+    else:
+        prizes = result_data
+
+    message = "🎯 <b>KẾT QUẢ LÔ 2 SỐ</b>\n"
+    message += f"📅 Ngày: {date}\n\n"
     
-    message = f"🎯 <b>LÔ GAN - {region_names.get(region, region)}</b>\n"
-    message += "<i>Những số lâu chưa về</i>\n\n"
+    # G8
+    if "G8" in prizes and prizes["G8"]:
+        lo2 = prizes["G8"][0][-2:]
+        message += f"🎊 <b>G8:</b> {lo2}\n"
     
-    # Top 15 số gan nhất
-    gan_numbers = [
-        (43, 18), (72, 17), (15, 16), (91, 15), (28, 14),
-        (54, 13), (86, 13), (37, 12), (69, 12), (2, 11),
-        (41, 11), (75, 10), (18, 10), (93, 10), (26, 9)
-    ]
+    # G7
+    if "G7" in prizes and prizes["G7"]:
+        lo2 = prizes["G7"][0][-2:]
+        message += f"🎪 <b>G7:</b> {lo2}\n"
     
-    message += "┌──────┬────────────────┐\n"
-    message += "│  Số  │ Số kỳ chưa về │\n"
-    message += "├──────┼────────────────┤\n"
+    # G6
+    if "G6" in prizes and prizes["G6"]:
+        lo2_list = [num[-2:] for num in prizes["G6"]]
+        message += f"🎗️ <b>G6:</b> {' '.join(lo2_list)}\n"
     
-    for num, count in gan_numbers:
-        message += f"│  {num:02d}  │      {count:2d}       │\n"
+    # G5
+    if "G5" in prizes and prizes["G5"]:
+        lo2 = prizes["G5"][0][-2:]
+        message += f"🏅 <b>G5:</b> {lo2}\n"
     
-    message += "└──────┴────────────────┘\n\n"
+    # G4
+    if "G4" in prizes and prizes["G4"]:
+        lo2_list = [num[-2:] for num in prizes["G4"]]
+        message += f"🎖️ <b>G4:</b> {' '.join(lo2_list)}\n"
     
-    message += "⚠️ <i>Lưu ý: Thống kê chỉ mang tính tham khảo</i>\n"
-    message += f"📅 <i>Cập nhật: {datetime.now().strftime('%d/%m/%Y')}</i>"
+    # G3
+    if "G3" in prizes and prizes["G3"]:
+        lo2_list = [num[-2:] for num in prizes["G3"]]
+        message += f"🥉 <b>G3:</b> {' '.join(lo2_list)}\n"
+    
+    # G2
+    if "G2" in prizes and prizes["G2"]:
+        lo2 = prizes["G2"][0][-2:]
+        message += f"🥈 <b>G2:</b> {lo2}\n"
+    
+    # G1
+    if "G1" in prizes and prizes["G1"]:
+        lo2 = prizes["G1"][0][-2:]
+        message += f"🥇 <b>G1:</b> {lo2}\n"
+    
+    # ĐB
+    if "DB" in prizes and prizes["DB"]:
+        lo2 = prizes["DB"][0][-2:]
+        message += f"🏆 <b>ĐB:</b> {lo2}\n"
     
     return message
+
+
+def format_lo_3_so_mb(result_data: dict) -> str:
+    """
+    Format Lô 3 số Miền Bắc - Lấy 3 chữ số cuối
+    G7 không có (chỉ 2 số)
+    """
+    date = result_data.get("date", "")
+    if "prizes" in result_data:
+        prizes = result_data["prizes"]
+    else:
+        prizes = result_data
+    
+    message = "🎯 <b>KẾT QUẢ LÔ 3 SỐ</b>\n"
+    message += f"📅 Ngày: {date}\n\n"
+    
+    # ĐB
+    if "DB" in prizes and prizes["DB"]:
+        lo3 = prizes["DB"][0][-3:]
+        message += f"🏆 <b>ĐB:</b> {lo3}\n"
+    
+    # G1
+    if "G1" in prizes and prizes["G1"]:
+        lo3 = prizes["G1"][0][-3:]
+        message += f"🥇 <b>G1:</b> {lo3}\n"
+    
+    # G2
+    if "G2" in prizes and prizes["G2"]:
+        lo3_list = [num[-3:] for num in prizes["G2"]]
+        message += f"🥈 <b>G2:</b> {' '.join(lo3_list)}\n"
+    
+    # G3
+    if "G3" in prizes and prizes["G3"]:
+        lo3_list = [num[-3:] for num in prizes["G3"]]
+        message += f"🥉 <b>G3:</b> {' '.join(lo3_list)}\n"
+    
+    # G4
+    if "G4" in prizes and prizes["G4"]:
+        lo3_list = [num[-3:] for num in prizes["G4"]]
+        message += f"🎖️ <b>G4:</b> {' '.join(lo3_list)}\n"
+    
+    # G5
+    if "G5" in prizes and prizes["G5"]:
+        lo3_list = [num[-3:] for num in prizes["G5"]]
+        message += f"🏅 <b>G5:</b> {' '.join(lo3_list)}\n"
+    
+    # G6
+    if "G6" in prizes and prizes["G6"]:
+        message += f"🎗️ <b>G6:</b> {' '.join(prizes['G6'])}\n"
+    
+    # G7 - Không có
+    message += "🎪 <b>G7:</b> không có\n"
+    
+    return message
+
+
+def format_lo_3_so_mn_mt(result_data: dict) -> str:
+    """
+    Format Lô 3 số Miền Nam/Trung - Lấy 3 chữ số cuối
+    G8 không có (chỉ 2 số)
+    Thứ tự: G8 → ĐB
+    """
+    date = result_data.get("date", "")
+    if "prizes" in result_data:
+        prizes = result_data["prizes"]
+    else:
+        prizes = result_data
+    
+    message = "🎯 <b>KẾT QUẢ LÔ 3 SỐ</b>\n"
+    message += f"📅 Ngày: {date}\n\n"
+    
+    # G8 - Không có
+    message += "🎊 <b>G8:</b> Không có\n"
+    
+    # G7
+    if "G7" in prizes and prizes["G7"]:
+        message += f"🎪 <b>G7:</b> {prizes['G7'][0]}\n"
+    
+    # G6
+    if "G6" in prizes and prizes["G6"]:
+        lo3_list = [num[-3:] for num in prizes["G6"]]
+        message += f"🎗️ <b>G6:</b> {' '.join(lo3_list)}\n"
+    
+    # G5
+    if "G5" in prizes and prizes["G5"]:
+        lo3 = prizes["G5"][0][-3:]
+        message += f"🏅 <b>G5:</b> {lo3}\n"
+    
+    # G4
+    if "G4" in prizes and prizes["G4"]:
+        lo3_list = [num[-3:] for num in prizes["G4"]]
+        message += f"🎖️ <b>G4:</b> {' '.join(lo3_list)}\n"
+    
+    # G3
+    if "G3" in prizes and prizes["G3"]:
+        lo3_list = [num[-3:] for num in prizes["G3"]]
+        message += f"🥉 <b>G3:</b> {' '.join(lo3_list)}\n"
+    
+    # G2
+    if "G2" in prizes and prizes["G2"]:
+        lo3 = prizes["G2"][0][-3:]
+        message += f"🥈 <b>G2:</b> {lo3}\n"
+    
+    # G1
+    if "G1" in prizes and prizes["G1"]:
+        lo3 = prizes["G1"][0][-3:]
+        message += f"🥇 <b>G1:</b> {lo3}\n"
+    
+    # ĐB
+    if "DB" in prizes and prizes["DB"]:
+        lo3 = prizes["DB"][0][-3:]
+        message += f"🏆 <b>ĐB:</b> {lo3}\n"
+    
+    return message
+
+
+def format_dau_lo(result_data: dict) -> str:
+    """
+    Thống kê Đầu Lô - Nhóm theo chữ số đầu (0-9)
+    
+    Logic:
+    1. Lấy tất cả lô 2 số từ các giải
+    2. Nhóm theo chữ số đầu
+    3. Sắp xếp chữ số đuôi trong mỗi nhóm
+    """
+    date = result_data.get("date", "")
+    if "prizes" in result_data:
+        prizes = result_data["prizes"]
+    else:
+        prizes = result_data
+    
+    # Thu thập tất cả lô 2 số
+    lo2_list = []
+    
+    # Danh sách giải cần xử lý (bao gồm cả G8 cho MN/MT)
+    prize_keys = ["DB", "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8"]
+    
+    for prize_key in prize_keys:
+        if prize_key in prizes and prizes[prize_key]:
+            for num in prizes[prize_key]:
+                if len(num) >= 2:
+                    lo2 = num[-2:]  # Lấy 2 số cuối
+                    lo2_list.append(lo2)
+    
+    # Nhóm theo đầu
+    dau_lo_dict = {i: [] for i in range(10)}
+    
+    for lo2 in lo2_list:
+        dau = int(lo2[0])  # Chữ số đầu
+        duoi = lo2[1]      # Chữ số đuôi
+        dau_lo_dict[dau].append(duoi)
+    
+    # Sắp xếp
+    for key in dau_lo_dict:
+        dau_lo_dict[key].sort()
+    
+    # Format message
+    message = "📊 <b>THỐNG KÊ ĐẦU LÔ</b>\n"
+    message += f"📅 Ngày: {date}\n\n"
+    
+    for i in range(10):
+        if dau_lo_dict[i]:
+            duoi_list = ','.join(dau_lo_dict[i])
+            message += f"🔢 <b>{i}</b> : {duoi_list}\n"
+        else:
+            message += f"🔢 <b>{i}</b> : không có\n"
+    
+    return message
+
+
+def format_duoi_lo(result_data: dict) -> str:
+    """
+    Thống kê Đuôi Lô - Nhóm theo chữ số đuôi (0-9)
+    
+    Logic:
+    1. Lấy tất cả lô 2 số từ các giải
+    2. Nhóm theo chữ số đuôi
+    3. Sắp xếp chữ số đầu trong mỗi nhóm
+    """
+    date = result_data.get("date", "")
+    if "prizes" in result_data:
+        prizes = result_data["prizes"]
+    else:
+        prizes = result_data
+    
+    # Thu thập tất cả lô 2 số
+    lo2_list = []
+    
+    prize_keys = ["DB", "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8"]
+    
+    for prize_key in prize_keys:
+        if prize_key in prizes and prizes[prize_key]:
+            for num in prizes[prize_key]:
+                if len(num) >= 2:
+                    lo2 = num[-2:]
+                    lo2_list.append(lo2)
+    
+    # Nhóm theo đuôi
+    duoi_lo_dict = {i: [] for i in range(10)}
+    
+    for lo2 in lo2_list:
+        dau = lo2[0]       # Chữ số đầu
+        duoi = int(lo2[1]) # Chữ số đuôi
+        duoi_lo_dict[duoi].append(dau)
+    
+    # Sắp xếp
+    for key in duoi_lo_dict:
+        duoi_lo_dict[key].sort()
+    
+    # Format message
+    message = "📊 <b>THỐNG KÊ ĐUÔI LÔ</b>\n"
+    message += f"📅 Ngày: {date}\n\n"
+    
+    for i in range(10):
+        if duoi_lo_dict[i]:
+            dau_list = ','.join(duoi_lo_dict[i])
+            message += f"🔢 <b>{i}</b> : {dau_list}\n"
+        else:
+            message += f"🔢 <b>{i}</b> : không có\n"
+    
+    return message
+
+
+# Legacy function - Keep for backward compatibility
+def format_lottery_result(result_data: dict, region: str = "MN") -> str:
+    """
+    Legacy formatter - Giữ để backward compatible
+    Redirect to new formatters
+    
+    DEBUG VERSION
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"🔍 format_lottery_result called: region={region}")
+    logger.info(f"🔍 result_data keys: {result_data.keys() if isinstance(result_data, dict) else 'NOT A DICT'}")
+    
+    if region == "MB":
+        logger.info("🔍 Calling format_result_mb_full()")
+        result = format_result_mb_full(result_data)
+        logger.info(f"🔍 MB result first 100 chars: {result[:100]}")
+        return result
+    else:
+        logger.info("🔍 Calling format_result_mn_mt_full()")
+        result = format_result_mn_mt_full(result_data)
+        logger.info(f"🔍 MN/MT result first 100 chars: {result[:100]}")
+        return result

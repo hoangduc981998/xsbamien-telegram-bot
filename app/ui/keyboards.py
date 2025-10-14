@@ -198,3 +198,38 @@ def get_schedule_back_button() -> InlineKeyboardMarkup:
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
+# ============= THÊM VÀO CUỐI FILE app/ui/keyboards.py =============
+
+def get_province_detail_menu(province_code: str) -> InlineKeyboardMarkup:
+    """
+    Menu chi tiết tỉnh với các nút phân loại kết quả
+    
+    Args:
+        province_code: Mã tỉnh (MB, TPHCM, DATH, etc.)
+    
+    Returns:
+        InlineKeyboardMarkup với 5 nút chức năng
+    
+    Buttons:
+    - 🎰 Kết Quả Đầy Đủ
+    - 🎯 Lô 2 Số | 🎲 Lô 3 Số
+    - 📊 Đầu Lô | 📈 Đuôi Lô
+    - ◀️ Quay Lại
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton("🎰 Kết Quả Đầy Đủ", callback_data=f"result_full_{province_code}"),
+        ],
+        [
+            InlineKeyboardButton("🎯 Lô 2 Số", callback_data=f"lo2_{province_code}"),
+            InlineKeyboardButton("🎲 Lô 3 Số", callback_data=f"lo3_{province_code}"),
+        ],
+        [
+            InlineKeyboardButton("📊 Đầu Lô", callback_data=f"daulo_{province_code}"),
+            InlineKeyboardButton("📈 Đuôi Lô", callback_data=f"duoilo_{province_code}"),
+        ],
+        [
+            InlineKeyboardButton("◀️ Quay Lại", callback_data="main_menu"),
+        ],
+    ]
+    return InlineKeyboardMarkup(keyboard)
