@@ -1,3 +1,4 @@
+
 """Unit tests for keyboard generation functions"""
 
 import pytest

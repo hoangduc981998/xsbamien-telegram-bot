@@ -6,6 +6,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 from app.config import PROVINCES, SCHEDULE
 
+from app.utils.cache import get_cached_schedule_day
 
 def get_main_menu_keyboard() -> InlineKeyboardMarkup:
     """Menu chính - Màn hình đầu tiên khi /start"""
@@ -117,7 +118,7 @@ def get_back_to_menu_keyboard() -> InlineKeyboardMarkup:
 def get_schedule_today_keyboard() -> InlineKeyboardMarkup:
     """Lịch quay hôm nay với quick access"""
     # Chuyển Python weekday (0=Mon) sang SCHEDULE format (0=Sun, 1=Mon...)
-    schedule_day = (datetime.now().weekday() + 1) % 7
+    schedule_day = get_cached_schedule_day()
 
     keyboard = []
 
@@ -180,7 +181,7 @@ def get_today_schedule_actions() -> InlineKeyboardMarkup:
         Keyboard với các nút tỉnh quay hôm nay và nút điều hướng
     """
     # Chuyển Python weekday (0=Mon) sang SCHEDULE format (0=Sun, 1=Mon...)
-    schedule_day = (datetime.now().weekday() + 1) % 7
+    schedule_day = get_cached_schedule_day()
     keyboard = []
 
     # Tạo nút cho TẤT CẢ các tỉnh quay hôm nay

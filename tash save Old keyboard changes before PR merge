@@ -1,0 +1,116 @@
+[1mdiff --git a/app/ui/keyboards.py b/app/ui/keyboards.py[m
+[1mindex 6bd552e..c3151e3 100644[m
+[1m--- a/app/ui/keyboards.py[m
+[1m+++ b/app/ui/keyboards.py[m
+[36m@@ -115,7 +115,7 @@[m [mdef get_back_to_menu_keyboard() -> InlineKeyboardMarkup:[m
+ [m
+ [m
+ def get_schedule_today_keyboard() -> InlineKeyboardMarkup:[m
+[31m-    """Lịch quay hôm nay với quick access"""[m
+[32m+[m[32m    """Lịch quay hôm nay với quick access - Tạo nút ĐỘNG dựa trên lịch thực tế"""[m
+     weekday = datetime.now().weekday()[m
+ [m
+     keyboard = [][m
+[36m@@ -124,20 +124,25 @@[m [mdef get_schedule_today_keyboard() -> InlineKeyboardMarkup:[m
+     for region in ["MB", "MT", "MN"]:[m
+         provinces_today = SCHEDULE[region].get(weekday, [])[m
+         if provinces_today:[m
+[31m-            row = [][m
+[31m-            for prov_key in provinces_today[:2]:  # Giới hạn 2 tỉnh/hàng[m
+[31m-                if prov_key in PROVINCES:[m
+[31m-                    emoji = PROVINCES[prov_key]["emoji"][m
+[31m-                    name = PROVINCES[prov_key]["name"][m
+[31m-                    display_name = name if len(name) <= 12 else name[:9] + "..."[m
+[31m-                    row.append([m
+[31m-                        InlineKeyboardButton([m
+[31m-                            f"{emoji} {display_name}",[m
+[31m-                            callback_data=f"province_{prov_key}",[m
+[31m-                        )[m
+[31m-                    )[m
+[31m-            if row:[m
+[31m-                keyboard.append(row)[m
+[32m+[m[32m            # Tạo nhiều hàng nếu có nhiều tỉnh (mỗi hàng 2 tỉnh)[m
+[32m+[m[32m            for i in range(0, len(provinces_today), 2):[m
+[32m+[m[32m                row = [][m
+[32m+[m[32m                for j in range(2):[m
+[32m+[m[32m                    idx = i + j[m
+[32m+[m[32m                    if idx < len(provinces_today):[m
+[32m+[m[32m                        prov_key = provinces_today[idx][m
+[32m+[m[32m                        if prov_key in PROVINCES:[m
+[32m+[m[32m                            emoji = PROVINCES[prov_key]["emoji"][m
+[32m+[m[32m                            name = PROVINCES[prov_key]["name"][m
+[32m+[m[32m                            display_name = name if len(name) <= 12 else name[:9] + "..."[m
+[32m+[m[32m                            row.append([m
+[32m+[m[32m                                InlineKeyboardButton([m
+[32m+[m[32m                                    f"{emoji} {display_name}",[m
+[32m+[m[32m                                    callback_data=f"province_{prov_key}",[m
+[32m+[m[32m                                )[m
+[32m+[m[32m                            )[m
+[32m+[m[32m                if row:[m
+[32m+[m[32m                    keyboard.append(row)[m
+ [m
+     keyboard.append([InlineKeyboardButton("◀️ Quay Lại", callback_data="main_menu")])[m
+ [m
+[36m@@ -168,20 +173,44 @@[m [mdef get_schedule_menu() -> InlineKeyboardMarkup:[m
+ [m
+ def get_today_schedule_actions() -> InlineKeyboardMarkup:[m
+     """[m
+[31m-    Action buttons sau khi xem lịch hôm nay[m
+[31m-[m
+[32m+[m[32m    ✅ FIX: Action buttons sau khi xem lịch hôm nay - TẠO NÚT ĐỘNG theo lịch thực tế[m
+[32m+[m[41m    [m
+     Returns:[m
+[31m-        Keyboard với nút xem kết quả và quay lại[m
+[32m+[m[32m        Keyboard với các tỉnh quay hôm nay và nút điều hướng[m
+     """[m
+[31m-    keyboard = [[m
+[31m-        [[m
+[31m-            InlineKeyboardButton("🎯 Xem Kết Quả Hôm Nay", callback_data="today"),[m
+[31m-        ],[m
+[31m-        [[m
+[31m-            InlineKeyboardButton("📅 Xem Lịch Cả Tuần", callback_data="schedule_week"),[m
+[31m-            InlineKeyboardButton("◀️ Quay Lại", callback_data="main_menu"),[m
+[31m-        ],[m
+[31m-    ][m
+[32m+[m[32m    weekday = datetime.now().weekday()[m
+[32m+[m[32m    keyboard = [][m
+[32m+[m
+[32m+[m[32m    # 🎯 Tạo nút cho các tỉnh quay hôm nay (giống get_schedule_today_keyboard)[m
+[32m+[m[32m    for region in ["MB", "MT", "MN"]:[m
+[32m+[m[32m        provinces_today = SCHEDULE[region].get(weekday, [])[m
+[32m+[m[32m        if provinces_today:[m
+[32m+[m[32m            # Tạo nhiều hàng nếu có nhiều tỉnh (mỗi hàng 2 tỉnh)[m
+[32m+[m[32m            for i in range(0, len(provinces_today), 2):[m
+[32m+[m[32m                row = [][m
+[32m+[m[32m                for j in range(2):[m
+[32m+[m[32m                    idx = i + j[m
+[32m+[m[32m                    if idx < len(provinces_today):[m
+[32m+[m[32m                        prov_key = provinces_today[idx][m
+[32m+[m[32m                        if prov_key in PROVINCES:[m
+[32m+[m[32m                            emoji = PROVINCES[prov_key]["emoji"][m
+[32m+[m[32m                            name = PROVINCES[prov_key]["name"][m
+[32m+[m[32m                            display_name = name if len(name) <= 12 else name[:9] + "..."[m
+[32m+[m[32m                            row.append([m
+[32m+[m[32m                                InlineKeyboardButton([m
+[32m+[m[32m                                    f"{emoji} {display_name}",[m
+[32m+[m[32m                                    callback_data=f"province_{prov_key}",[m
+[32m+[m[32m                                )[m
+[32m+[m[32m                            )[m
+[32m+[m[32m                if row:[m
+[32m+[m[32m                    keyboard.append(row)[m
+[32m+[m
+[32m+[m[32m    # Nút điều hướng[m
+[32m+[m[32m    keyboard.append([[m
+[32m+[m[32m        InlineKeyboardButton("📅 Xem Lịch Cả Tuần", callback_data="schedule_week"),[m
+[32m+[m[32m        InlineKeyboardButton("◀️ Quay Lại", callback_data="main_menu"),[m
+[32m+[m[32m    ])[m
+[32m+[m
+     return InlineKeyboardMarkup(keyboard)[m
+ [m
+ [m
+[36m@@ -237,3 +266,4 @@[m [mdef get_province_detail_menu(province_code: str) -> InlineKeyboardMarkup:[m
+         ],[m
+     ][m
+     return InlineKeyboardMarkup(keyboard)[m
+[41m+    [m
+\ No newline at end of file[m
