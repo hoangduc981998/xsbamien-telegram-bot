@@ -6,7 +6,8 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from app.config import PROVINCES
-from app.services.lottery_service import LotteryService  # ← THÊM IMPORT MỚI
+# Đã sửa: get_mock_lottery_result không cần thiết nữa nếu dùng LotteryService
+# from app.services.mock_data import get_mock_lottery_result 
 from app.ui.formatters import (
     format_dau_lo,
     format_duoi_lo,
@@ -19,9 +20,9 @@ from app.ui.formatters import (
     format_result_mn_mt_full,
 )
 from app.ui.keyboards import (
+    get_province_detail_keyboard,
     get_back_to_menu_keyboard,
     get_main_menu_keyboard,
-    get_province_detail_keyboard,
     get_province_detail_menu,
     get_region_menu_keyboard,
     get_schedule_back_button,
@@ -30,6 +31,10 @@ from app.ui.keyboards import (
     get_stats_menu_keyboard,
     get_today_schedule_actions,
 )
+
+# SỬA LỖI CÚ PHÁP Ở ĐÂY:
+# 1. Chỉ import các hàm và biến thực sự từ app.ui.messages
+# 2. Import LotteryService từ app.services.lottery_service (giả sử nó nằm ở đó)
 from app.ui.messages import (
     HELP_MESSAGE,
     WELCOME_MESSAGE,
@@ -38,16 +43,20 @@ from app.ui.messages import (
     get_today_schedule_message,
     get_tomorrow_schedule_message,
 )
+# Thêm import cho LotteryService
+from app.services.lottery_service import LotteryService
 
 logger = logging.getLogger(__name__)
 
-# ← KHỞI TẠO SERVICE
-lottery_service = LotteryService()
 
+# Initialize lottery service
+lottery_service = LotteryService()
 
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Xử lý tất cả callback queries từ inline buttons"""
     query = update.callback_query
+
+    # QUAN TRỌNG: Phản hồi ngay để button phản ứng nhanh
     await query.answer()
 
     callback_data = query.data
@@ -70,15 +79,15 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="HTML",
             )
 
-        # Lịch quay hôm nay
+        # Lịch quay hôm nay (OLD - giữ để backward compatible với keyboard cũ)
         elif callback_data == "today":
             message = get_today_schedule_message()
             await query.edit_message_text(message, reply_markup=get_schedule_today_keyboard(), parse_mode="HTML")
 
-        # Lịch quay trong tuần
+        # Lịch quay trong tuần - Hiển thị menu chọn
         elif callback_data == "schedule":
             await query.edit_message_text(
-                "📅 <b>Chọn Xem Lịch Quay</b>\n\nBạn muốn xem lịch của ngày nào?",
+                "📅 <b>Chọn Xem Lịch Quay</b>\n\n" "Bạn muốn xem lịch của ngày nào?",
                 reply_markup=get_schedule_menu(),
                 parse_mode="HTML",
             )
@@ -86,7 +95,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Quay lại menu lịch
         elif callback_data == "schedule_menu":
             await query.edit_message_text(
-                "📅 <b>Chọn Xem Lịch Quay</b>\n\nBạn muốn xem lịch của ngày nào?",
+                "📅 <b>Chọn Xem Lịch Quay</b>\n\n" "Bạn muốn xem lịch của ngày nào?",
                 reply_markup=get_schedule_menu(),
                 parse_mode="HTML",
             )
@@ -99,7 +108,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="HTML",
             )
 
-        # Lịch ngày mai
+        # Lịch ngày mai (động)
         elif callback_data == "schedule_tomorrow":
             await query.edit_message_text(
                 get_tomorrow_schedule_message(),
@@ -107,7 +116,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="HTML",
             )
 
-        # Lịch cả tuần
+        # Lịch cả tuần (static)
         elif callback_data == "schedule_week":
             await query.edit_message_text(
                 get_full_week_schedule_message(),
@@ -115,7 +124,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="HTML",
             )
 
-        # Chọn miền
+        # Chọn miền (region_MB, region_MT, region_MN)
         elif callback_data.startswith("region_"):
             region = callback_data.split("_")[1]
             message = get_region_message(region)
@@ -125,7 +134,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="HTML",
             )
 
-        # Chọn tỉnh
+        # Chọn tỉnh (province_TPHCM, province_DANA, etc.)
         elif callback_data.startswith("province_"):
             province_key = callback_data.split("_")[1]
 
@@ -140,24 +149,27 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     parse_mode="HTML",
                 )
 
-        # ✅ THAY ĐỔI: SỬ DỤNG API THẬT
+        # Kết quả tỉnh (result_TPHCM, result_DANA, etc.)
+        # Khối này bị ghi đè logic và không dùng format_lottery_result() nữa.
+        # Tôi sẽ đổi tên thành result_old_ để giữ lại logic nếu cần.
         elif callback_data.startswith("result_") and not callback_data.startswith("result_full_"):
             province_key = callback_data.split("_")[1]
 
-            # Hiển thị loading
-            await query.edit_message_text("⏳ Đang tải kết quả từ API...")
+            # Hiển thị loading trước
+            await query.edit_message_text("⏳ Đang tải kết quả...")
 
-            # ✅ GỌI API THẬT
+            # Lấy mock data (thay bằng service mới)
             result_data = await lottery_service.get_latest_result(province_key)
 
-            # Xác định region
+            # ✅ FIX: Kiểm tra nếu province_key chính là region
             if province_key in ["MB", "MT", "MN"]:
-                region = province_key
+                region = province_key  # ← Trực tiếp dùng làm region
             else:
+                # Lấy region từ PROVINCES
                 province = PROVINCES.get(province_key, {})
                 region = province.get("region", "MN")
 
-            logger.info(f"🔍 province_key={province_key}, region={region}")
+            logger.info(f"🔍 result_old_{province_key}, region={region}")
 
             # Format result
             formatted_result = format_lottery_result(result_data, region)
@@ -175,7 +187,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             await query.edit_message_text(message, reply_markup=get_stats_menu_keyboard(), parse_mode="HTML")
 
-        # Thống kê lô 2 số theo miền
+        # Thống kê lô 2 số theo miền (stats_MB_2digit, stats_MT_2digit, stats_MN_2digit)
         elif callback_data.startswith("stats_") and "_2digit" in callback_data:
             region = callback_data.split("_")[1]
             region_names = {"MB": "Miền Bắc", "MT": "Miền Trung", "MN": "Miền Nam"}
@@ -188,7 +200,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="HTML",
             )
 
-        # Thống kê lô 2 số theo tỉnh
+        # Thống kê lô 2 số theo tỉnh (stats2_TPHCM, etc.)
         elif callback_data.startswith("stats2_"):
             province_key = callback_data.split("_")[1]
             province = PROVINCES.get(province_key, {})
@@ -201,7 +213,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="HTML",
             )
 
-        # Thống kê lô 3 số theo tỉnh
+        # Thống kê lô 3 số theo tỉnh (stats3_TPHCM, etc.)
         elif callback_data.startswith("stats3_"):
             province_key = callback_data.split("_")[1]
             province = PROVINCES.get(province_key, {})
@@ -209,7 +221,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.edit_message_text(
                 f"📊 <b>Thống Kê Lô 3 Số - {province.get('name', '')}</b>\n\n"
                 "🚧 Tính năng đang được phát triển.\n"
-                "�� Sẽ sớm cập nhật trong phiên bản tiếp theo!",
+                "💡 Sẽ sớm cập nhật trong phiên bản tiếp theo!",
                 reply_markup=get_province_detail_keyboard(province_key),
                 parse_mode="HTML",
             )
@@ -234,7 +246,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="HTML",
             )
 
-        # Đăng ký nhắc nhở
+        # Đăng ký nhắc nhở (subscribe_TPHCM, etc.)
         elif callback_data.startswith("subscribe_"):
             province_key = callback_data.split("_")[1]
             province = PROVINCES.get(province_key, {})
@@ -250,15 +262,19 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="HTML",
             )
 
-        # ✅ KẾT QUẢ ĐẦY ĐỦ - DÙNG API
+        # ====== XỬ LÝ KẾT QUẢ ĐẦY ĐỦ ======
         elif callback_data.startswith("result_full_"):
             province_code = callback_data.replace("result_full_", "")
 
-            # ✅ GỌI API THẬT
+            # Lấy data
             result_data = await lottery_service.get_latest_result(province_code)
 
+            # ✅ THÊM DEBUG:
             logger.info(f"🔍 result_full_{province_code}")
             logger.info(f"🔍 result_data keys: {result_data.keys()}")
+            logger.info(f"🔍 Has G8? {'G8' in result_data}")
+            logger.info(f"🔍 Has G7? {'G7' in result_data}")
+            logger.info(f"🔍 Has DB? {'DB' in result_data}")
 
             # Format theo miền
             if province_code == "MB":
@@ -272,11 +288,10 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="HTML",
             )
 
-        # ✅ LÔ 2 SỐ - DÙNG API
+        # ====== XỬ LÝ LÔ 2 SỐ ======
         elif callback_data.startswith("lo2_"):
             province_code = callback_data.replace("lo2_", "")
 
-            # ✅ GỌI API THẬT
             result_data = await lottery_service.get_latest_result(province_code)
 
             # Format theo miền
@@ -291,11 +306,10 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="HTML",
             )
 
-        # ✅ LÔ 3 SỐ - DÙNG API
+        # ====== XỬ LÝ LÔ 3 SỐ ======
         elif callback_data.startswith("lo3_"):
             province_code = callback_data.replace("lo3_", "")
 
-            # ✅ GỌI API THẬT
             result_data = await lottery_service.get_latest_result(province_code)
 
             # Format theo miền
@@ -310,11 +324,10 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="HTML",
             )
 
-        # ✅ ĐẦU LÔ - DÙNG API
+        # ====== XỬ LÝ ĐẦU LÔ ======
         elif callback_data.startswith("daulo_"):
             province_code = callback_data.replace("daulo_", "")
 
-            # ✅ GỌI API THẬT
             result_data = await lottery_service.get_latest_result(province_code)
             message = format_dau_lo(result_data)
 
@@ -324,11 +337,10 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="HTML",
             )
 
-        # ✅ ĐUÔI LÔ - DÙNG API
+        # ====== XỬ LÝ ĐUÔI LÔ ======
         elif callback_data.startswith("duoilo_"):
             province_code = callback_data.replace("duoilo_", "")
 
-            # ✅ GỌI API THẬT
             result_data = await lottery_service.get_latest_result(province_code)
             message = format_duoi_lo(result_data)
 
@@ -338,7 +350,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="HTML",
             )
 
-        # Fallback
+        # Fallback cho các callback chưa xử lý
         else:
             await query.edit_message_text(
                 f"⚠️ Chức năng <code>{callback_data}</code> đang phát triển...",
