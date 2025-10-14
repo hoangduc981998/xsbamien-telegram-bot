@@ -14,7 +14,7 @@ MOCK_RESULTS = {
             "G5": ["2577", "2808", "3600", "1919", "4560", "2403"],
             "G6": ["039", "767", "147"],
             "G7": ["25", "42", "72", "87"],
-        }
+        },
     },
     "TPHCM": {
         "date": "13-10-2025",
@@ -29,7 +29,7 @@ MOCK_RESULTS = {
             "G2": ["65713"],
             "G1": ["83460"],
             "DB": ["167699"],
-        }
+        },
     },
     "DOTH": {
         "date": "13-10-2025",
@@ -44,7 +44,7 @@ MOCK_RESULTS = {
             "G2": ["87654"],
             "G1": ["76543"],
             "DB": ["654321"],
-        }
+        },
     },
     "CAMA": {
         "date": "13-10-2025",
@@ -59,7 +59,7 @@ MOCK_RESULTS = {
             "G2": ["12345"],
             "G1": ["67890"],
             "DB": ["234567"],
-        }
+        },
     },
     # Miền Trung
     "THTH": {
@@ -75,7 +75,7 @@ MOCK_RESULTS = {
             "G2": ["23456"],
             "G1": ["78901"],
             "DB": ["345678"],
-        }
+        },
     },
     "PHYE": {
         "date": "13-10-2025",
@@ -90,7 +90,7 @@ MOCK_RESULTS = {
             "G2": ["34567"],
             "G1": ["89012"],
             "DB": ["456789"],
-        }
+        },
     },
 }
 
@@ -98,16 +98,16 @@ MOCK_RESULTS = {
 def get_mock_result(province_code: str) -> dict:
     """
     Lấy mock result cho tỉnh
-    
+
     Args:
         province_code: Mã tỉnh (MB, TPHCM, etc.)
-    
+
     Returns:
         Dict chứa date, province_name, và prizes
     """
     if province_code in MOCK_RESULTS:
         return MOCK_RESULTS[province_code]
-    
+
     # Default fallback (nếu không có data)
     return {
         "date": "13-10-2025",
@@ -115,5 +115,5 @@ def get_mock_result(province_code: str) -> dict:
         "prizes": {
             "DB": ["12345"],
             "G1": ["67890"],
-        }
+        },
     }

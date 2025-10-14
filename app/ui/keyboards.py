@@ -1,7 +1,10 @@
 """Inline keyboards - Menu và nút bấm đẹp mắt"""
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from app.config import PROVINCES, SCHEDULE
+
 from datetime import datetime
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+from app.config import PROVINCES, SCHEDULE
 
 
 def get_main_menu_keyboard() -> InlineKeyboardMarkup:
@@ -29,13 +32,13 @@ def get_main_menu_keyboard() -> InlineKeyboardMarkup:
 def get_region_menu_keyboard(region: str) -> InlineKeyboardMarkup:
     """Menu chọn tỉnh/thành theo miền"""
     keyboard = []
-    
+
     # Lấy danh sách tỉnh theo miền
     provinces = [(k, v) for k, v in PROVINCES.items() if v["region"] == region]
-    
+
     # Sắp xếp theo tên
     provinces.sort(key=lambda x: x[1]["name"])
-    
+
     # Tạo nút 2 cột
     for i in range(0, len(provinces), 2):
         row = []
@@ -46,17 +49,12 @@ def get_region_menu_keyboard(region: str) -> InlineKeyboardMarkup:
                 name = province["name"]
                 # Rút gọn tên nếu quá dài
                 display_name = name if len(name) <= 15 else name[:12] + "..."
-                row.append(
-                    InlineKeyboardButton(
-                        f"{emoji} {display_name}",
-                        callback_data=f"province_{key}"
-                    )
-                )
+                row.append(InlineKeyboardButton(f"{emoji} {display_name}", callback_data=f"province_{key}"))
         keyboard.append(row)
-    
+
     # Nút quay lại
     keyboard.append([InlineKeyboardButton("◀️ Quay Lại", callback_data="main_menu")])
-    
+
     return InlineKeyboardMarkup(keyboard)
 
 
@@ -74,7 +72,10 @@ def get_province_detail_keyboard(province_key: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton("🔔 Đăng Ký Nhắc Nhở", callback_data=f"subscribe_{province_key}"),
         ],
         [
-            InlineKeyboardButton("◀️ Quay Lại", callback_data=f"region_{PROVINCES[province_key]['region']}"),
+            InlineKeyboardButton(
+                "◀️ Quay Lại",
+                callback_data=f"region_{PROVINCES[province_key]['region']}",
+            ),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -116,9 +117,9 @@ def get_back_to_menu_keyboard() -> InlineKeyboardMarkup:
 def get_schedule_today_keyboard() -> InlineKeyboardMarkup:
     """Lịch quay hôm nay với quick access"""
     weekday = datetime.now().weekday()
-    
+
     keyboard = []
-    
+
     # Thêm các tỉnh quay hôm nay cho từng miền
     for region in ["MB", "MT", "MN"]:
         provinces_today = SCHEDULE[region].get(weekday, [])
@@ -132,21 +133,21 @@ def get_schedule_today_keyboard() -> InlineKeyboardMarkup:
                     row.append(
                         InlineKeyboardButton(
                             f"{emoji} {display_name}",
-                            callback_data=f"province_{prov_key}"
+                            callback_data=f"province_{prov_key}",
                         )
                     )
             if row:
                 keyboard.append(row)
-    
+
     keyboard.append([InlineKeyboardButton("◀️ Quay Lại", callback_data="main_menu")])
-    
+
     return InlineKeyboardMarkup(keyboard)
 
 
 def get_schedule_menu() -> InlineKeyboardMarkup:
     """
     Menu lịch quay với 3 lựa chọn
-    
+
     Returns:
         Keyboard menu lịch quay
     """
@@ -168,7 +169,7 @@ def get_schedule_menu() -> InlineKeyboardMarkup:
 def get_today_schedule_actions() -> InlineKeyboardMarkup:
     """
     Action buttons sau khi xem lịch hôm nay
-    
+
     Returns:
         Keyboard với nút xem kết quả và quay lại
     """
@@ -187,7 +188,7 @@ def get_today_schedule_actions() -> InlineKeyboardMarkup:
 def get_schedule_back_button() -> InlineKeyboardMarkup:
     """
     Nút quay lại cho các màn hình lịch
-    
+
     Returns:
         Keyboard với nút quay lại menu lịch
     """
@@ -198,18 +199,21 @@ def get_schedule_back_button() -> InlineKeyboardMarkup:
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
+
+
 # ============= THÊM VÀO CUỐI FILE app/ui/keyboards.py =============
+
 
 def get_province_detail_menu(province_code: str) -> InlineKeyboardMarkup:
     """
     Menu chi tiết tỉnh với các nút phân loại kết quả
-    
+
     Args:
         province_code: Mã tỉnh (MB, TPHCM, DATH, etc.)
-    
+
     Returns:
         InlineKeyboardMarkup với 5 nút chức năng
-    
+
     Buttons:
     - 🎰 Kết Quả Đầy Đủ
     - 🎯 Lô 2 Số | 🎲 Lô 3 Số
