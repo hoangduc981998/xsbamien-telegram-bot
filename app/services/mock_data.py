@@ -8,66 +8,43 @@ from typing import Dict
 def get_mock_lottery_result(province_key: str) -> Dict:
     """
     Trả về kết quả xổ số giả (mock) cho demo
-
-    Args:
-        province_key: Mã tỉnh/thành (VD: "TPHCM", "MB", "DANA")
-
-    Returns:
-        Dict chứa kết quả các giải
-        - Miền Bắc: 27 giải (ĐB, G1-G7)
-        - Miền Nam/Trung: 18 giải (G8-ĐB, thứ tự ngược)
     """
     from app.data.mock_results import MOCK_RESULTS
     
-    # Lấy từ mock data file
+    # Return from MOCK_RESULTS if exists (already in correct format)
     if province_key in MOCK_RESULTS:
-        return MOCK_RESULTS[province_key]
+        result = MOCK_RESULTS[province_key]
+        # Ensure flat structure (unwrap 'prizes' if nested)
+        if 'prizes' in result and isinstance(result['prizes'], dict):
+            # Flatten: move prizes content to top level
+            flat_result = {
+                'date': result.get('date'),
+                'province': result.get('province_name', result.get('province', province_key))
+            }
+            flat_result.update(result['prizes'])
+            return flat_result
+        return result
     
-    # Fallback: Generate random nếu không có trong MOCK_RESULTS
+    # Fallback: Generate random
     from datetime import datetime
     import random
     
     random.seed(hash(province_key + datetime.now().strftime("%Y%m%d")))
     
-    # Xác định miền
-    from app.config import PROVINCES
-    region = None
-    for prov in PROVINCES:
-        if prov['key'] == province_key:
-            region = prov['region']
-            break
-    
-    if not region:
-        region = "MN"  # Default
-    
-    # Generate theo region
+    # Default to MN region
     result = {
         "date": datetime.now().strftime("%d/%m/%Y"),
-        "province": province_key
+        "province": province_key,
+        "G8": [f"{random.randint(0, 99):02d}"],
+        "G7": [f"{random.randint(0, 999):03d}"],
+        "G6": [f"{random.randint(0, 9999):04d}" for _ in range(3)],
+        "G5": [f"{random.randint(0, 9999):04d}"],
+        "G4": [f"{random.randint(0, 99999):05d}" for _ in range(7)],
+        "G3": [f"{random.randint(0, 99999):05d}" for _ in range(2)],
+        "G2": [f"{random.randint(0, 99999):05d}"],
+        "G1": [f"{random.randint(0, 99999):05d}"],
+        "DB": [f"{random.randint(0, 999999):06d}"]
     }
-    
-    if region == "MB":
-        # Miền Bắc: 27 giải
-        result["DB"] = f"{random.randint(0, 99999):05d}"
-        result["G1"] = f"{random.randint(0, 99999):05d}"
-        result["G2"] = [f"{random.randint(0, 99999):05d}" for _ in range(2)]
-        result["G3"] = [f"{random.randint(0, 9999):04d}" for _ in range(6)]
-        result["G4"] = [f"{random.randint(0, 9999):04d}" for _ in range(4)]
-        result["G5"] = [f"{random.randint(0, 9999):04d}" for _ in range(6)]
-        result["G6"] = [f"{random.randint(0, 999):03d}" for _ in range(3)]
-        result["G7"] = [f"{random.randint(0, 99):02d}" for _ in range(4)]
-    else:
-        # Miền Nam/Trung: 18 giải
-        result["G8"] = [f"{random.randint(0, 99):02d}"]
-        result["G7"] = [f"{random.randint(0, 999):03d}"]
-        result["G6"] = [f"{random.randint(0, 9999):04d}" for _ in range(3)]
-        result["G5"] = [f"{random.randint(0, 9999):04d}"]
-        result["G4"] = [f"{random.randint(0, 99999):05d}" for _ in range(7)]
-        result["G3"] = [f"{random.randint(0, 99999):05d}" for _ in range(2)]
-        result["G2"] = [f"{random.randint(0, 99999):05d}"]
-        result["G1"] = [f"{random.randint(0, 99999):05d}"]
-        result["DB"] = [f"{random.randint(0, 999999):06d}"]
-    
     return result
 
 
