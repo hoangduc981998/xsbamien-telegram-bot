@@ -116,28 +116,34 @@ def get_back_to_menu_keyboard() -> InlineKeyboardMarkup:
 
 def get_schedule_today_keyboard() -> InlineKeyboardMarkup:
     """Lịch quay hôm nay với quick access"""
-    weekday = datetime.now().weekday()
+    # Chuyển Python weekday (0=Mon) sang SCHEDULE format (0=Sun, 1=Mon...)
+    schedule_day = (datetime.now().weekday() + 1) % 7
 
     keyboard = []
 
     # Thêm các tỉnh quay hôm nay cho từng miền
     for region in ["MB", "MT", "MN"]:
-        provinces_today = SCHEDULE[region].get(weekday, [])
+        provinces_today = SCHEDULE[region].get(schedule_day, [])
         if provinces_today:
-            row = []
-            for prov_key in provinces_today[:2]:  # Giới hạn 2 tỉnh/hàng
-                if prov_key in PROVINCES:
-                    emoji = PROVINCES[prov_key]["emoji"]
-                    name = PROVINCES[prov_key]["name"]
-                    display_name = name if len(name) <= 12 else name[:9] + "..."
-                    row.append(
-                        InlineKeyboardButton(
-                            f"{emoji} {display_name}",
-                            callback_data=f"province_{prov_key}",
-                        )
-                    )
-            if row:
-                keyboard.append(row)
+            # Tạo nhiều hàng nếu có nhiều tỉnh (mỗi hàng 2 tỉnh)
+            for i in range(0, len(provinces_today), 2):
+                row = []
+                for j in range(2):
+                    idx = i + j
+                    if idx < len(provinces_today):
+                        prov_key = provinces_today[idx]
+                        if prov_key in PROVINCES:
+                            emoji = PROVINCES[prov_key]["emoji"]
+                            name = PROVINCES[prov_key]["name"]
+                            display_name = name if len(name) <= 12 else name[:9] + "..."
+                            row.append(
+                                InlineKeyboardButton(
+                                    f"{emoji} {display_name}",
+                                    callback_data=f"province_{prov_key}",
+                                )
+                            )
+                if row:
+                    keyboard.append(row)
 
     keyboard.append([InlineKeyboardButton("◀️ Quay Lại", callback_data="main_menu")])
 
@@ -168,20 +174,45 @@ def get_schedule_menu() -> InlineKeyboardMarkup:
 
 def get_today_schedule_actions() -> InlineKeyboardMarkup:
     """
-    Action buttons sau khi xem lịch hôm nay
+    Tạo nút ĐỘNG dựa trên lịch quay thực tế của ngày hôm nay
 
     Returns:
-        Keyboard với nút xem kết quả và quay lại
+        Keyboard với các nút tỉnh quay hôm nay và nút điều hướng
     """
-    keyboard = [
-        [
-            InlineKeyboardButton("🎯 Xem Kết Quả Hôm Nay", callback_data="today"),
-        ],
-        [
-            InlineKeyboardButton("📅 Xem Lịch Cả Tuần", callback_data="schedule_week"),
-            InlineKeyboardButton("◀️ Quay Lại", callback_data="main_menu"),
-        ],
-    ]
+    # Chuyển Python weekday (0=Mon) sang SCHEDULE format (0=Sun, 1=Mon...)
+    schedule_day = (datetime.now().weekday() + 1) % 7
+    keyboard = []
+
+    # Tạo nút cho TẤT CẢ các tỉnh quay hôm nay
+    for region in ["MB", "MT", "MN"]:
+        provinces_today = SCHEDULE[region].get(schedule_day, [])
+        if provinces_today:
+            # Tạo nhiều hàng nếu có nhiều tỉnh (mỗi hàng 2 tỉnh)
+            for i in range(0, len(provinces_today), 2):
+                row = []
+                for j in range(2):
+                    idx = i + j
+                    if idx < len(provinces_today):
+                        prov_key = provinces_today[idx]
+                        if prov_key in PROVINCES:
+                            emoji = PROVINCES[prov_key]["emoji"]
+                            name = PROVINCES[prov_key]["name"]
+                            display_name = name if len(name) <= 12 else name[:9] + "..."
+                            row.append(
+                                InlineKeyboardButton(
+                                    f"{emoji} {display_name}",
+                                    callback_data=f"province_{prov_key}",
+                                )
+                            )
+                if row:
+                    keyboard.append(row)
+
+    # Nút điều hướng
+    keyboard.append([
+        InlineKeyboardButton("📅 Xem Lịch Cả Tuần", callback_data="schedule_week"),
+        InlineKeyboardButton("◀️ Quay Lại", callback_data="main_menu"),
+    ])
+
     return InlineKeyboardMarkup(keyboard)
 
 
