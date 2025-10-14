@@ -309,3 +309,19 @@ Dự án này được phân phối dưới giấy phép MIT. Xem file `LICENSE`
 Made with ❤️ for Vietnamese Lottery Community
 
 </div>
+## 📸 Screenshots
+
+### Main Menu
+![Main Menu](docs/screenshots/main-menu.png)
+
+### Miền Bắc Results
+![MB Results](docs/screenshots/mb-results.png)
+
+### Lô 2 Số
+![Lo 2](docs/screenshots/lo2.png)
+
+### Features Demo
+- ✅ Real-time lottery results
+- ✅ Statistical analysis
+- ✅ User-friendly interface
+- ✅ Support for all 63 provinces
