@@ -13,7 +13,12 @@ def format_result_mb_full(result_data: dict) -> str:
         Message formatted với HTML
     """
     date = result_data.get("date", "")
-    prizes = result_data.get("prizes", {})
+    
+    # ✅ FIX: Lấy prizes trực tiếp từ result_data nếu không có key "prizes"
+    if "prizes" in result_data:
+        prizes = result_data["prizes"]
+    else:
+        prizes = result_data  # Mock data có G1, G2, ... trực tiếp trong root
     
     message = "🎰 <b>KẾT QUẢ XỔ SỐ MIỀN BẮC 27 GIẢI</b>\n"
     message += f"📅 Ngày: {date}\n\n"
@@ -65,8 +70,13 @@ def format_result_mn_mt_full(result_data: dict) -> str:
         Message formatted với HTML
     """
     date = result_data.get("date", "")
-    prizes = result_data.get("prizes", {})
-    province_name = result_data.get("province_name", "MIỀN NAM")
+    province_name = result_data.get("province", "MIỀN NAM")  # ← Sửa "province_name" thành "province"
+    
+    # ✅ FIX: Lấy prizes trực tiếp từ result_data
+    if "prizes" in result_data:
+        prizes = result_data["prizes"]
+    else:
+        prizes = result_data
     
     message = f"🎰 <b>KẾT QUẢ XỔ SỐ {province_name.upper()} 18 GIẢI</b>\n"
     message += f"📅 Ngày: {date}\n\n"
@@ -121,7 +131,10 @@ def format_lo_2_so_mb(result_data: dict) -> str:
     - G7 (2 số): Giữ nguyên (đã là 2 số)
     """
     date = result_data.get("date", "")
-    prizes = result_data.get("prizes", {})
+    if "prizes" in result_data:
+        prizes = result_data["prizes"]
+    else:
+        prizes = result_data
     
     message = "🎯 <b>KẾT QUẢ LÔ 2 SỐ</b>\n"
     message += f"📅 Ngày: {date}\n\n"
@@ -174,8 +187,11 @@ def format_lo_2_so_mn_mt(result_data: dict) -> str:
     Thứ tự: G8 → ĐB
     """
     date = result_data.get("date", "")
-    prizes = result_data.get("prizes", {})
-    
+    if "prizes" in result_data:
+        prizes = result_data["prizes"]
+    else:
+        prizes = result_data
+
     message = "🎯 <b>KẾT QUẢ LÔ 2 SỐ</b>\n"
     message += f"📅 Ngày: {date}\n\n"
     
@@ -233,7 +249,10 @@ def format_lo_3_so_mb(result_data: dict) -> str:
     G7 không có (chỉ 2 số)
     """
     date = result_data.get("date", "")
-    prizes = result_data.get("prizes", {})
+    if "prizes" in result_data:
+        prizes = result_data["prizes"]
+    else:
+        prizes = result_data
     
     message = "🎯 <b>KẾT QUẢ LÔ 3 SỐ</b>\n"
     message += f"📅 Ngày: {date}\n\n"
@@ -285,7 +304,10 @@ def format_lo_3_so_mn_mt(result_data: dict) -> str:
     Thứ tự: G8 → ĐB
     """
     date = result_data.get("date", "")
-    prizes = result_data.get("prizes", {})
+    if "prizes" in result_data:
+        prizes = result_data["prizes"]
+    else:
+        prizes = result_data
     
     message = "🎯 <b>KẾT QUẢ LÔ 3 SỐ</b>\n"
     message += f"📅 Ngày: {date}\n\n"
@@ -345,7 +367,10 @@ def format_dau_lo(result_data: dict) -> str:
     3. Sắp xếp chữ số đuôi trong mỗi nhóm
     """
     date = result_data.get("date", "")
-    prizes = result_data.get("prizes", {})
+    if "prizes" in result_data:
+        prizes = result_data["prizes"]
+    else:
+        prizes = result_data
     
     # Thu thập tất cả lô 2 số
     lo2_list = []
@@ -396,7 +421,10 @@ def format_duoi_lo(result_data: dict) -> str:
     3. Sắp xếp chữ số đầu trong mỗi nhóm
     """
     date = result_data.get("date", "")
-    prizes = result_data.get("prizes", {})
+    if "prizes" in result_data:
+        prizes = result_data["prizes"]
+    else:
+        prizes = result_data
     
     # Thu thập tất cả lô 2 số
     lo2_list = []
@@ -441,8 +469,22 @@ def format_lottery_result(result_data: dict, region: str = "MN") -> str:
     """
     Legacy formatter - Giữ để backward compatible
     Redirect to new formatters
+    
+    DEBUG VERSION
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"🔍 format_lottery_result called: region={region}")
+    logger.info(f"🔍 result_data keys: {result_data.keys() if isinstance(result_data, dict) else 'NOT A DICT'}")
+    
     if region == "MB":
-        return format_result_mb_full(result_data)
+        logger.info("🔍 Calling format_result_mb_full()")
+        result = format_result_mb_full(result_data)
+        logger.info(f"🔍 MB result first 100 chars: {result[:100]}")
+        return result
     else:
-        return format_result_mn_mt_full(result_data)
+        logger.info("🔍 Calling format_result_mn_mt_full()")
+        result = format_result_mn_mt_full(result_data)
+        logger.info(f"🔍 MN/MT result first 100 chars: {result[:100]}")
+        return result

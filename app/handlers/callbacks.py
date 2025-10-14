@@ -4,11 +4,13 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from app.ui.keyboards import (
-    get_main_menu,
-    get_region_menu,
+    get_main_menu_keyboard,
+    get_region_menu_keyboard,
+    get_province_detail_keyboard,    # ← THÊM DÒNG NÀY
     get_province_detail_menu,
-    get_stats_menu,
-    get_back_button,
+    get_province_detail_keyboard,
+    get_stats_menu_keyboard,
+    get_back_to_menu_keyboard,
     get_schedule_today_keyboard,
     get_schedule_menu,
     get_today_schedule_actions,
@@ -25,7 +27,6 @@ from app.ui.messages import (
 )
 from app.ui.formatters import (
     format_lottery_result,
-    format_statistics,
     format_result_mb_full,
     format_result_mn_mt_full,
     format_lo_2_so_mb,
@@ -149,7 +150,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
         
         # Kết quả tỉnh (result_TPHCM, result_DANA, etc.)
-        elif callback_data.startswith("result_"):
+        elif callback_data.startswith("result_") and not callback_data.startswith("result_full_"):
             province_key = callback_data.split("_")[1]
             
             # Hiển thị loading trước
@@ -157,7 +158,19 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
             # Lấy mock data
             result_data = get_mock_lottery_result(province_key)
-            formatted_result = format_lottery_result(province_key, result_data)
+            
+            # ✅ FIX: Kiểm tra nếu province_key chính là region
+            if province_key in ["MB", "MT", "MN"]:
+                region = province_key  # ← Trực tiếp dùng làm region
+            else:
+                # Lấy region từ PROVINCES
+                province = PROVINCES.get(province_key, {})
+                region = province.get("region", "MN")
+            
+            logger.info(f"🔍 province_key={province_key}, region={region}")
+            
+            # Format result
+            formatted_result = format_lottery_result(result_data, region)
             
             await query.edit_message_text(
                 formatted_result,
@@ -179,14 +192,12 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Thống kê lô 2 số theo miền (stats_MB_2digit, stats_MT_2digit, stats_MN_2digit)
         elif callback_data.startswith("stats_") and "_2digit" in callback_data:
             region = callback_data.split("_")[1]
-            
-            await query.edit_message_text("⏳ Đang tải thống kê...")
-            
-            stats_data = get_mock_stats_2digit(region)
-            formatted_stats = format_stats_2digit(region, stats_data)
+            region_names = {"MB": "Miền Bắc", "MT": "Miền Trung", "MN": "Miền Nam"}
             
             await query.edit_message_text(
-                formatted_stats,
+                f"📊 <b>Thống Kê Lô 2 Số - {region_names.get(region, region)}</b>\n\n"
+                "🚧 Tính năng đang được phát triển.\n"
+                "💡 Sẽ sớm cập nhật trong phiên bản tiếp theo!",
                 reply_markup=get_back_to_menu_keyboard(),
                 parse_mode="HTML"
             )
@@ -195,15 +206,11 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif callback_data.startswith("stats2_"):
             province_key = callback_data.split("_")[1]
             province = PROVINCES.get(province_key, {})
-            region = province.get("region", "MN")
-            
-            await query.edit_message_text("⏳ Đang tải thống kê...")
-            
-            stats_data = get_mock_stats_2digit(region)
-            formatted_stats = format_stats_2digit(region, stats_data)
             
             await query.edit_message_text(
-                formatted_stats,
+                f"📊 <b>Thống Kê Lô 2 Số - {province.get('name', '')}</b>\n\n"
+                "🚧 Tính năng đang được phát triển.\n"
+                "💡 Sẽ sớm cập nhật trong phiên bản tiếp theo!",
                 reply_markup=get_province_detail_keyboard(province_key),
                 parse_mode="HTML"
             )
@@ -211,39 +218,32 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Thống kê lô 3 số theo tỉnh (stats3_TPHCM, etc.)
         elif callback_data.startswith("stats3_"):
             province_key = callback_data.split("_")[1]
-            
-            await query.edit_message_text("⏳ Đang tải thống kê...")
-            
-            stats_data = get_mock_stats_3digit(province_key)
-            formatted_stats = format_stats_3digit(province_key, stats_data)
+            province = PROVINCES.get(province_key, {})
             
             await query.edit_message_text(
-                formatted_stats,
+                f"📊 <b>Thống Kê Lô 3 Số - {province.get('name', '')}</b>\n\n"
+                "🚧 Tính năng đang được phát triển.\n"
+                "💡 Sẽ sớm cập nhật trong phiên bản tiếp theo!",
                 reply_markup=get_province_detail_keyboard(province_key),
                 parse_mode="HTML"
             )
         
         # Thống kê đầu-đuôi
         elif callback_data == "stats_headtail":
-            await query.edit_message_text("⏳ Đang tải thống kê...")
-            
-            formatted_stats = format_head_tail()
-            
             await query.edit_message_text(
-                formatted_stats,
+                "📊 <b>Thống Kê Đầu-Đuôi Giải Đặc Biệt</b>\n\n"
+                "🚧 Tính năng đang được phát triển.\n"
+                "💡 Sẽ sớm cập nhật trong phiên bản tiếp theo!",
                 reply_markup=get_back_to_menu_keyboard(),
                 parse_mode="HTML"
             )
         
         # Lô gan
         elif callback_data == "stats_gan":
-            await query.edit_message_text("⏳ Đang tải thống kê...")
-            
-            # Mặc định hiển thị Miền Nam
-            formatted_stats = format_gan("MN")
-            
             await query.edit_message_text(
-                formatted_stats,
+                "📊 <b>Thống Kê Lô Gan (Lâu Về)</b>\n\n"
+                "🚧 Tính năng đang được phát triển.\n"
+                "💡 Sẽ sớm cập nhật trong phiên bản tiếp theo!",
                 reply_markup=get_back_to_menu_keyboard(),
                 parse_mode="HTML"
             )

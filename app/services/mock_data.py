@@ -12,70 +12,127 @@ def get_mock_lottery_result(province_key: str) -> Dict:
         province_key: Mã tỉnh/thành (VD: "TPHCM", "MB", "DANA")
     
     Returns:
-        Dict chứa kết quả các giải từ G8→ĐB
+        Dict chứa kết quả các giải
+        - Miền Bắc: 27 giải (ĐB, G1-G7)
+        - Miền Nam/Trung: 18 giải (G8-ĐB, thứ tự ngược)
     """
     # Seed để có kết quả nhất quán cho mỗi tỉnh
     random.seed(hash(province_key + datetime.now().strftime("%Y%m%d")))
     
-    result = {
-        "date": datetime.now().strftime("%d/%m/%Y"),
-        "province": province_key,
-        
-        # Giải đặc biệt (6 số)
-        "DB": str(random.randint(100000, 999999)),
-        
-        # Giải nhất (5 số)
-        "G1": str(random.randint(10000, 99999)),
-        
-        # Giải nhì (2 số 5 chữ số)
-        "G2": [
-            str(random.randint(10000, 99999)),
-            str(random.randint(10000, 99999)),
-        ],
-        
-        # Giải ba (6 số 5 chữ số)
-        "G3": [
-            str(random.randint(10000, 99999)),
-            str(random.randint(10000, 99999)),
-            str(random.randint(10000, 99999)),
-            str(random.randint(10000, 99999)),
-            str(random.randint(10000, 99999)),
-            str(random.randint(10000, 99999)),
-        ],
-        
-        # Giải tư (4 số 4 chữ số)
-        "G4": [
-            str(random.randint(1000, 9999)),
-            str(random.randint(1000, 9999)),
-            str(random.randint(1000, 9999)),
-            str(random.randint(1000, 9999)),
-        ],
-        
-        # Giải năm (6 số 4 chữ số)
-        "G5": [
-            str(random.randint(1000, 9999)),
-            str(random.randint(1000, 9999)),
-            str(random.randint(1000, 9999)),
-            str(random.randint(1000, 9999)),
-            str(random.randint(1000, 9999)),
-            str(random.randint(1000, 9999)),
-        ],
-        
-        # Giải sáu (3 số 3 chữ số)
-        "G6": [
-            str(random.randint(100, 999)),
-            str(random.randint(100, 999)),
-            str(random.randint(100, 999)),
-        ],
-        
-        # Giải bảy (4 số 2 chữ số)
-        "G7": [
-            str(random.randint(10, 99)),
-            str(random.randint(10, 99)),
-            str(random.randint(10, 99)),
-            str(random.randint(10, 99)),
-        ],
-    }
+    # Xác định miền dựa vào province_key
+    from app.config import PROVINCES
+    province_info = PROVINCES.get(province_key, {})
+    region = province_info.get("region", "MN")
+    
+    if region == "MB":
+        # ========== MIỀN BẮC: 27 GIẢI ==========
+        result = {
+            "date": datetime.now().strftime("%d/%m/%Y"),
+            "province": province_info.get("name", "Miền Bắc"),
+            
+            # Đặc biệt (1 số, 5 chữ số)
+            "DB": [str(random.randint(10000, 99999))],
+            
+            # Giải Nhất (1 số, 5 chữ số)
+            "G1": [str(random.randint(10000, 99999))],
+            
+            # Giải Nhì (2 số, 5 chữ số)
+            "G2": [
+                str(random.randint(10000, 99999)),
+                str(random.randint(10000, 99999)),
+            ],
+            
+            # Giải Ba (6 số, 5 chữ số)
+            "G3": [
+                str(random.randint(10000, 99999)),
+                str(random.randint(10000, 99999)),
+                str(random.randint(10000, 99999)),
+                str(random.randint(10000, 99999)),
+                str(random.randint(10000, 99999)),
+                str(random.randint(10000, 99999)),
+            ],
+            
+            # Giải Tư (4 số, 4 chữ số)
+            "G4": [
+                str(random.randint(1000, 9999)),
+                str(random.randint(1000, 9999)),
+                str(random.randint(1000, 9999)),
+                str(random.randint(1000, 9999)),
+            ],
+            
+            # Giải Năm (6 số, 4 chữ số)
+            "G5": [
+                str(random.randint(1000, 9999)),
+                str(random.randint(1000, 9999)),
+                str(random.randint(1000, 9999)),
+                str(random.randint(1000, 9999)),
+                str(random.randint(1000, 9999)),
+                str(random.randint(1000, 9999)),
+            ],
+            
+            # Giải Sáu (3 số, 3 chữ số)
+            "G6": [
+                str(random.randint(100, 999)),
+                str(random.randint(100, 999)),
+                str(random.randint(100, 999)),
+            ],
+            
+            # Giải Bảy (4 số, 2 chữ số)
+            "G7": [
+                str(random.randint(10, 99)),
+                str(random.randint(10, 99)),
+                str(random.randint(10, 99)),
+                str(random.randint(10, 99)),
+            ],
+        }
+    else:
+        # ========== MIỀN NAM/TRUNG: 18 GIẢI ==========
+        result = {
+            "date": datetime.now().strftime("%d/%m/%Y"),
+            "province": province_info.get("name", province_key),
+            
+            # Giải Tám (1 số, 2 chữ số) ← BỊ THIẾU!
+            "G8": [str(random.randint(10, 99))],
+            
+            # Giải Bảy (1 số, 3 chữ số)
+            "G7": [str(random.randint(100, 999))],
+            
+            # Giải Sáu (3 số, 4 chữ số) ← SỬA: 3 số x 4 chữ số
+            "G6": [
+                str(random.randint(1000, 9999)),
+                str(random.randint(1000, 9999)),
+                str(random.randint(1000, 9999)),
+            ],
+            
+            # Giải Năm (1 số, 4 chữ số)
+            "G5": [str(random.randint(1000, 9999))],
+            
+            # Giải Tư (7 số, 5 chữ số) ← SỬA: 7 số!
+            "G4": [
+                str(random.randint(10000, 99999)),
+                str(random.randint(10000, 99999)),
+                str(random.randint(10000, 99999)),
+                str(random.randint(10000, 99999)),
+                str(random.randint(10000, 99999)),
+                str(random.randint(10000, 99999)),
+                str(random.randint(10000, 99999)),
+            ],
+            
+            # Giải Ba (2 số, 5 chữ số) ← SỬA: Chỉ 2 số!
+            "G3": [
+                str(random.randint(10000, 99999)),
+                str(random.randint(10000, 99999)),
+            ],
+            
+            # Giải Nhì (1 số, 5 chữ số)
+            "G2": [str(random.randint(10000, 99999))],
+            
+            # Giải Nhất (1 số, 5 chữ số)
+            "G1": [str(random.randint(10000, 99999))],
+            
+            # Đặc Biệt (1 số, 6 chữ số)
+            "DB": [str(random.randint(100000, 999999))],
+        }
     
     return result
 
