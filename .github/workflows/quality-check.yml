@@ -1,0 +1,35 @@
+name: Code Quality Check
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install black isort flake8
+          pip install -r requirements.txt
+      
+      - name: Check formatting with black
+        run: black --check app/ --line-length 120
+      
+      - name: Check imports with isort
+        run: isort --check-only app/ --profile black
+      
+      - name: Lint with flake8
+        run: flake8 app/ --max-line-length=120 --exclude=__pycache__
+      
+      - name: Run syntax check
+        run: python -m py_compile app/**/*.py
