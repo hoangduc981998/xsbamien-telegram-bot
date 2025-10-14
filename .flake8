@@ -1,0 +1,13 @@
+[flake8]
+max-line-length = 120
+exclude = 
+    __pycache__,
+    venv,
+    env,
+    .git,
+    *.pyc
+
+# Ignore specific rules in specific files
+per-file-ignores =
+    # callbacks.py has 3 long but readable lines
+    app/handlers/callbacks.py:E501

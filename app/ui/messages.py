@@ -29,7 +29,7 @@ HELP_MESSAGE = """
 /start - Khởi động bot, hiển thị menu
 /help - Xem hướng dẫn này
 /mb - Kết quả Miền Bắc hôm nay
-/mt - Kết quả Miền Trung hôm nay  
+/mt - Kết quả Miền Trung hôm nay
 /mn - Kết quả Miền Nam hôm nay
 
 <b>🎯 Cách Sử Dụng:</b>

@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 """Result formatters - Format kết quả xổ số với các kiểu hiển thị khác nhau"""
 
 

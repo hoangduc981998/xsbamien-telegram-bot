@@ -27,7 +27,6 @@ def get_mock_lottery_result(province_key: str) -> Dict:
 
     # Fallback: Generate random
     import random
-    from datetime import datetime
 
     random.seed(hash(province_key + datetime.now().strftime("%Y%m%d")))
 
