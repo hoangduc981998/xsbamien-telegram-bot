@@ -1,5 +1,5 @@
 import os
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 # Telegram Configuration
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
@@ -29,7 +29,6 @@ DRAW_TIMES = {
 PROVINCES = {
     # Miền Bắc
     "MB": {"name": "Miền Bắc", "code": "miba", "region": "MB", "emoji": "🔴"},
-    
     # Miền Nam (21 tỉnh)
     "TPHCM": {"name": "TP. Hồ Chí Minh", "code": "tphc", "region": "MN", "emoji": "🏙️"},
     "BALI": {"name": "Bạc Liêu", "code": "bali", "region": "MN", "emoji": "📍"},
@@ -52,7 +51,6 @@ PROVINCES = {
     "TRVI": {"name": "Trà Vinh", "code": "trvi", "region": "MN", "emoji": "📍"},
     "VILO": {"name": "Vĩnh Long", "code": "vilo", "region": "MN", "emoji": "📍"},
     "VUTA": {"name": "Vũng Tàu", "code": "vuta", "region": "MN", "emoji": "📍"},
-    
     # Miền Trung (14 tỉnh)
     "DANA": {"name": "Đà Nẵng", "code": "dana", "region": "MT", "emoji": "📍"},
     "BIDI": {"name": "Bình Định", "code": "bidi", "region": "MT", "emoji": "📍"},
@@ -75,10 +73,10 @@ SCHEDULE = {
     "MN": {
         0: ["TIGI", "KIGI", "DALAT"],  # Chủ nhật
         1: ["TPHCM", "DOTH", "CAMA"],  # Thứ 2
-        2: ["BETR", "VUTA", "BALI"],   # Thứ 3
-        3: ["DONA", "CATH", "SOTR"],   # Thứ 4
-        4: ["TANI", "ANGI", "BITH"],   # Thứ 5
-        5: ["VILO", "BIDU", "TRVI"],   # Thứ 6
+        2: ["BETR", "VUTA", "BALI"],  # Thứ 3
+        3: ["DONA", "CATH", "SOTR"],  # Thứ 4
+        4: ["TANI", "ANGI", "BITH"],  # Thứ 5
+        5: ["VILO", "BIDU", "TRVI"],  # Thứ 6
         6: ["TPHCM", "LOAN", "BIPH", "HAGI"],  # Thứ 7
     },
     "MT": {
@@ -91,17 +89,24 @@ SCHEDULE = {
         6: ["DANA", "QUNG", "DANO"],
     },
     "MB": {
-        0: ["MB"], 1: ["MB"], 2: ["MB"], 3: ["MB"],
-        4: ["MB"], 5: ["MB"], 6: ["MB"],  # Hàng ngày
-    }
+        0: ["MB"],
+        1: ["MB"],
+        2: ["MB"],
+        3: ["MB"],
+        4: ["MB"],
+        5: ["MB"],
+        6: ["MB"],  # Hàng ngày
+    },
 }
 
-def get_province_by_code(code: str) -> Dict:
+
+def get_province_by_code(code: str) -> Optional[Dict]:
     """Lấy thông tin tỉnh theo code"""
     for key, value in PROVINCES.items():
         if value["code"] == code.lower():
             return value
     return None
+
 
 def get_provinces_by_region(region: str) -> List[Dict]:
     """Lấy danh sách tỉnh theo miền"""
