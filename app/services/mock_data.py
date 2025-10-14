@@ -17,101 +17,59 @@ def get_mock_lottery_result(province_key: str) -> Dict:
         - Miền Bắc: 27 giải (ĐB, G1-G7)
         - Miền Nam/Trung: 18 giải (G8-ĐB, thứ tự ngược)
     """
-    # Seed để có kết quả nhất quán cho mỗi tỉnh
+    from app.data.mock_results import MOCK_RESULTS
+    
+    # Lấy từ mock data file
+    if province_key in MOCK_RESULTS:
+        return MOCK_RESULTS[province_key]
+    
+    # Fallback: Generate random nếu không có trong MOCK_RESULTS
+    from datetime import datetime
+    import random
+    
     random.seed(hash(province_key + datetime.now().strftime("%Y%m%d")))
-
-    # Xác định miền dựa vào province_key
+    
+    # Xác định miền
     from app.config import PROVINCES
-
-    province_info = PROVINCES.get(province_key, {})
-    region = province_info.get("region", "MN")
-
+    region = None
+    for prov in PROVINCES:
+        if prov['key'] == province_key:
+            region = prov['region']
+            break
+    
+    if not region:
+        region = "MN"  # Default
+    
+    # Generate theo region
+    result = {
+        "date": datetime.now().strftime("%d/%m/%Y"),
+        "province": province_key
+    }
+    
     if region == "MB":
-        # ========== MIỀN BẮC: 27 GIẢI ==========
-        result = {
-            "date": datetime.now().strftime("%d/%m/%Y"),
-            "province": province_info.get("name", "Miền Bắc"),
-            # Đặc biệt (1 số, 5 chữ số)
-            "DB": [str(random.randint(10000, 99999))],
-            # Giải Nhất (1 số, 5 chữ số)
-            "G1": [str(random.randint(10000, 99999))],
-            # Giải Nhì (2 số, 5 chữ số)
-            "G2": [
-                str(random.randint(10000, 99999)),
-                str(random.randint(10000, 99999)),
-            ],
-            # Giải Ba (6 số, 5 chữ số)
-            "G3": [
-                str(random.randint(10000, 99999)),
-                str(random.randint(10000, 99999)),
-                str(random.randint(10000, 99999)),
-                str(random.randint(10000, 99999)),
-                str(random.randint(10000, 99999)),
-                str(random.randint(10000, 99999)),
-            ],
-            # Giải Tư (4 số, 4 chữ số)
-            "G4": [
-                str(random.randint(1000, 9999)),
-                str(random.randint(1000, 9999)),
-                str(random.randint(1000, 9999)),
-                str(random.randint(1000, 9999)),
-            ],
-            # Giải Năm (6 số, 4 chữ số)
-            "G5": [
-                str(random.randint(1000, 9999)),
-                str(random.randint(1000, 9999)),
-                str(random.randint(1000, 9999)),
-                str(random.randint(1000, 9999)),
-                str(random.randint(1000, 9999)),
-                str(random.randint(1000, 9999)),
-            ],
-            # Giải Sáu (3 số, 3 chữ số)
-            "G6": [
-                str(random.randint(100, 999)),
-                str(random.randint(100, 999)),
-                str(random.randint(100, 999)),
-            ],
-            # Giải Bảy (4 số, 2 chữ số)
-            "G7": [
-                str(random.randint(10, 99)),
-                str(random.randint(10, 99)),
-                str(random.randint(10, 99)),
-                str(random.randint(10, 99)),
-            ],
-        }
+        # Miền Bắc: 27 giải
+        result["DB"] = f"{random.randint(0, 99999):05d}"
+        result["G1"] = f"{random.randint(0, 99999):05d}"
+        result["G2"] = [f"{random.randint(0, 99999):05d}" for _ in range(2)]
+        result["G3"] = [f"{random.randint(0, 9999):04d}" for _ in range(6)]
+        result["G4"] = [f"{random.randint(0, 9999):04d}" for _ in range(4)]
+        result["G5"] = [f"{random.randint(0, 9999):04d}" for _ in range(6)]
+        result["G6"] = [f"{random.randint(0, 999):03d}" for _ in range(3)]
+        result["G7"] = [f"{random.randint(0, 99):02d}" for _ in range(4)]
     else:
-        # ========== MIỀN NAM/TRUNG: 18 GIẢI ==========
-        result = {
-            "date": datetime.now().strftime("%d/%m/%Y"),
-            "province": province_info.get("name", province_key),
-            # ✅ CHECK: Đảm bảo TẤT CẢ các key này đều có!
-            "G8": [str(random.randint(10, 99))],
-            "G7": [str(random.randint(100, 999))],
-            "G6": [
-                str(random.randint(1000, 9999)),
-                str(random.randint(1000, 9999)),
-                str(random.randint(1000, 9999)),
-            ],
-            "G5": [str(random.randint(1000, 9999))],
-            "G4": [
-                str(random.randint(10000, 99999)),
-                str(random.randint(10000, 99999)),
-                str(random.randint(10000, 99999)),
-                str(random.randint(10000, 99999)),
-                str(random.randint(10000, 99999)),
-                str(random.randint(10000, 99999)),
-                str(random.randint(10000, 99999)),
-            ],
-            "G3": [
-                str(random.randint(10000, 99999)),
-                str(random.randint(10000, 99999)),
-            ],
-            "G2": [str(random.randint(10000, 99999))],
-            "G1": [str(random.randint(10000, 99999))],
-            "DB": [str(random.randint(100000, 999999))],
-        }
+        # Miền Nam/Trung: 18 giải
+        result["G8"] = [f"{random.randint(0, 99):02d}"]
+        result["G7"] = [f"{random.randint(0, 999):03d}"]
+        result["G6"] = [f"{random.randint(0, 9999):04d}" for _ in range(3)]
+        result["G5"] = [f"{random.randint(0, 9999):04d}"]
+        result["G4"] = [f"{random.randint(0, 99999):05d}" for _ in range(7)]
+        result["G3"] = [f"{random.randint(0, 99999):05d}" for _ in range(2)]
+        result["G2"] = [f"{random.randint(0, 99999):05d}"]
+        result["G1"] = [f"{random.randint(0, 99999):05d}"]
+        result["DB"] = [f"{random.randint(0, 999999):06d}"]
+    
+    return result
 
-        return result
 
 
 def get_mock_stats_2digit(region: str) -> Dict:
