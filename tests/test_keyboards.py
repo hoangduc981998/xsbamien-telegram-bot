@@ -2,16 +2,22 @@
 
 import pytest
 from unittest.mock import patch
+from datetime import date
 
 from app.ui.keyboards import (
     get_schedule_today_keyboard,
     get_today_schedule_actions,
 )
 from app.config import PROVINCES, SCHEDULE
+from app.utils.cache import ScheduleCache
 
 
 class TestGetScheduleTodayKeyboard:
     """Test get_schedule_today_keyboard() function"""
+
+    def setup_method(self):
+        """Clear cache before each test"""
+        ScheduleCache.clear_cache()
 
     @pytest.mark.parametrize("python_weekday,schedule_day", [
         (0, 1),  # Monday → schedule day 1 (Thứ 2)
@@ -24,8 +30,9 @@ class TestGetScheduleTodayKeyboard:
     ])
     def test_weekday_conversion(self, python_weekday, schedule_day):
         """Test Python weekday converts correctly to SCHEDULE format"""
-        with patch('app.ui.keyboards.datetime') as mock_dt:
+        with patch('app.utils.cache.datetime') as mock_dt:
             mock_dt.now.return_value.weekday.return_value = python_weekday
+            mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
             # Get expected provinces for this schedule day
             expected_provinces = []
@@ -49,9 +56,10 @@ class TestGetScheduleTodayKeyboard:
 
     def test_all_provinces_shown_no_limit(self):
         """Test that all provinces are shown (not limited to [:2])"""
-        with patch('app.ui.keyboards.datetime') as mock_dt:
+        with patch('app.utils.cache.datetime') as mock_dt:
             # Tuesday has 6 provinces (1 MB + 2 MT + 3 MN)
             mock_dt.now.return_value.weekday.return_value = 1  # Tuesday
+            mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
             keyboard = get_schedule_today_keyboard()
 
@@ -66,8 +74,9 @@ class TestGetScheduleTodayKeyboard:
 
     def test_two_column_layout(self):
         """Test buttons are arranged in 2-column layout"""
-        with patch('app.ui.keyboards.datetime') as mock_dt:
+        with patch('app.utils.cache.datetime') as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 1  # Tuesday
+            mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
             keyboard = get_schedule_today_keyboard()
 
@@ -86,8 +95,9 @@ class TestGetScheduleTodayKeyboard:
 
     def test_button_display_name_truncation(self):
         """Test long province names are truncated"""
-        with patch('app.ui.keyboards.datetime') as mock_dt:
+        with patch('app.utils.cache.datetime') as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 0  # Monday (has TP.HCM)
+            mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
             keyboard = get_schedule_today_keyboard()
 
@@ -105,8 +115,9 @@ class TestGetScheduleTodayKeyboard:
 
     def test_button_callback_data_format(self):
         """Test button callback data format is correct"""
-        with patch('app.ui.keyboards.datetime') as mock_dt:
+        with patch('app.utils.cache.datetime') as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 0  # Monday
+            mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
             keyboard = get_schedule_today_keyboard()
 
@@ -122,8 +133,9 @@ class TestGetScheduleTodayKeyboard:
 
     def test_provinces_grouped_by_region_order(self):
         """Test provinces appear in correct order: MB → MT → MN"""
-        with patch('app.ui.keyboards.datetime') as mock_dt:
+        with patch('app.utils.cache.datetime') as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 0  # Monday
+            mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
             keyboard = get_schedule_today_keyboard()
 
@@ -157,6 +169,10 @@ class TestGetScheduleTodayKeyboard:
 class TestGetTodayScheduleActions:
     """Test get_today_schedule_actions() function"""
 
+    def setup_method(self):
+        """Clear cache before each test"""
+        ScheduleCache.clear_cache()
+
     @pytest.mark.parametrize("python_weekday,schedule_day", [
         (0, 1),  # Monday → schedule day 1
         (1, 2),  # Tuesday → schedule day 2
@@ -168,8 +184,9 @@ class TestGetTodayScheduleActions:
     ])
     def test_weekday_conversion(self, python_weekday, schedule_day):
         """Test Python weekday converts correctly to SCHEDULE format"""
-        with patch('app.ui.keyboards.datetime') as mock_dt:
+        with patch('app.utils.cache.datetime') as mock_dt:
             mock_dt.now.return_value.weekday.return_value = python_weekday
+            mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
             # Get expected provinces for this schedule day
             expected_provinces = []
@@ -204,9 +221,10 @@ class TestGetTodayScheduleActions:
 
     def test_all_provinces_shown_no_limit(self):
         """Test that all provinces are shown (not limited to [:2])"""
-        with patch('app.ui.keyboards.datetime') as mock_dt:
+        with patch('app.utils.cache.datetime') as mock_dt:
             # Tuesday has 6 provinces
             mock_dt.now.return_value.weekday.return_value = 1  # Tuesday
+            mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
             keyboard = get_today_schedule_actions()
 
@@ -221,8 +239,9 @@ class TestGetTodayScheduleActions:
 
     def test_two_column_layout(self):
         """Test buttons are arranged in 2-column layout"""
-        with patch('app.ui.keyboards.datetime') as mock_dt:
+        with patch('app.utils.cache.datetime') as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 1  # Tuesday
+            mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
             keyboard = get_today_schedule_actions()
 
@@ -232,8 +251,9 @@ class TestGetTodayScheduleActions:
 
     def test_button_display_name_truncation(self):
         """Test long province names are truncated"""
-        with patch('app.ui.keyboards.datetime') as mock_dt:
+        with patch('app.utils.cache.datetime') as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 0  # Monday (has TP.HCM)
+            mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
             keyboard = get_today_schedule_actions()
 
@@ -250,8 +270,9 @@ class TestGetTodayScheduleActions:
 
     def test_button_callback_data_format(self):
         """Test button callback data format is correct"""
-        with patch('app.ui.keyboards.datetime') as mock_dt:
+        with patch('app.utils.cache.datetime') as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 0  # Monday
+            mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
             keyboard = get_today_schedule_actions()
 
@@ -265,8 +286,9 @@ class TestGetTodayScheduleActions:
 
     def test_provinces_before_navigation_buttons(self):
         """Test province buttons come before navigation buttons"""
-        with patch('app.ui.keyboards.datetime') as mock_dt:
+        with patch('app.utils.cache.datetime') as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 0  # Monday
+            mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
             keyboard = get_today_schedule_actions()
 
@@ -284,8 +306,9 @@ class TestGetTodayScheduleActions:
 
     def test_provinces_grouped_by_region_order(self):
         """Test provinces appear in correct order: MB → MT → MN"""
-        with patch('app.ui.keyboards.datetime') as mock_dt:
+        with patch('app.utils.cache.datetime') as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 0  # Monday
+            mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
             keyboard = get_today_schedule_actions()
 
@@ -317,8 +340,9 @@ class TestGetTodayScheduleActions:
 
     def test_thursday_has_7_provinces(self):
         """Test Thursday has 7 provinces (edge case with most provinces)"""
-        with patch('app.ui.keyboards.datetime') as mock_dt:
+        with patch('app.utils.cache.datetime') as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 3  # Thursday
+            mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
             keyboard = get_today_schedule_actions()
 
