@@ -1,13 +1,142 @@
 # .github/workflows/test.yml
-name: Tests
-on: [push, pull_request]
+name: Tests and Quality Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
 jobs:
+  # Matrix testing with multiple Python versions
   test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Run tests with coverage
+        run: |
+          pytest tests/ -v --cov=app --cov-report=term --cov-report=xml --cov-report=html
+        env:
+          TELEGRAM_BOT_TOKEN: test_token
+
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.12'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: Upload HTML coverage report
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: htmlcov/
+
+  # Code quality checks
+  quality:
+    name: Code Quality
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install -r requirements.txt -r requirements-dev.txt
-      - run: pytest tests/ -v --cov=app
+          cache: 'pip'
+
+      - name: Install quality tools
+        run: |
+          pip install black flake8 isort mypy
+
+      - name: Check code formatting with Black
+        run: |
+          black --check app/ tests/
+        continue-on-error: true
+
+      - name: Check import sorting with isort
+        run: |
+          isort --check-only app/ tests/
+        continue-on-error: true
+
+      - name: Run Flake8
+        run: |
+          flake8 app/ tests/ --max-line-length=120 --extend-ignore=E203,W503
+        continue-on-error: true
+
+      - name: Type check with mypy
+        run: |
+          mypy app/ --ignore-missing-imports
+        continue-on-error: true
+
+  # PR comment with coverage
+  coverage-comment:
+    name: Coverage Comment
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Run coverage
+        run: |
+          pytest tests/ --cov=app --cov-report=term --cov-report=xml
+        env:
+          TELEGRAM_BOT_TOKEN: test_token
+
+      - name: Get coverage percentage
+        id: coverage
+        run: |
+          COVERAGE=$(python -c "import xml.etree.ElementTree as ET; tree = ET.parse('coverage.xml'); root = tree.getroot(); print(f\"{float(root.attrib['line-rate']) * 100:.1f}\")")
+          echo "COVERAGE=$COVERAGE" >> $GITHUB_OUTPUT
+          echo "Coverage: $COVERAGE%"
+
+      - name: Comment PR with coverage
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const coverage = '${{ steps.coverage.outputs.COVERAGE }}';
+            const emoji = coverage >= 70 ? '✅' : coverage >= 60 ? '⚠️' : '❌';
+            const body = `## ${emoji} Test Coverage Report\n\n**Coverage**: ${coverage}%\n\n- Target: 65%\n- Status: ${coverage >= 65 ? '✅ Passed' : '❌ Below threshold'}`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

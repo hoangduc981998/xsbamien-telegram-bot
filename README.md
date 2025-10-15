@@ -7,9 +7,13 @@
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
+[![Tests](https://github.com/hoangduc981998/xsbamien-telegram-bot/actions/workflows/test.yml/badge.svg)](https://github.com/hoangduc981998/xsbamien-telegram-bot/actions/workflows/test.yml)
+[![Deploy](https://github.com/hoangduc981998/xsbamien-telegram-bot/actions/workflows/deploy.yml/badge.svg)](https://github.com/hoangduc981998/xsbamien-telegram-bot/actions/workflows/deploy.yml)
+![Coverage](https://img.shields.io/badge/coverage-68%25-yellow)
+
 **Bot Telegram tra cứu kết quả xổ số nhanh chóng, chính xác cho cả 3 miền Bắc - Trung - Nam**
 
-[Demo](#-demo) • [Tính Năng](#-tính-năng) • [Cài Đặt](#-cài-đặt) • [Sử Dụng](#-sử-dụng) • [Đóng Góp](#-đóng-góp)
+[Demo](#-demo) • [Tính Năng](#-tính-năng) • [Cài Đặt](#-cài-đặt) • [Deployment](#-deployment) • [Sử Dụng](#-sử-dụng) • [Đóng Góp](#-đóng-góp)
 
 </div>
 
@@ -93,6 +97,52 @@ python -m app.main
 ```bash
 docker-compose up -d
 ```
+
+---
+
+## 🚢 Deployment
+
+### Quick Deployment Options
+
+#### 🐳 Docker (Local/VPS)
+```bash
+# Build and run
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+```
+
+#### ☁️ Google Cloud Run (Production)
+```bash
+# Setup GCP (one-time)
+export GCP_PROJECT_ID=your-project-id
+./scripts/setup-gcp.sh
+
+# Deploy
+./scripts/deploy.sh production
+```
+
+#### 🤖 Automated CI/CD
+Push to `main` branch triggers automatic deployment via GitHub Actions.
+
+### Deployment Status
+
+![Tests](https://github.com/hoangduc981998/xsbamien-telegram-bot/actions/workflows/test.yml/badge.svg)
+![Deploy](https://github.com/hoangduc981998/xsbamien-telegram-bot/actions/workflows/deploy.yml/badge.svg)
+![Coverage](https://img.shields.io/badge/coverage-68%25-yellow)
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `TELEGRAM_BOT_TOKEN` | ✅ Yes | Bot token from @BotFather |
+| `ENVIRONMENT` | No | `development`, `staging`, `production` |
+| `LOG_LEVEL` | No | `DEBUG`, `INFO`, `WARNING`, `ERROR` |
+| `API_TIMEOUT` | No | API request timeout (default: 30s) |
+| `CACHE_ENABLED` | No | Enable caching (default: true) |
+
+📖 **Full deployment guide**: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
 ---
 
