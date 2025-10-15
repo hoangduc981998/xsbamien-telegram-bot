@@ -45,9 +45,7 @@ class LotteryService:
 
             # Return latest (first in list)
             latest = results[0]
-            logger.info(
-                f"✅ Got latest result for {province_code}: {latest.get('date')}"
-            )
+            logger.info(f"✅ Got latest result for {province_code}: {latest.get('date')}")
             return latest
 
         except Exception as e:

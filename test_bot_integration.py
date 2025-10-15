@@ -30,9 +30,7 @@ async def test():
 
         print(f"📅 Date: {result.get('date')}")
         print(f"🏛️  Province: {result.get('province')}")
-        print(
-            f"🎯 Prizes: {', '.join([k for k in result.keys() if k.startswith('G') or k == 'DB'])}"
-        )
+        print(f"🎯 Prizes: {', '.join([k for k in result.keys() if k.startswith('G') or k == 'DB'])}")
 
         # Show some prizes
         if "DB" in result:

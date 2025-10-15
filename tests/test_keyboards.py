@@ -55,9 +55,7 @@ class TestGetScheduleTodayKeyboard:
             for row in keyboard.inline_keyboard[:-1]:  # Exclude last row (Back button)
                 for button in row:
                     if button.callback_data.startswith("result_"):
-                        actual_provinces.append(
-                            button.callback_data.replace("result_", "")
-                        )
+                        actual_provinces.append(button.callback_data.replace("result_", ""))
 
             # Verify
             error_msg = (
@@ -82,9 +80,7 @@ class TestGetScheduleTodayKeyboard:
                     if button.callback_data.startswith("result_"):
                         result_count += 1
 
-            assert (
-                result_count == 6
-            ), f"Expected 6 provinces on Tuesday, got {result_count}"
+            assert result_count == 6, f"Expected 6 provinces on Tuesday, got {result_count}"
 
     def test_two_column_layout(self):
         """Test buttons are arranged in 2-column layout"""
@@ -142,9 +138,7 @@ class TestGetScheduleTodayKeyboard:
                         # Extract province code
                         result_code = button.callback_data.replace("result_", "")
                         # Verify it exists in PROVINCES
-                        assert (
-                            result_code in PROVINCES
-                        ), f"Province code {result_code} not found in PROVINCES"
+                        assert result_code in PROVINCES, f"Province code {result_code} not found in PROVINCES"
 
     def test_provinces_grouped_by_region_order(self):
         """Test provinces appear in correct order: MB → MT → MN"""
@@ -219,9 +213,7 @@ class TestGetTodayScheduleActions:
             for row in keyboard.inline_keyboard[:-1]:  # Exclude last row
                 for button in row:
                     if button.callback_data.startswith("result_"):
-                        actual_provinces.append(
-                            button.callback_data.replace("result_", "")
-                        )
+                        actual_provinces.append(button.callback_data.replace("result_", ""))
 
             # Verify
             error_msg = (
@@ -262,9 +254,7 @@ class TestGetTodayScheduleActions:
                     if button.callback_data.startswith("result_"):
                         result_count += 1
 
-            assert (
-                result_count == 6
-            ), f"Expected 6 provinces on Tuesday, got {result_count}"
+            assert result_count == 6, f"Expected 6 provinces on Tuesday, got {result_count}"
 
     def test_two_column_layout(self):
         """Test buttons are arranged in 2-column layout"""
@@ -310,9 +300,7 @@ class TestGetTodayScheduleActions:
                 for button in row:
                     if button.callback_data.startswith("result_"):
                         result_code = button.callback_data.replace("result_", "")
-                        assert (
-                            result_code in PROVINCES
-                        ), f"Province code {result_code} not found in PROVINCES"
+                        assert result_code in PROVINCES, f"Province code {result_code} not found in PROVINCES"
 
     def test_provinces_before_navigation_buttons(self):
         """Test province buttons come before navigation buttons"""
@@ -387,9 +375,7 @@ class TestGetTodayScheduleActions:
                         result_count += 1
 
             # Thursday should have 7 provinces: MB + BIDI/QUBI/QUTR + TANI/ANGI/BITH
-            assert (
-                result_count == 7
-            ), f"Expected 7 provinces on Thursday, got {result_count}"
+            assert result_count == 7, f"Expected 7 provinces on Thursday, got {result_count}"
 
 
 class TestGetMainMenuKeyboard:
@@ -470,10 +456,7 @@ class TestGetResultsMenuKeyboard:
         keyboard = get_results_menu_keyboard()
 
         # Get callbacks without back button
-        region_callbacks = [
-            row[0].callback_data
-            for row in keyboard.inline_keyboard[:-1]  # Exclude last (back) button
-        ]
+        region_callbacks = [row[0].callback_data for row in keyboard.inline_keyboard[:-1]]  # Exclude last (back) button
 
         # Should be in order: results_MB, results_MT, results_MN
         assert region_callbacks[0] == "results_MB"

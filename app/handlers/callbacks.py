@@ -73,9 +73,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Lịch quay hôm nay
         elif callback_data == "today":
             message = get_today_schedule_message()
-            await query.edit_message_text(
-                message, reply_markup=get_schedule_today_keyboard(), parse_mode="HTML"
-            )
+            await query.edit_message_text(message, reply_markup=get_schedule_today_keyboard(), parse_mode="HTML")
 
         # Lịch quay trong tuần
         elif callback_data == "schedule":
@@ -143,9 +141,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
 
         # ✅ THAY ĐỔI: SỬ DỤNG API THẬT
-        elif callback_data.startswith("result_") and not callback_data.startswith(
-            "result_full_"
-        ):
+        elif callback_data.startswith("result_") and not callback_data.startswith("result_full_"):
             province_key = callback_data.split("_")[1]
 
             # Hiển thị loading
@@ -177,9 +173,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             message = "📊 <b>THỐNG KÊ & PHÂN TÍCH</b>\n\n"
             message += "Chọn loại thống kê bạn muốn xem:"
 
-            await query.edit_message_text(
-                message, reply_markup=get_stats_menu_keyboard(), parse_mode="HTML"
-            )
+            await query.edit_message_text(message, reply_markup=get_stats_menu_keyboard(), parse_mode="HTML")
 
         # Thống kê lô 2 số theo miền
         elif callback_data.startswith("stats_") and "_2digit" in callback_data:

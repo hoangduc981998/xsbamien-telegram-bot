@@ -206,9 +206,7 @@ class TestTransformSingleResult:
             "detail": json.dumps(["12345"]),
         }
 
-        result = DataTransformer.transform_single_result(
-            issue, "Custom Province Name", "MB"
-        )
+        result = DataTransformer.transform_single_result(issue, "Custom Province Name", "MB")
 
         assert result["province"] == "Custom Province Name"
 
@@ -300,9 +298,7 @@ class TestTransformResults:
             "t": {
                 "name": "Test",
                 "navCate": "MB",
-                "issueList": [
-                    {"turnNum": "2025-10-14", "detail": json.dumps(["12345"])}
-                ],
+                "issueList": [{"turnNum": "2025-10-14", "detail": json.dumps(["12345"])}],
             },
         }
         results = DataTransformer.transform_results(mb_response)

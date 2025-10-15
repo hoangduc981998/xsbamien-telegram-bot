@@ -33,11 +33,7 @@ class DataTransformer:
             detail_list = json.loads(detail_str)
 
             # Select prize mapping based on region
-            prize_names = (
-                DataTransformer.MB_PRIZES
-                if region == "MB"
-                else DataTransformer.MN_MT_PRIZES
-            )
+            prize_names = DataTransformer.MB_PRIZES if region == "MB" else DataTransformer.MN_MT_PRIZES
 
             # Build result dict
             result = {"date": issue.get("turnNum"), "province": province_name}
@@ -93,9 +89,7 @@ class DataTransformer:
 
             results = []
             for issue in issue_list:
-                result = DataTransformer.transform_single_result(
-                    issue, province_name, region
-                )
+                result = DataTransformer.transform_single_result(issue, province_name, region)
                 if result:
                     results.append(result)
 

@@ -16,9 +16,7 @@ logger = logging.getLogger(__name__)
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Xử lý lệnh /start - Hiển thị menu chính"""
     try:
-        await update.message.reply_text(
-            WELCOME_MESSAGE, reply_markup=get_main_menu_keyboard(), parse_mode="HTML"
-        )
+        await update.message.reply_text(WELCOME_MESSAGE, reply_markup=get_main_menu_keyboard(), parse_mode="HTML")
         logger.info(f"User {update.effective_user.id} started bot")
     except Exception as e:
         logger.error(f"Error in start_command: {e}")
@@ -28,9 +26,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Xử lý lệnh /help - Hiển thị hướng dẫn"""
     try:
-        await update.message.reply_text(
-            HELP_MESSAGE, reply_markup=get_main_menu_keyboard(), parse_mode="HTML"
-        )
+        await update.message.reply_text(HELP_MESSAGE, reply_markup=get_main_menu_keyboard(), parse_mode="HTML")
         logger.info(f"User {update.effective_user.id} requested help")
     except Exception as e:
         logger.error(f"Error in help_command: {e}")
@@ -60,9 +56,7 @@ async def mt_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Xử lý lệnh /mt - Kết quả Miền Trung hôm nay"""
     try:
         # Hiển thị loading
-        loading_msg = await update.message.reply_text(
-            "⏳ Đang tải kết quả Miền Trung..."
-        )
+        loading_msg = await update.message.reply_text("⏳ Đang tải kết quả Miền Trung...")
 
         # Lấy mock data (DANA - Đà Nẵng làm ví dụ)
         result_data = get_mock_lottery_result("DANA")

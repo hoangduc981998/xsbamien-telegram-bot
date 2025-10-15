@@ -56,10 +56,7 @@ class TestMessageConstants:
     def test_no_data_message_content(self):
         """Test no data message"""
         assert "😔" in NO_DATA_MESSAGE
-        assert (
-            "Chưa có dữ liệu" in NO_DATA_MESSAGE
-            or "không có" in NO_DATA_MESSAGE.lower()
-        )
+        assert "Chưa có dữ liệu" in NO_DATA_MESSAGE or "không có" in NO_DATA_MESSAGE.lower()
 
     def test_message_constants_are_strings(self):
         """Test all message constants are strings"""

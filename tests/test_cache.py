@@ -27,9 +27,7 @@ class TestScheduleCache:
             (6, 0),  # Sunday → Chủ Nhật
         ],
     )
-    def test_cache_returns_correct_schedule_day(
-        self, python_weekday, expected_schedule_day
-    ):
+    def test_cache_returns_correct_schedule_day(self, python_weekday, expected_schedule_day):
         """Test cache trả về đúng schedule_day cho từng ngày"""
         with patch("app.utils.cache.datetime") as mock_dt:
             mock_now = mock_dt.now.return_value

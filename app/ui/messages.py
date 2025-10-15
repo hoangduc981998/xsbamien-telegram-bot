@@ -85,7 +85,9 @@ def get_schedule_message() -> str:
         # Miền Bắc
         mb_provinces = SCHEDULE["MB"].get(day_idx, [])
         if mb_provinces:
-            message += f"  🔴 <b>Miền Bắc</b>: {', '.join([PROVINCES[p]['name'] for p in mb_provinces if p in PROVINCES])}\n"
+            message += (
+                f"  🔴 <b>Miền Bắc</b>: {', '.join([PROVINCES[p]['name'] for p in mb_provinces if p in PROVINCES])}\n"
+            )
 
         # Miền Trung
         mt_provinces = SCHEDULE["MT"].get(day_idx, [])
@@ -103,9 +105,7 @@ def get_schedule_message() -> str:
 
     message += "\n⏰ <b>Giờ Quay:</b>\n"
     message += f"🟢 Miền Nam: {DRAW_TIMES['MN']['start']} - {DRAW_TIMES['MN']['end']}\n"
-    message += (
-        f"🟠 Miền Trung: {DRAW_TIMES['MT']['start']} - {DRAW_TIMES['MT']['end']}\n"
-    )
+    message += f"🟠 Miền Trung: {DRAW_TIMES['MT']['start']} - {DRAW_TIMES['MT']['end']}\n"
     message += f"🔴 Miền Bắc: {DRAW_TIMES['MB']['start']} - {DRAW_TIMES['MB']['end']}\n"
 
     return message

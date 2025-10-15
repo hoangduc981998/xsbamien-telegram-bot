@@ -34,9 +34,7 @@ class TestCompleteWeekIntegration:
     )
     def test_complete_day_flow(self, python_weekday, day_name, schedule_day):
         """Test complete flow: message generation + button generation for each day"""
-        with patch("app.utils.cache.datetime") as mock_kb_dt, patch(
-            "app.ui.messages.datetime"
-        ) as mock_msg_dt:
+        with patch("app.utils.cache.datetime") as mock_kb_dt, patch("app.ui.messages.datetime") as mock_msg_dt:
 
             # Mock datetime for both modules
             mock_kb_dt.now.return_value.weekday.return_value = python_weekday
@@ -53,9 +51,7 @@ class TestCompleteWeekIntegration:
             for row in keyboard.inline_keyboard[:-1]:
                 for button in row:
                     if button.callback_data.startswith("result_"):
-                        button_provinces.append(
-                            button.callback_data.replace("result_", "")
-                        )
+                        button_provinces.append(button.callback_data.replace("result_", ""))
 
             # Get expected provinces for this day
             expected_provinces = []
@@ -63,9 +59,7 @@ class TestCompleteWeekIntegration:
                 expected_provinces.extend(SCHEDULE[region].get(schedule_day, []))
 
             # Verify
-            assert (
-                button_provinces == expected_provinces
-            ), f"{day_name}: Button provinces don't match schedule"
+            assert button_provinces == expected_provinces, f"{day_name}: Button provinces don't match schedule"
 
             # Verify message contains day name
             assert day_name in message, f"Message doesn't contain '{day_name}'"
@@ -74,9 +68,7 @@ class TestCompleteWeekIntegration:
             for prov_code in expected_provinces:
                 if prov_code in PROVINCES:
                     prov_name = PROVINCES[prov_code]["name"]
-                    assert (
-                        prov_name in message
-                    ), f"{day_name}: Province '{prov_name}' not in message"
+                    assert prov_name in message, f"{day_name}: Province '{prov_name}' not in message"
 
     def test_thursday_has_most_provinces(self):
         """Thursday should have 7 provinces (most in the week)"""
@@ -110,22 +102,14 @@ class TestCompleteWeekIntegration:
                         code = button.callback_data.replace("result_", "")
                         button_provinces.append(code)
 
-            mn_provinces = [
-                p
-                for p in button_provinces
-                if PROVINCES.get(p, {}).get("region") == "MN"
-            ]
+            mn_provinces = [p for p in button_provinces if PROVINCES.get(p, {}).get("region") == "MN"]
 
-            assert (
-                len(mn_provinces) == 4
-            ), f"Saturday should have 4 MN provinces, got {len(mn_provinces)}"
+            assert len(mn_provinces) == 4, f"Saturday should have 4 MN provinces, got {len(mn_provinces)}"
 
     @pytest.mark.parametrize("python_weekday", range(7))
     def test_message_button_result_consistency(self, python_weekday):
         """Verify provinces in message exactly match provinces in buttons"""
-        with patch("app.utils.cache.datetime") as mock_kb_dt, patch(
-            "app.ui.messages.datetime"
-        ) as mock_msg_dt:
+        with patch("app.utils.cache.datetime") as mock_kb_dt, patch("app.ui.messages.datetime") as mock_msg_dt:
 
             mock_kb_dt.now.return_value.weekday.return_value = python_weekday
             mock_kb_dt.now.return_value.date.return_value = date(2025, 10, 14)
@@ -147,8 +131,7 @@ class TestCompleteWeekIntegration:
                 if code in PROVINCES:
                     prov_name = PROVINCES[code]["name"]
                     assert prov_name in message, (
-                        f"Weekday {python_weekday}: "
-                        f"Province '{prov_name}' in button but not in message"
+                        f"Weekday {python_weekday}: " f"Province '{prov_name}' in button but not in message"
                     )
 
     def test_region_order_consistent(self):
@@ -173,25 +156,15 @@ class TestCompleteWeekIntegration:
                 # Verify order: all MB first, then MT, then MN
                 if provinces_in_order:
                     # Find indices of last MB, MT
-                    mb_indices = [
-                        i for i, r in enumerate(provinces_in_order) if r == "MB"
-                    ]
-                    mt_indices = [
-                        i for i, r in enumerate(provinces_in_order) if r == "MT"
-                    ]
-                    mn_indices = [
-                        i for i, r in enumerate(provinces_in_order) if r == "MN"
-                    ]
+                    mb_indices = [i for i, r in enumerate(provinces_in_order) if r == "MB"]
+                    mt_indices = [i for i, r in enumerate(provinces_in_order) if r == "MT"]
+                    mn_indices = [i for i, r in enumerate(provinces_in_order) if r == "MN"]
 
                     if mb_indices and mt_indices:
-                        assert max(mb_indices) < min(
-                            mt_indices
-                        ), f"Weekday {weekday}: MB should come before MT"
+                        assert max(mb_indices) < min(mt_indices), f"Weekday {weekday}: MB should come before MT"
 
                     if mt_indices and mn_indices:
-                        assert max(mt_indices) < min(
-                            mn_indices
-                        ), f"Weekday {weekday}: MT should come before MN"
+                        assert max(mt_indices) < min(mn_indices), f"Weekday {weekday}: MT should come before MN"
 
 
 class TestScheduleActionsIntegration:
@@ -226,8 +199,7 @@ class TestScheduleActionsIntegration:
                         provinces2.append(button.callback_data)
 
             assert provinces1 == provinces2, (
-                f"Weekday {python_weekday}: "
-                f"Province lists don't match between functions"
+                f"Weekday {python_weekday}: " f"Province lists don't match between functions"
             )
 
     def test_navigation_buttons_present_all_days(self):
@@ -243,14 +215,10 @@ class TestScheduleActionsIntegration:
                 schedule_week_row = keyboard.inline_keyboard[-2]
                 back_row = keyboard.inline_keyboard[-1]
 
-                assert (
-                    len(schedule_week_row) == 1
-                ), f"Weekday {weekday}: Schedule week row should have 1 button"
+                assert len(schedule_week_row) == 1, f"Weekday {weekday}: Schedule week row should have 1 button"
                 assert schedule_week_row[0].callback_data == "schedule_week"
 
-                assert (
-                    len(back_row) == 1
-                ), f"Weekday {weekday}: Back row should have 1 button"
+                assert len(back_row) == 1, f"Weekday {weekday}: Back row should have 1 button"
                 assert back_row[0].callback_data == "back_to_main"
 
 
@@ -274,10 +242,7 @@ class TestButtonCallbackDataIntegration:
                 for button in row:
                     if button.callback_data.startswith("result_"):
                         code = button.callback_data.replace("result_", "")
-                        assert code in PROVINCES, (
-                            f"Weekday {python_weekday}: "
-                            f"Invalid province code '{code}'"
-                        )
+                        assert code in PROVINCES, f"Weekday {python_weekday}: " f"Invalid province code '{code}'"
 
     def test_callback_format_consistency(self):
         """Verify callback_data format is consistent across all days"""
@@ -292,12 +257,8 @@ class TestButtonCallbackDataIntegration:
                     for button in row:
                         if button.callback_data != "back_to_main":
                             assert button.callback_data.startswith("result_"), (
-                                f"Weekday {weekday}: "
-                                f"Invalid callback format: {button.callback_data}"
+                                f"Weekday {weekday}: " f"Invalid callback format: {button.callback_data}"
                             )
 
                             code = button.callback_data.replace("result_", "")
-                            assert code.isupper(), (
-                                f"Weekday {weekday}: "
-                                f"Province code should be uppercase: {code}"
-                            )
+                            assert code.isupper(), f"Weekday {weekday}: " f"Province code should be uppercase: {code}"

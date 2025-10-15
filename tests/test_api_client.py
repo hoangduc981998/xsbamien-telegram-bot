@@ -46,10 +46,7 @@ class TestMU88APIClient:
 
     def test_base_url_is_set(self):
         """Test that BASE_URL is set correctly"""
-        assert (
-            MU88APIClient.BASE_URL
-            == "https://mu88.live/api/front/open/lottery/history/list/game"
-        )
+        assert MU88APIClient.BASE_URL == "https://mu88.live/api/front/open/lottery/history/list/game"
 
     def test_province_map_contains_mb(self):
         """Test province map contains MB"""
@@ -178,9 +175,7 @@ class TestFetchResults:
         mock_client = AsyncMock()
         mock_client.__aenter__.return_value = mock_client
         mock_client.__aexit__.return_value = None
-        mock_client.get = AsyncMock(
-            side_effect=httpx.TimeoutException("Request timeout")
-        )
+        mock_client.get = AsyncMock(side_effect=httpx.TimeoutException("Request timeout"))
 
         mocker.patch("httpx.AsyncClient", return_value=mock_client)
 
