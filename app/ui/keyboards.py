@@ -28,9 +28,7 @@ def get_schedule_today_keyboard() -> InlineKeyboardMarkup:
                 display_name = province_info["name"]
 
                 # Tạo button với tên đầy đủ (không giới hạn ký tự)
-                button = InlineKeyboardButton(
-                    text=display_name, callback_data=f"result_{province_code}"
-                )
+                button = InlineKeyboardButton(text=display_name, callback_data=f"result_{province_code}")
 
                 # Thêm button vào hàng mới (2 buttons/hàng)
                 if not keyboard or len(keyboard[-1]) == 2:
@@ -67,9 +65,7 @@ def get_today_schedule_actions() -> InlineKeyboardMarkup:
                 display_name = province_info["name"]
 
                 # Tạo button với tên đầy đủ
-                button = InlineKeyboardButton(
-                    text=display_name, callback_data=f"result_{province_code}"
-                )
+                button = InlineKeyboardButton(text=display_name, callback_data=f"result_{province_code}")
 
                 # Thêm vào keyboard (2 buttons/hàng)
                 if not keyboard or len(keyboard[-1]) == 2:
@@ -78,9 +74,7 @@ def get_today_schedule_actions() -> InlineKeyboardMarkup:
                     keyboard[-1].append(button)
 
     # Thêm navigation buttons (full width, 1 button/hàng)
-    keyboard.append(
-        [InlineKeyboardButton("📅 Lịch cả tuần", callback_data="schedule_week")]
-    )
+    keyboard.append([InlineKeyboardButton("📅 Lịch cả tuần", callback_data="schedule_week")])
     keyboard.append([InlineKeyboardButton("🔙 Quay lại", callback_data="back_to_main")])
 
     return InlineKeyboardMarkup(keyboard)
@@ -129,9 +123,7 @@ def get_region_provinces_keyboard(region: str) -> InlineKeyboardMarkup:
     for province_code in sorted_provinces:
         province_info = PROVINCES.get(province_code)
         if province_info:
-            button = InlineKeyboardButton(
-                text=province_info["name"], callback_data=f"result_{province_code}"
-            )
+            button = InlineKeyboardButton(text=province_info["name"], callback_data=f"result_{province_code}")
 
             if not keyboard or len(keyboard[-1]) == 2:
                 keyboard.append([button])

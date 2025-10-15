@@ -30,17 +30,11 @@ class ScheduleCache:
         # Kiểm tra nếu đã sang ngày mới thì làm mới cache
         if cls._last_update_date != today:
             cls._cache_misses += 1
-            logger.info(
-                f"🔄 Cache MISS: Date changed from "
-                f"{cls._last_update_date} to {today}"
-            )
+            logger.info(f"🔄 Cache MISS: Date changed from " f"{cls._last_update_date} to {today}")
             cls._refresh_cache(today)
         else:
             cls._cache_hits += 1
-            logger.debug(
-                f"✅ Cache HIT: Using cached value "
-                f"(hits={cls._cache_hits}, misses={cls._cache_misses})"
-            )
+            logger.debug(f"✅ Cache HIT: Using cached value " f"(hits={cls._cache_hits}, misses={cls._cache_misses})")
 
         return cls._cache.get("schedule_day")
 
@@ -51,24 +45,8 @@ class ScheduleCache:
         schedule_day = (weekday + 1) % 7
 
         # Weekday names for logging
-        weekday_names = [
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-            "Sunday",
-        ]
-        schedule_names = [
-            "Chủ Nhật",
-            "Thứ Hai",
-            "Thứ Ba",
-            "Thứ Tư",
-            "Thứ Năm",
-            "Thứ Sáu",
-            "Thứ Bảy",
-        ]
+        weekday_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        schedule_names = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"]
 
         cls._cache["schedule_day"] = schedule_day
         cls._cache["weekday"] = weekday
@@ -86,9 +64,7 @@ class ScheduleCache:
 
         # Log conversion formula
         logger.debug(
-            f"📐 Conversion: Python weekday {weekday} "
-            f"→ (weekday + 1) % 7 "
-            f"→ SCHEDULE day {schedule_day}"
+            f"📐 Conversion: Python weekday {weekday} " f"→ (weekday + 1) % 7 " f"→ SCHEDULE day {schedule_day}"
         )
 
     @classmethod
@@ -123,11 +99,7 @@ class ScheduleCache:
         cls._cache_hits = 0
         cls._cache_misses = 0
 
-        logger.warning(
-            f"🗑️ Cache cleared: "
-            f"Previous data={old_cache}, "
-            f"Previous stats={old_stats}"
-        )
+        logger.warning(f"🗑️ Cache cleared: " f"Previous data={old_cache}, " f"Previous stats={old_stats}")
 
 
 # Hàm helper đơn giản để sử dụng

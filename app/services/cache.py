@@ -5,9 +5,7 @@ import redis
 
 class CacheService:
     def __init__(self):
-        self.redis_client = redis.Redis(
-            host="localhost", port=6379, decode_responses=True
-        )
+        self.redis_client = redis.Redis(host="localhost", port=6379, decode_responses=True)
 
     def get_lottery_result(self, region: str, date: str):
         key = f"lottery:{region}:{date}"
