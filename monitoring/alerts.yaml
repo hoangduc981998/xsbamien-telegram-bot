@@ -1,0 +1,185 @@
+# Cloud Monitoring Alert Policies for xsbamien-telegram-bot
+# These can be created using gcloud or Terraform
+
+alertPolicies:
+  # Alert 1: High Error Rate
+  - displayName: "XS Bot - High Error Rate"
+    documentation:
+      content: |
+        The error rate for xsbamien-telegram-bot has exceeded 5%.
+        This may indicate issues with:
+        - API connectivity
+        - Bot token configuration
+        - External service dependencies
+        
+        Check logs: gcloud run logs read xsbamien-telegram-bot --region asia-southeast1
+      mimeType: "text/markdown"
+    conditions:
+      - displayName: "Error Rate > 5%"
+        conditionThreshold:
+          filter: |
+            resource.type="cloud_run_revision"
+            resource.labels.service_name="xsbamien-telegram-bot"
+            metric.type="run.googleapis.com/request_count"
+            metric.labels.response_code_class="5xx"
+          comparison: COMPARISON_GT
+          thresholdValue: 0.05
+          duration: "300s"  # 5 minutes
+          aggregations:
+            - alignmentPeriod: "60s"
+              perSeriesAligner: ALIGN_RATE
+              crossSeriesReducer: REDUCE_MEAN
+              groupByFields:
+                - "resource.service_name"
+    combiner: OR
+    enabled: true
+    notificationChannels: []  # Add your notification channels
+    alertStrategy:
+      autoClose: "1800s"  # 30 minutes
+
+  # Alert 2: High Latency
+  - displayName: "XS Bot - High Latency"
+    documentation:
+      content: |
+        The response latency for xsbamien-telegram-bot has exceeded 2 seconds.
+        This may indicate:
+        - Performance degradation
+        - External API slowness
+        - Resource constraints
+        
+        Check metrics: gcloud monitoring dashboards list --filter="displayName:xsbamien"
+      mimeType: "text/markdown"
+    conditions:
+      - displayName: "Latency > 2s"
+        conditionThreshold:
+          filter: |
+            resource.type="cloud_run_revision"
+            resource.labels.service_name="xsbamien-telegram-bot"
+            metric.type="run.googleapis.com/request_latencies"
+          comparison: COMPARISON_GT
+          thresholdValue: 2000  # 2000ms = 2s
+          duration: "300s"  # 5 minutes
+          aggregations:
+            - alignmentPeriod: "60s"
+              perSeriesAligner: ALIGN_PERCENTILE_95
+              crossSeriesReducer: REDUCE_MEAN
+              groupByFields:
+                - "resource.service_name"
+    combiner: OR
+    enabled: true
+    notificationChannels: []
+    alertStrategy:
+      autoClose: "1800s"
+
+  # Alert 3: High Memory Usage
+  - displayName: "XS Bot - High Memory Usage"
+    documentation:
+      content: |
+        Memory usage for xsbamien-telegram-bot has exceeded 80%.
+        This may lead to:
+        - Out of memory errors
+        - Service restarts
+        - Degraded performance
+        
+        Consider:
+        - Increasing memory allocation (--memory flag)
+        - Investigating memory leaks
+        - Optimizing cache usage
+      mimeType: "text/markdown"
+    conditions:
+      - displayName: "Memory Usage > 80%"
+        conditionThreshold:
+          filter: |
+            resource.type="cloud_run_revision"
+            resource.labels.service_name="xsbamien-telegram-bot"
+            metric.type="run.googleapis.com/container/memory/utilizations"
+          comparison: COMPARISON_GT
+          thresholdValue: 0.80
+          duration: "300s"  # 5 minutes
+          aggregations:
+            - alignmentPeriod: "60s"
+              perSeriesAligner: ALIGN_MEAN
+              crossSeriesReducer: REDUCE_MEAN
+              groupByFields:
+                - "resource.service_name"
+    combiner: OR
+    enabled: true
+    notificationChannels: []
+    alertStrategy:
+      autoClose: "1800s"
+
+  # Alert 4: High CPU Usage
+  - displayName: "XS Bot - High CPU Usage"
+    documentation:
+      content: |
+        CPU usage for xsbamien-telegram-bot has exceeded 80%.
+        This may indicate:
+        - High traffic load
+        - Inefficient code execution
+        - Background processing issues
+        
+        Consider:
+        - Increasing CPU allocation (--cpu flag)
+        - Scaling max instances
+        - Optimizing heavy operations
+      mimeType: "text/markdown"
+    conditions:
+      - displayName: "CPU Usage > 80%"
+        conditionThreshold:
+          filter: |
+            resource.type="cloud_run_revision"
+            resource.labels.service_name="xsbamien-telegram-bot"
+            metric.type="run.googleapis.com/container/cpu/utilizations"
+          comparison: COMPARISON_GT
+          thresholdValue: 0.80
+          duration: "300s"  # 5 minutes
+          aggregations:
+            - alignmentPeriod: "60s"
+              perSeriesAligner: ALIGN_MEAN
+              crossSeriesReducer: REDUCE_MEAN
+              groupByFields:
+                - "resource.service_name"
+    combiner: OR
+    enabled: true
+    notificationChannels: []
+    alertStrategy:
+      autoClose: "1800s"
+
+  # Alert 5: Service Down
+  - displayName: "XS Bot - Service Down"
+    documentation:
+      content: |
+        The xsbamien-telegram-bot service is not responding to requests.
+        This is a critical issue requiring immediate attention.
+        
+        Troubleshooting steps:
+        1. Check service status: gcloud run services describe xsbamien-telegram-bot --region asia-southeast1
+        2. Check recent deployments: gcloud run revisions list --service xsbamien-telegram-bot
+        3. View logs: gcloud run logs read xsbamien-telegram-bot --limit 100
+        4. Consider rollback if recent deployment caused the issue
+      mimeType: "text/markdown"
+    conditions:
+      - displayName: "No Requests in 5 Minutes"
+        conditionAbsent:
+          filter: |
+            resource.type="cloud_run_revision"
+            resource.labels.service_name="xsbamien-telegram-bot"
+            metric.type="run.googleapis.com/request_count"
+          duration: "300s"  # 5 minutes
+          aggregations:
+            - alignmentPeriod: "60s"
+              perSeriesAligner: ALIGN_RATE
+    combiner: OR
+    enabled: true
+    notificationChannels: []
+    alertStrategy:
+      autoClose: "900s"  # 15 minutes
+
+# To create these alerts, use:
+# gcloud alpha monitoring policies create --policy-from-file=monitoring/alerts.yaml
+
+# Or use Terraform:
+# resource "google_monitoring_alert_policy" "high_error_rate" {
+#   display_name = "XS Bot - High Error Rate"
+#   ...
+# }
