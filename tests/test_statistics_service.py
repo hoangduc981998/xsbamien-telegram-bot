@@ -216,19 +216,19 @@ class TestGetFrequencyStats:
 
     @pytest.fixture
     def service(self):
-        return StatisticsService()
+        return StatisticsService(use_database=False)
 
-    def test_frequency_stats_returns_dict(self, service):
+    @pytest.mark.asyncio
+    async def test_frequency_stats_returns_dict(self, service):
         """Test that frequency stats returns dict"""
-        numbers = ["12", "34", "56", "78", "90"]
-        result = service.get_frequency_stats(numbers, days=30)
+        result = await service.get_frequency_stats("MB", days=30)
 
         assert isinstance(result, dict)
 
-    def test_frequency_stats_mock_data(self, service):
+    @pytest.mark.asyncio
+    async def test_frequency_stats_mock_data(self, service):
         """Test that mock data is reasonable"""
-        numbers = ["12", "34", "56"]
-        result = service.get_frequency_stats(numbers, days=30)
+        result = await service.get_frequency_stats("TPHCM", days=30)
 
         # Should have some data
         assert len(result) > 0

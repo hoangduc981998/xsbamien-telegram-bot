@@ -43,9 +43,20 @@
 - ✅ **Lô 2 Số** - Tần suất và phân bố số 2 chữ số
 - ✅ **Lô 3 Số** - Phân tích ba càng (3 chữ số)
 - ✅ **Đầu Lô / Đuôi Lô** - Thống kê theo chữ số đầu/đuôi
-- 🚧 **Lô Gan** - Số lâu không về (mock data - beta)
+- ✅ **Lô Gan** - Số lâu không về (database-powered - real statistics!)
+- ✅ **Hot/Cold Numbers** - Số nóng/lạnh từ dữ liệu thực
+- ✅ **Frequency Analysis** - Phân tích tần suất xuất hiện
 
 _📝 Chi tiết xem [STATISTICS.md](docs/STATISTICS.md)_
+
+### 🗄️ Database & Historical Data (NEW!)
+- ✅ **PostgreSQL Integration** - Lưu trữ lịch sử 100+ ngày
+- ✅ **Real Statistics** - Thống kê từ dữ liệu thực (không mock)
+- ✅ **Fast Queries** - Indexes tối ưu cho truy vấn nhanh
+- ✅ **MU88 API Crawler** - Thu thập dữ liệu hợp pháp 100%
+- ✅ **CLI Tools** - Quản lý database dễ dàng
+
+_📝 Chi tiết xem [DATABASE.md](docs/DATABASE.md)_
 
 ### 🔔 Thông Báo Thông Minh
 - ⏰ Nhắc trước giờ quay (15 phút)
@@ -64,7 +75,8 @@ _📝 Chi tiết xem [STATISTICS.md](docs/STATISTICS.md)_
 ### Yêu Cầu
 - Python 3.12+
 - Telegram Bot Token ([Tạo bot](https://t.me/BotFather))
-- Redis (tùy chọn, cho production)
+- PostgreSQL 13+ (tùy chọn, cho database features)
+- Redis (tùy chọn, cho production cache)
 
 ### Cài Đặt Nhanh
 
@@ -89,6 +101,48 @@ nano .env  # Thêm TELEGRAM_BOT_TOKEN
 ```bash
 python -m app.main
 ```
+
+### 🗄️ Setup Database (Tùy Chọn - Cho Thống Kê Nâng Cao)
+
+#### 1️⃣ Cài PostgreSQL
+```bash
+# Ubuntu/Debian
+sudo apt install postgresql postgresql-contrib
+
+# macOS
+brew install postgresql@15
+
+# Docker
+docker run --name lottery-postgres \
+  -e POSTGRES_PASSWORD=lottery_pass \
+  -e POSTGRES_USER=lottery_user \
+  -e POSTGRES_DB=lottery_db \
+  -p 5432:5432 -d postgres:15-alpine
+```
+
+#### 2️⃣ Khởi Tạo Database
+```bash
+# Cấu hình .env
+echo "DATABASE_URL=postgresql+asyncpg://lottery_user:lottery_pass@localhost:5432/lottery_db" >> .env
+echo "USE_DATABASE=true" >> .env
+
+# Chạy migrations
+python -m alembic upgrade head
+```
+
+#### 3️⃣ Tải Dữ Liệu Lịch Sử (100 ngày)
+```bash
+# Tải tất cả tỉnh (36 tỉnh × 100 ngày)
+python scripts/load_historical_data.py --days 100 --all
+
+# Hoặc chỉ 1 miền
+python scripts/load_historical_data.py --days 100 --region MN
+
+# Hoặc 1 tỉnh cụ thể
+python scripts/load_historical_data.py --days 100 --province MB
+```
+
+_📝 Xem thêm: [DATABASE.md](docs/DATABASE.md) để biết chi tiết_
 
 ### 🐳 Chạy Với Docker
 

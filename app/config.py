@@ -18,6 +18,13 @@ CACHE_TTL = 600  # 10 phút
 # Logging
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
+# Database Configuration
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql+asyncpg://lottery_user:lottery_pass@localhost:5432/lottery_db"
+)
+USE_DATABASE = os.getenv("USE_DATABASE", "false").lower() == "true"
+
 # Giờ quay thưởng (HH:MM format)
 DRAW_TIMES = {
     "MB": {"start": "18:15", "end": "18:30"},
