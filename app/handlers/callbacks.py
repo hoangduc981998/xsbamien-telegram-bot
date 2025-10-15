@@ -61,7 +61,36 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         # Main menu
-        if callback_data == "main_menu":
+        # Back to main menu
+        if callback_data == "back_to_main":
+            await query.answer()
+            from app.ui.messages import get_welcome_message
+            from app.ui.keyboards import get_main_menu_keyboard
+            
+            message = get_welcome_message()
+            keyboard = get_main_menu_keyboard()
+            await query.edit_message_text(
+                message,
+                reply_markup=keyboard,
+                parse_mode="HTML",
+            )
+        
+        # Results menu
+        elif callback_data == "results_menu":
+            await query.answer()
+            from app.ui.keyboards import get_region_keyboard
+            
+            message = "🎯 <b>XEM KẾT QUẢ XỔ SỐ</b>\n\n"
+            message += "Chọn khu vực để xem kết quả:"
+            keyboard = get_region_keyboard()
+            await query.edit_message_text(
+                message,
+                reply_markup=keyboard,
+                parse_mode="HTML",
+            )
+        
+        # Main menu
+        elif callback_data == "main_menu":
             await query.edit_message_text(
                 WELCOME_MESSAGE,
                 reply_markup=get_main_menu_keyboard(),
