@@ -58,7 +58,9 @@ class MU88APIClient:
     def __init__(self, timeout: float = 30.0):
         self.timeout = timeout
 
-    async def fetch_results(self, province_code: str, limit: int = 60) -> Optional[Dict]:
+    async def fetch_results(
+        self, province_code: str, limit: int = 60
+    ) -> Optional[Dict]:
         """
         Fetch lottery results from MU88 API
 
@@ -71,7 +73,9 @@ class MU88APIClient:
         """
         try:
             # Convert province code to game code
-            game_code = self.PROVINCE_MAP.get(province_code.upper(), province_code.lower())
+            game_code = self.PROVINCE_MAP.get(
+                province_code.upper(), province_code.lower()
+            )
 
             params = {"limitNum": limit, "gameCode": game_code}
 

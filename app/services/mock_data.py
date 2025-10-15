@@ -19,7 +19,9 @@ def get_mock_lottery_result(province_key: str) -> Dict:
             # Flatten: move prizes content to top level
             flat_result = {
                 "date": result.get("date"),
-                "province": result.get("province_name", result.get("province", province_key)),
+                "province": result.get(
+                    "province_name", result.get("province", province_key)
+                ),
             }
             flat_result.update(result["prizes"])
             return flat_result

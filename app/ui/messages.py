@@ -85,9 +85,7 @@ def get_schedule_message() -> str:
         # Miền Bắc
         mb_provinces = SCHEDULE["MB"].get(day_idx, [])
         if mb_provinces:
-            message += (
-                f"  🔴 <b>Miền Bắc</b>: {', '.join([PROVINCES[p]['name'] for p in mb_provinces if p in PROVINCES])}\n"
-            )
+            message += f"  🔴 <b>Miền Bắc</b>: {', '.join([PROVINCES[p]['name'] for p in mb_provinces if p in PROVINCES])}\n"
 
         # Miền Trung
         mt_provinces = SCHEDULE["MT"].get(day_idx, [])
@@ -105,7 +103,9 @@ def get_schedule_message() -> str:
 
     message += "\n⏰ <b>Giờ Quay:</b>\n"
     message += f"🟢 Miền Nam: {DRAW_TIMES['MN']['start']} - {DRAW_TIMES['MN']['end']}\n"
-    message += f"🟠 Miền Trung: {DRAW_TIMES['MT']['start']} - {DRAW_TIMES['MT']['end']}\n"
+    message += (
+        f"🟠 Miền Trung: {DRAW_TIMES['MT']['start']} - {DRAW_TIMES['MT']['end']}\n"
+    )
     message += f"🔴 Miền Bắc: {DRAW_TIMES['MB']['start']} - {DRAW_TIMES['MB']['end']}\n"
 
     return message
@@ -123,7 +123,15 @@ def get_today_schedule_message() -> str:
     date_str = now.strftime("%d/%m/%Y")
 
     # Day names tiếng Việt
-    day_names = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"]
+    day_names = [
+        "Thứ Hai",
+        "Thứ Ba",
+        "Thứ Tư",
+        "Thứ Năm",
+        "Thứ Sáu",
+        "Thứ Bảy",
+        "Chủ Nhật",
+    ]
     day_name = day_names[weekday]
 
     # Chuyển Python weekday (0=Mon) sang SCHEDULE format (0=Sun, 1=Mon...)
@@ -170,7 +178,15 @@ def get_tomorrow_schedule_message() -> str:
     weekday = tomorrow.weekday()
     date_str = tomorrow.strftime("%d/%m/%Y")
 
-    day_names = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"]
+    day_names = [
+        "Thứ Hai",
+        "Thứ Ba",
+        "Thứ Tư",
+        "Thứ Năm",
+        "Thứ Sáu",
+        "Thứ Bảy",
+        "Chủ Nhật",
+    ]
     day_name = day_names[weekday]
 
     schedule_day = (weekday + 1) % 7

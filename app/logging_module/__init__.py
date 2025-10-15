@@ -13,4 +13,4 @@ from config_data import PROVINCES, SCHEDULE
 # Import logging config
 from .logging_config import setup_logging
 
-__all__ = ['PROVINCES', 'SCHEDULE', 'setup_logging']
+__all__ = ["PROVINCES", "SCHEDULE", "setup_logging"]

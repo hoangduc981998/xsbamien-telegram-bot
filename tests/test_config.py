@@ -98,6 +98,7 @@ class TestDrawTimes:
 
     def test_draw_times_order(self):
         """Test that MN draws first, then MT, then MB"""
+
         # Convert to minutes for comparison
         def to_minutes(time_str):
             h, m = map(int, time_str.split(":"))

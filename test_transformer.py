@@ -20,7 +20,7 @@ async def test():
     for province_code, name in test_cases:
         print(f"\n{'='*70}")
         print(f"Testing: {name}")
-        print('='*70)
+        print("=" * 70)
 
         # Fetch from API
         api_response = await client.fetch_results(province_code, limit=3)
@@ -38,13 +38,13 @@ async def test():
             print(f"Date: {result.get('date')}")
             print(f"Province: {result.get('province')}")
             print(f"Keys: {list(result.keys())}")
-            
+
             # Show prizes
-            if 'DB' in result:
+            if "DB" in result:
                 print(f"DB: {result['DB']}")
-            if 'G1' in result:
+            if "G1" in result:
                 print(f"G1: {result['G1']}")
-            if 'G8' in result:
+            if "G8" in result:
                 print(f"G8: {result['G8']}")
 
     print("\n✅ All tests completed!")

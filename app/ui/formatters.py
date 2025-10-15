@@ -69,7 +69,9 @@ def format_result_mn_mt_full(result_data: dict) -> str:
         Message formatted với HTML
     """
     date = result_data.get("date", "")
-    province_name = result_data.get("province", "MIỀN NAM")  # ← Sửa "province_name" thành "province"
+    province_name = result_data.get(
+        "province", "MIỀN NAM"
+    )  # ← Sửa "province_name" thành "province"
 
     # ✅ FIX: Lấy prizes trực tiếp từ result_data
     if "prizes" in result_data:
@@ -476,7 +478,9 @@ def format_lottery_result(result_data: dict, region: str = "MN") -> str:
     logger = logging.getLogger(__name__)
 
     logger.info(f"🔍 format_lottery_result called: region={region}")
-    logger.info(f"🔍 result_data keys: {result_data.keys() if isinstance(result_data, dict) else 'NOT A DICT'}")
+    logger.info(
+        f"🔍 result_data keys: {result_data.keys() if isinstance(result_data, dict) else 'NOT A DICT'}"
+    )
 
     if region == "MB":
         logger.info("🔍 Calling format_result_mb_full()")

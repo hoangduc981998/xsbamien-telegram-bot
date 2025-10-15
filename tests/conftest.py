@@ -11,10 +11,12 @@ def mock_datetime():
     Returns:
         Function that creates a mock datetime with specified weekday
     """
+
     def _mock_datetime(weekday):
         mock = Mock()
         mock.weekday.return_value = weekday
         return mock
+
     return _mock_datetime
 
 
@@ -28,9 +30,34 @@ def expected_provinces_by_day():
     return {
         0: ["MB", "THTH", "PHYE", "TPHCM", "DOTH", "CAMA"],  # Monday (schedule_day=1)
         1: ["MB", "QUNA", "DALAK", "BETR", "VUTA", "BALI"],  # Tuesday (schedule_day=2)
-        2: ["MB", "DANA", "KHHO", "DONA", "CATH", "SOTR"],   # Wednesday (schedule_day=3)
-        3: ["MB", "BIDI", "QUBI", "QUTR", "TANI", "ANGI", "BITH"],  # Thursday (schedule_day=4)
-        4: ["MB", "GILA", "NITH", "VILO", "BIDU", "TRVI"],   # Friday (schedule_day=5)
-        5: ["MB", "DANA", "QUNG", "DANO", "TPHCM", "LOAN", "BIPH", "HAGI"],  # Saturday (schedule_day=6)
-        6: ["MB", "THTH", "KHHO", "KOTU", "TIGI", "KIGI", "DALAT"],  # Sunday (schedule_day=0)
+        2: ["MB", "DANA", "KHHO", "DONA", "CATH", "SOTR"],  # Wednesday (schedule_day=3)
+        3: [
+            "MB",
+            "BIDI",
+            "QUBI",
+            "QUTR",
+            "TANI",
+            "ANGI",
+            "BITH",
+        ],  # Thursday (schedule_day=4)
+        4: ["MB", "GILA", "NITH", "VILO", "BIDU", "TRVI"],  # Friday (schedule_day=5)
+        5: [
+            "MB",
+            "DANA",
+            "QUNG",
+            "DANO",
+            "TPHCM",
+            "LOAN",
+            "BIPH",
+            "HAGI",
+        ],  # Saturday (schedule_day=6)
+        6: [
+            "MB",
+            "THTH",
+            "KHHO",
+            "KOTU",
+            "TIGI",
+            "KIGI",
+            "DALAT",
+        ],  # Sunday (schedule_day=0)
     }

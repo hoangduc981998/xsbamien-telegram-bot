@@ -16,16 +16,18 @@ def sample_mb_api_response():
             "issueList": [
                 {
                     "turnNum": "2025-10-14",
-                    "detail": json.dumps([
-                        "12345",  # DB
-                        "67890",  # G1
-                        "11111,22222",  # G2
-                        "33333,44444,55555,66666,77777,88888",  # G3
-                        "1234,5678,9012,3456",  # G4
-                        "1111,2222,3333,4444,5555,6666",  # G5
-                        "111,222,333",  # G6
-                        "11,22,33,44",  # G7
-                    ]),
+                    "detail": json.dumps(
+                        [
+                            "12345",  # DB
+                            "67890",  # G1
+                            "11111,22222",  # G2
+                            "33333,44444,55555,66666,77777,88888",  # G3
+                            "1234,5678,9012,3456",  # G4
+                            "1111,2222,3333,4444,5555,6666",  # G5
+                            "111,222,333",  # G6
+                            "11,22,33,44",  # G7
+                        ]
+                    ),
                 }
             ],
         },
@@ -43,17 +45,19 @@ def sample_mn_api_response():
             "issueList": [
                 {
                     "turnNum": "2025-10-15",
-                    "detail": json.dumps([
-                        "456789",  # DB
-                        "890123",  # G1
-                        "234567",  # G2
-                        "123456,789012",  # G3
-                        "12345,67890,11111,22222,33333,44444,55555",  # G4
-                        "4567",  # G5
-                        "1234,5678,9012",  # G6
-                        "123",  # G7
-                        "12",  # G8
-                    ]),
+                    "detail": json.dumps(
+                        [
+                            "456789",  # DB
+                            "890123",  # G1
+                            "234567",  # G2
+                            "123456,789012",  # G3
+                            "12345,67890,11111,22222,33333,44444,55555",  # G4
+                            "4567",  # G5
+                            "1234,5678,9012",  # G6
+                            "123",  # G7
+                            "12",  # G8
+                        ]
+                    ),
                 }
             ],
         },
@@ -71,17 +75,19 @@ def sample_mt_api_response():
             "issueList": [
                 {
                     "turnNum": "2025-10-16",
-                    "detail": json.dumps([
-                        "999999",  # DB
-                        "888888",  # G1
-                        "777777",  # G2
-                        "666666,555555",  # G3
-                        "11111,22222,33333,44444,55555,66666,77777",  # G4
-                        "8888",  # G5
-                        "1111,2222,3333",  # G6
-                        "444",  # G7
-                        "55",  # G8
-                    ]),
+                    "detail": json.dumps(
+                        [
+                            "999999",  # DB
+                            "888888",  # G1
+                            "777777",  # G2
+                            "666666,555555",  # G3
+                            "11111,22222,33333,44444,55555,66666,77777",  # G4
+                            "8888",  # G5
+                            "1111,2222,3333",  # G6
+                            "444",  # G7
+                            "55",  # G8
+                        ]
+                    ),
                 }
             ],
         },
@@ -95,16 +101,18 @@ class TestTransformSingleResult:
         """Test transforming MB result"""
         issue = {
             "turnNum": "2025-10-14",
-            "detail": json.dumps([
-                "12345",  # DB
-                "67890",  # G1
-                "11111,22222",  # G2
-                "33333,44444,55555,66666,77777,88888",  # G3
-                "1234,5678,9012,3456",  # G4
-                "1111,2222,3333,4444,5555,6666",  # G5
-                "111,222,333",  # G6
-                "11,22,33,44",  # G7
-            ]),
+            "detail": json.dumps(
+                [
+                    "12345",  # DB
+                    "67890",  # G1
+                    "11111,22222",  # G2
+                    "33333,44444,55555,66666,77777,88888",  # G3
+                    "1234,5678,9012,3456",  # G4
+                    "1111,2222,3333,4444,5555,6666",  # G5
+                    "111,222,333",  # G6
+                    "11,22,33,44",  # G7
+                ]
+            ),
         }
 
         result = DataTransformer.transform_single_result(issue, "Miền Bắc", "MB")
@@ -121,17 +129,19 @@ class TestTransformSingleResult:
         """Test transforming MN result"""
         issue = {
             "turnNum": "2025-10-15",
-            "detail": json.dumps([
-                "456789",  # DB
-                "890123",  # G1
-                "234567",  # G2
-                "123456,789012",  # G3
-                "12345,67890,11111,22222,33333,44444,55555",  # G4
-                "4567",  # G5
-                "1234,5678,9012",  # G6
-                "123",  # G7
-                "12",  # G8
-            ]),
+            "detail": json.dumps(
+                [
+                    "456789",  # DB
+                    "890123",  # G1
+                    "234567",  # G2
+                    "123456,789012",  # G3
+                    "12345,67890,11111,22222,33333,44444,55555",  # G4
+                    "4567",  # G5
+                    "1234,5678,9012",  # G6
+                    "123",  # G7
+                    "12",  # G8
+                ]
+            ),
         }
 
         result = DataTransformer.transform_single_result(issue, "TP.HCM", "MN")
@@ -147,17 +157,19 @@ class TestTransformSingleResult:
         """Test transforming MT result"""
         issue = {
             "turnNum": "2025-10-16",
-            "detail": json.dumps([
-                "999999",  # DB
-                "888888",  # G1
-                "777777",  # G2
-                "666666,555555",  # G3
-                "11111,22222,33333,44444,55555,66666,77777",  # G4
-                "8888",  # G5
-                "1111,2222,3333",  # G6
-                "444",  # G7
-                "55",  # G8
-            ]),
+            "detail": json.dumps(
+                [
+                    "999999",  # DB
+                    "888888",  # G1
+                    "777777",  # G2
+                    "666666,555555",  # G3
+                    "11111,22222,33333,44444,55555,66666,77777",  # G4
+                    "8888",  # G5
+                    "1111,2222,3333",  # G6
+                    "444",  # G7
+                    "55",  # G8
+                ]
+            ),
         }
 
         result = DataTransformer.transform_single_result(issue, "Đà Nẵng", "MT")
@@ -288,7 +300,9 @@ class TestTransformResults:
             "t": {
                 "name": "Test",
                 "navCate": "MB",
-                "issueList": [{"turnNum": "2025-10-14", "detail": json.dumps(["12345"])}],
+                "issueList": [
+                    {"turnNum": "2025-10-14", "detail": json.dumps(["12345"])}
+                ],
             },
         }
         results = DataTransformer.transform_results(mb_response)
@@ -375,7 +389,16 @@ class TestDataTransformerEdgeCases:
 
     def test_prize_mapping_mb_correct_order(self):
         """Test that MB prizes are mapped in correct order"""
-        assert DataTransformer.MB_PRIZES == ["DB", "G1", "G2", "G3", "G4", "G5", "G6", "G7"]
+        assert DataTransformer.MB_PRIZES == [
+            "DB",
+            "G1",
+            "G2",
+            "G3",
+            "G4",
+            "G5",
+            "G6",
+            "G7",
+        ]
 
     def test_prize_mapping_mn_mt_correct_order(self):
         """Test that MN/MT prizes are mapped in correct order"""

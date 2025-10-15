@@ -56,7 +56,10 @@ class TestMessageConstants:
     def test_no_data_message_content(self):
         """Test no data message"""
         assert "😔" in NO_DATA_MESSAGE
-        assert "Chưa có dữ liệu" in NO_DATA_MESSAGE or "không có" in NO_DATA_MESSAGE.lower()
+        assert (
+            "Chưa có dữ liệu" in NO_DATA_MESSAGE
+            or "không có" in NO_DATA_MESSAGE.lower()
+        )
 
     def test_message_constants_are_strings(self):
         """Test all message constants are strings"""
@@ -78,7 +81,7 @@ class TestMessageConstants:
 class TestGetScheduleMessage:
     """Test get_schedule_message() function"""
 
-    @patch('app.ui.messages.datetime')
+    @patch("app.ui.messages.datetime")
     def test_schedule_message_structure(self, mock_datetime):
         """Test schedule message has proper structure"""
         mock_datetime.now.return_value.weekday.return_value = 0  # Monday
@@ -91,7 +94,7 @@ class TestGetScheduleMessage:
         assert "🟠 Miền Trung:" in result
         assert "🔴 Miền Bắc:" in result
 
-    @patch('app.ui.messages.datetime')
+    @patch("app.ui.messages.datetime")
     def test_schedule_shows_all_days(self, mock_datetime):
         """Test schedule message includes all days of week"""
         mock_datetime.now.return_value.weekday.return_value = 2  # Wednesday
@@ -107,7 +110,7 @@ class TestGetScheduleMessage:
         assert "Thứ Sáu" in result
         assert "Thứ Bảy" in result
 
-    @patch('app.ui.messages.datetime')
+    @patch("app.ui.messages.datetime")
     def test_schedule_highlights_today(self, mock_datetime):
         """Test schedule message highlights current day"""
         mock_datetime.now.return_value.weekday.return_value = 3  # Thursday
@@ -118,7 +121,7 @@ class TestGetScheduleMessage:
         assert "Thứ Năm" in result
         assert "HÔM NAY" in result
 
-    @patch('app.ui.messages.datetime')
+    @patch("app.ui.messages.datetime")
     def test_schedule_includes_draw_times(self, mock_datetime):
         """Test schedule message includes draw times"""
         mock_datetime.now.return_value.weekday.return_value = 0
@@ -134,7 +137,7 @@ class TestGetScheduleMessage:
 class TestGetTodayScheduleMessage:
     """Test get_today_schedule_message() function"""
 
-    @patch('app.ui.messages.datetime')
+    @patch("app.ui.messages.datetime")
     def test_today_schedule_structure(self, mock_datetime):
         """Test today's schedule has proper structure"""
         mock_now = mock_datetime.now.return_value
@@ -150,7 +153,7 @@ class TestGetTodayScheduleMessage:
         assert "🟠 <b>Miền Trung</b>" in result
         assert "🔴 <b>Miền Bắc</b>" in result
 
-    @patch('app.ui.messages.datetime')
+    @patch("app.ui.messages.datetime")
     def test_today_schedule_shows_provinces(self, mock_datetime):
         """Test today's schedule shows province names"""
         mock_now = mock_datetime.now.return_value
@@ -164,7 +167,7 @@ class TestGetTodayScheduleMessage:
         assert "TP.HCM" in result or "HCM" in result or "Hồ Chí Minh" in result
         assert "Phú Yên" in result or "PHYE" in result
 
-    @patch('app.ui.messages.datetime')
+    @patch("app.ui.messages.datetime")
     def test_today_schedule_always_shows_mb(self, mock_datetime):
         """Test today's schedule always shows Miền Bắc"""
         mock_now = mock_datetime.now.return_value
@@ -176,7 +179,7 @@ class TestGetTodayScheduleMessage:
         assert "🔴 <b>Miền Bắc</b>" in result
         assert "hàng ngày" in result
 
-    @patch('app.ui.messages.datetime')
+    @patch("app.ui.messages.datetime")
     def test_today_schedule_shows_draw_times(self, mock_datetime):
         """Test today's schedule shows specific draw times"""
         mock_now = mock_datetime.now.return_value
@@ -193,7 +196,7 @@ class TestGetTodayScheduleMessage:
 class TestGetTomorrowScheduleMessage:
     """Test get_tomorrow_schedule_message() function"""
 
-    @patch('app.ui.messages.datetime')
+    @patch("app.ui.messages.datetime")
     def test_tomorrow_schedule_structure(self, mock_datetime):
         """Test tomorrow's schedule has proper structure"""
         # Today is Monday, tomorrow is Tuesday
@@ -208,7 +211,7 @@ class TestGetTomorrowScheduleMessage:
         assert "Thứ Ba" in result
         assert "15/10/2025" in result
 
-    @patch('app.ui.messages.datetime')
+    @patch("app.ui.messages.datetime")
     def test_tomorrow_schedule_shows_regions(self, mock_datetime):
         """Test tomorrow's schedule shows all regions"""
         mock_now = mock_datetime.now.return_value
@@ -222,7 +225,7 @@ class TestGetTomorrowScheduleMessage:
         assert "🟠 <b>Miền Trung</b>" in result
         assert "🔴 <b>Miền Bắc</b>" in result
 
-    @patch('app.ui.messages.datetime')
+    @patch("app.ui.messages.datetime")
     def test_tomorrow_schedule_encouragement(self, mock_datetime):
         """Test tomorrow's schedule has encouragement message"""
         mock_now = mock_datetime.now.return_value

@@ -1,4 +1,3 @@
-
 """Unit tests for keyboard generation functions"""
 
 import pytest
@@ -25,18 +24,21 @@ class TestGetScheduleTodayKeyboard:
         """Clear cache before each test"""
         ScheduleCache.clear_cache()
 
-    @pytest.mark.parametrize("python_weekday,schedule_day", [
-        (0, 1),  # Monday → schedule day 1 (Thứ 2)
-        (1, 2),  # Tuesday → schedule day 2 (Thứ 3)
-        (2, 3),  # Wednesday → schedule day 3 (Thứ 4)
-        (3, 4),  # Thursday → schedule day 4 (Thứ 5)
-        (4, 5),  # Friday → schedule day 5 (Thứ 6)
-        (5, 6),  # Saturday → schedule day 6 (Thứ 7)
-        (6, 0),  # Sunday → schedule day 0 (Chủ nhật)
-    ])
+    @pytest.mark.parametrize(
+        "python_weekday,schedule_day",
+        [
+            (0, 1),  # Monday → schedule day 1 (Thứ 2)
+            (1, 2),  # Tuesday → schedule day 2 (Thứ 3)
+            (2, 3),  # Wednesday → schedule day 3 (Thứ 4)
+            (3, 4),  # Thursday → schedule day 4 (Thứ 5)
+            (4, 5),  # Friday → schedule day 5 (Thứ 6)
+            (5, 6),  # Saturday → schedule day 6 (Thứ 7)
+            (6, 0),  # Sunday → schedule day 0 (Chủ nhật)
+        ],
+    )
     def test_weekday_conversion(self, python_weekday, schedule_day):
         """Test Python weekday converts correctly to SCHEDULE format"""
-        with patch('app.utils.cache.datetime') as mock_dt:
+        with patch("app.utils.cache.datetime") as mock_dt:
             mock_dt.now.return_value.weekday.return_value = python_weekday
             mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
@@ -53,16 +55,20 @@ class TestGetScheduleTodayKeyboard:
             for row in keyboard.inline_keyboard[:-1]:  # Exclude last row (Back button)
                 for button in row:
                     if button.callback_data.startswith("result_"):
-                        actual_provinces.append(button.callback_data.replace("result_", ""))
+                        actual_provinces.append(
+                            button.callback_data.replace("result_", "")
+                        )
 
             # Verify
-            error_msg = (f"Weekday {python_weekday} → Schedule day {schedule_day}: "
-                         f"Expected {expected_provinces}, got {actual_provinces}")
+            error_msg = (
+                f"Weekday {python_weekday} → Schedule day {schedule_day}: "
+                f"Expected {expected_provinces}, got {actual_provinces}"
+            )
             assert actual_provinces == expected_provinces, error_msg
 
     def test_all_provinces_shown_no_limit(self):
         """Test that all provinces are shown (not limited to [:2])"""
-        with patch('app.utils.cache.datetime') as mock_dt:
+        with patch("app.utils.cache.datetime") as mock_dt:
             # Tuesday has 6 provinces (1 MB + 2 MT + 3 MN)
             mock_dt.now.return_value.weekday.return_value = 1  # Tuesday
             mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
@@ -76,11 +82,13 @@ class TestGetScheduleTodayKeyboard:
                     if button.callback_data.startswith("result_"):
                         result_count += 1
 
-            assert result_count == 6, f"Expected 6 provinces on Tuesday, got {result_count}"
+            assert (
+                result_count == 6
+            ), f"Expected 6 provinces on Tuesday, got {result_count}"
 
     def test_two_column_layout(self):
         """Test buttons are arranged in 2-column layout"""
-        with patch('app.utils.cache.datetime') as mock_dt:
+        with patch("app.utils.cache.datetime") as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 1  # Tuesday
             mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
@@ -101,7 +109,7 @@ class TestGetScheduleTodayKeyboard:
 
     def test_button_display_name_truncation(self):
         """Test long province names are truncated"""
-        with patch('app.utils.cache.datetime') as mock_dt:
+        with patch("app.utils.cache.datetime") as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 0  # Monday (has TP.HCM)
             mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
@@ -121,7 +129,7 @@ class TestGetScheduleTodayKeyboard:
 
     def test_button_callback_data_format(self):
         """Test button callback data format is correct"""
-        with patch('app.utils.cache.datetime') as mock_dt:
+        with patch("app.utils.cache.datetime") as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 0  # Monday
             mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
@@ -134,12 +142,13 @@ class TestGetScheduleTodayKeyboard:
                         # Extract province code
                         result_code = button.callback_data.replace("result_", "")
                         # Verify it exists in PROVINCES
-                        assert result_code in PROVINCES, \
-                            f"Province code {result_code} not found in PROVINCES"
+                        assert (
+                            result_code in PROVINCES
+                        ), f"Province code {result_code} not found in PROVINCES"
 
     def test_provinces_grouped_by_region_order(self):
         """Test provinces appear in correct order: MB → MT → MN"""
-        with patch('app.utils.cache.datetime') as mock_dt:
+        with patch("app.utils.cache.datetime") as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 0  # Monday
             mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
@@ -179,18 +188,21 @@ class TestGetTodayScheduleActions:
         """Clear cache before each test"""
         ScheduleCache.clear_cache()
 
-    @pytest.mark.parametrize("python_weekday,schedule_day", [
-        (0, 1),  # Monday → schedule day 1
-        (1, 2),  # Tuesday → schedule day 2
-        (2, 3),  # Wednesday → schedule day 3
-        (3, 4),  # Thursday → schedule day 4
-        (4, 5),  # Friday → schedule day 5
-        (5, 6),  # Saturday → schedule day 6
-        (6, 0),  # Sunday → schedule day 0
-    ])
+    @pytest.mark.parametrize(
+        "python_weekday,schedule_day",
+        [
+            (0, 1),  # Monday → schedule day 1
+            (1, 2),  # Tuesday → schedule day 2
+            (2, 3),  # Wednesday → schedule day 3
+            (3, 4),  # Thursday → schedule day 4
+            (4, 5),  # Friday → schedule day 5
+            (5, 6),  # Saturday → schedule day 6
+            (6, 0),  # Sunday → schedule day 0
+        ],
+    )
     def test_weekday_conversion(self, python_weekday, schedule_day):
         """Test Python weekday converts correctly to SCHEDULE format"""
-        with patch('app.utils.cache.datetime') as mock_dt:
+        with patch("app.utils.cache.datetime") as mock_dt:
             mock_dt.now.return_value.weekday.return_value = python_weekday
             mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
@@ -207,11 +219,15 @@ class TestGetTodayScheduleActions:
             for row in keyboard.inline_keyboard[:-1]:  # Exclude last row
                 for button in row:
                     if button.callback_data.startswith("result_"):
-                        actual_provinces.append(button.callback_data.replace("result_", ""))
+                        actual_provinces.append(
+                            button.callback_data.replace("result_", "")
+                        )
 
             # Verify
-            error_msg = (f"Weekday {python_weekday} → Schedule day {schedule_day}: "
-                         f"Expected {expected_provinces}, got {actual_provinces}")
+            error_msg = (
+                f"Weekday {python_weekday} → Schedule day {schedule_day}: "
+                f"Expected {expected_provinces}, got {actual_provinces}"
+            )
             assert actual_provinces == expected_provinces, error_msg
 
     def test_navigation_buttons_present(self):
@@ -221,18 +237,18 @@ class TestGetTodayScheduleActions:
         # Check last 2 rows (separate buttons)
         schedule_week_row = keyboard.inline_keyboard[-2]
         back_row = keyboard.inline_keyboard[-1]
-        
+
         assert len(schedule_week_row) == 1
         assert schedule_week_row[0].text == "📅 Lịch cả tuần"
         assert schedule_week_row[0].callback_data == "schedule_week"
-        
+
         assert len(back_row) == 1
         assert back_row[0].text == "🔙 Quay lại"
         assert back_row[0].callback_data == "back_to_main"
 
     def test_all_provinces_shown_no_limit(self):
         """Test that all provinces are shown (not limited to [:2])"""
-        with patch('app.utils.cache.datetime') as mock_dt:
+        with patch("app.utils.cache.datetime") as mock_dt:
             # Tuesday has 6 provinces
             mock_dt.now.return_value.weekday.return_value = 1  # Tuesday
             mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
@@ -246,11 +262,13 @@ class TestGetTodayScheduleActions:
                     if button.callback_data.startswith("result_"):
                         result_count += 1
 
-            assert result_count == 6, f"Expected 6 provinces on Tuesday, got {result_count}"
+            assert (
+                result_count == 6
+            ), f"Expected 6 provinces on Tuesday, got {result_count}"
 
     def test_two_column_layout(self):
         """Test buttons are arranged in 2-column layout"""
-        with patch('app.utils.cache.datetime') as mock_dt:
+        with patch("app.utils.cache.datetime") as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 1  # Tuesday
             mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
@@ -262,7 +280,7 @@ class TestGetTodayScheduleActions:
 
     def test_button_display_name_truncation(self):
         """Test long province names are truncated"""
-        with patch('app.utils.cache.datetime') as mock_dt:
+        with patch("app.utils.cache.datetime") as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 0  # Monday (has TP.HCM)
             mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
@@ -281,7 +299,7 @@ class TestGetTodayScheduleActions:
 
     def test_button_callback_data_format(self):
         """Test button callback data format is correct"""
-        with patch('app.utils.cache.datetime') as mock_dt:
+        with patch("app.utils.cache.datetime") as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 0  # Monday
             mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
@@ -292,12 +310,13 @@ class TestGetTodayScheduleActions:
                 for button in row:
                     if button.callback_data.startswith("result_"):
                         result_code = button.callback_data.replace("result_", "")
-                        assert result_code in PROVINCES, \
-                            f"Province code {result_code} not found in PROVINCES"
+                        assert (
+                            result_code in PROVINCES
+                        ), f"Province code {result_code} not found in PROVINCES"
 
     def test_provinces_before_navigation_buttons(self):
         """Test province buttons come before navigation buttons"""
-        with patch('app.utils.cache.datetime') as mock_dt:
+        with patch("app.utils.cache.datetime") as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 0  # Monday
             mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
@@ -307,18 +326,20 @@ class TestGetTodayScheduleActions:
             last_two_rows = keyboard.inline_keyboard[-2:]
             for row in last_two_rows:
                 for button in row:
-                    assert not button.callback_data.startswith("result_"), \
-                        "Navigation rows should not contain province buttons"
+                    assert not button.callback_data.startswith(
+                        "result_"
+                    ), "Navigation rows should not contain province buttons"
 
             # All other rows should contain province buttons (if any buttons exist)
             for row in keyboard.inline_keyboard[:-2]:
                 for button in row:
-                    assert button.callback_data.startswith("result_"), \
-                        "Province rows should only contain province buttons"
+                    assert button.callback_data.startswith(
+                        "result_"
+                    ), "Province rows should only contain province buttons"
 
     def test_provinces_grouped_by_region_order(self):
         """Test provinces appear in correct order: MB → MT → MN"""
-        with patch('app.utils.cache.datetime') as mock_dt:
+        with patch("app.utils.cache.datetime") as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 0  # Monday
             mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
@@ -352,7 +373,7 @@ class TestGetTodayScheduleActions:
 
     def test_thursday_has_7_provinces(self):
         """Test Thursday has 7 provinces (edge case with most provinces)"""
-        with patch('app.utils.cache.datetime') as mock_dt:
+        with patch("app.utils.cache.datetime") as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 3  # Thursday
             mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
@@ -366,7 +387,9 @@ class TestGetTodayScheduleActions:
                         result_count += 1
 
             # Thursday should have 7 provinces: MB + BIDI/QUBI/QUTR + TANI/ANGI/BITH
-            assert result_count == 7, f"Expected 7 provinces on Thursday, got {result_count}"
+            assert (
+                result_count == 7
+            ), f"Expected 7 provinces on Thursday, got {result_count}"
 
 
 class TestGetMainMenuKeyboard:
@@ -384,7 +407,7 @@ class TestGetMainMenuKeyboard:
         keyboard = get_main_menu_keyboard()
 
         button_texts = [row[0].text for row in keyboard.inline_keyboard]
-        
+
         assert "Lịch quay hôm nay" in " ".join(button_texts)
         assert "Lịch quay cả tuần" in " ".join(button_texts)
         assert "Xem kết quả" in " ".join(button_texts)
@@ -395,7 +418,7 @@ class TestGetMainMenuKeyboard:
         keyboard = get_main_menu_keyboard()
 
         callbacks = [row[0].callback_data for row in keyboard.inline_keyboard]
-        
+
         assert "schedule_today" in callbacks
         assert "schedule_week" in callbacks
         assert "results_menu" in callbacks
@@ -425,7 +448,7 @@ class TestGetResultsMenuKeyboard:
         keyboard = get_results_menu_keyboard()
 
         button_texts = [row[0].text for row in keyboard.inline_keyboard]
-        
+
         assert any("Miền Bắc" in text for text in button_texts)
         assert any("Miền Trung" in text for text in button_texts)
         assert any("Miền Nam" in text for text in button_texts)
@@ -436,7 +459,7 @@ class TestGetResultsMenuKeyboard:
         keyboard = get_results_menu_keyboard()
 
         callbacks = [row[0].callback_data for row in keyboard.inline_keyboard]
-        
+
         assert "results_MB" in callbacks
         assert "results_MT" in callbacks
         assert "results_MN" in callbacks
@@ -451,7 +474,7 @@ class TestGetResultsMenuKeyboard:
             row[0].callback_data
             for row in keyboard.inline_keyboard[:-1]  # Exclude last (back) button
         ]
-        
+
         # Should be in order: results_MB, results_MT, results_MN
         assert region_callbacks[0] == "results_MB"
         assert region_callbacks[1] == "results_MT"
@@ -493,7 +516,7 @@ class TestGetRegionProvincesKeyboard:
 
         # All province rows (except possibly last and back) should have 2 buttons
         province_rows = keyboard.inline_keyboard[:-1]  # Exclude back button
-        
+
         for row in province_rows[:-1]:  # All but last province row
             assert len(row) <= 2
 
@@ -549,7 +572,7 @@ class TestGetBackToResultsKeyboard:
         keyboard = get_back_to_results_keyboard()
 
         button_texts = [row[0].text for row in keyboard.inline_keyboard]
-        
+
         assert any("tỉnh khác" in text for text in button_texts)
         assert any("trang chủ" in text for text in button_texts)
 
@@ -558,7 +581,7 @@ class TestGetBackToResultsKeyboard:
         keyboard = get_back_to_results_keyboard()
 
         callbacks = [row[0].callback_data for row in keyboard.inline_keyboard]
-        
+
         assert "results_menu" in callbacks
         assert "back_to_main" in callbacks
 
@@ -585,7 +608,7 @@ class TestGetWeekScheduleKeyboard:
         keyboard = get_week_schedule_keyboard()
 
         button_texts = [row[0].text for row in keyboard.inline_keyboard]
-        
+
         assert any("lịch hôm nay" in text.lower() for text in button_texts)
         assert any("kết quả" in text.lower() for text in button_texts)
         assert any("quay lại" in text.lower() for text in button_texts)
@@ -595,7 +618,7 @@ class TestGetWeekScheduleKeyboard:
         keyboard = get_week_schedule_keyboard()
 
         callbacks = [row[0].callback_data for row in keyboard.inline_keyboard]
-        
+
         assert "schedule_today" in callbacks
         assert "results_menu" in callbacks
         assert "back_to_main" in callbacks

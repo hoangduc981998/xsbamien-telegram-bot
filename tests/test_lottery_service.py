@@ -247,9 +247,7 @@ class TestGetHistory:
         lottery_service.api_client.fetch_results.assert_called_once_with("MB", 30)
 
     @pytest.mark.asyncio
-    async def test_get_history_api_failure_returns_empty(
-        self, lottery_service, mocker
-    ):
+    async def test_get_history_api_failure_returns_empty(self, lottery_service, mocker):
         """Test that empty list is returned when API fails"""
         lottery_service.api_client.fetch_results = AsyncMock(return_value=None)
 
