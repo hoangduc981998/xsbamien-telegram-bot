@@ -23,3 +23,7 @@ htmlcov/
 logs/
 *.log
 *.log.*
+
+# GCP credentials
+gcp-key.json
+*.json
