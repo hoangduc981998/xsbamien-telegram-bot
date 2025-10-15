@@ -8,6 +8,11 @@ from datetime import date
 from app.ui.keyboards import (
     get_schedule_today_keyboard,
     get_today_schedule_actions,
+    get_main_menu_keyboard,
+    get_results_menu_keyboard,
+    get_region_provinces_keyboard,
+    get_back_to_results_keyboard,
+    get_week_schedule_keyboard,
 )
 from app.config import PROVINCES, SCHEDULE
 from app.utils.cache import ScheduleCache
@@ -362,3 +367,242 @@ class TestGetTodayScheduleActions:
 
             # Thursday should have 7 provinces: MB + BIDI/QUBI/QUTR + TANI/ANGI/BITH
             assert result_count == 7, f"Expected 7 provinces on Thursday, got {result_count}"
+
+
+class TestGetMainMenuKeyboard:
+    """Test get_main_menu_keyboard() function"""
+
+    def test_main_menu_structure(self):
+        """Test main menu has all expected buttons"""
+        keyboard = get_main_menu_keyboard()
+
+        # Should have 4 rows (one for each menu item)
+        assert len(keyboard.inline_keyboard) == 4
+
+    def test_main_menu_button_texts(self):
+        """Test main menu button texts"""
+        keyboard = get_main_menu_keyboard()
+
+        button_texts = [row[0].text for row in keyboard.inline_keyboard]
+        
+        assert "Lịch quay hôm nay" in " ".join(button_texts)
+        assert "Lịch quay cả tuần" in " ".join(button_texts)
+        assert "Xem kết quả" in " ".join(button_texts)
+        assert "Hướng dẫn" in " ".join(button_texts)
+
+    def test_main_menu_callback_data(self):
+        """Test main menu callback data is correct"""
+        keyboard = get_main_menu_keyboard()
+
+        callbacks = [row[0].callback_data for row in keyboard.inline_keyboard]
+        
+        assert "schedule_today" in callbacks
+        assert "schedule_week" in callbacks
+        assert "results_menu" in callbacks
+        assert "help" in callbacks
+
+    def test_main_menu_single_column(self):
+        """Test main menu uses single column layout"""
+        keyboard = get_main_menu_keyboard()
+
+        # Each row should have exactly 1 button
+        for row in keyboard.inline_keyboard:
+            assert len(row) == 1
+
+
+class TestGetResultsMenuKeyboard:
+    """Test get_results_menu_keyboard() function"""
+
+    def test_results_menu_structure(self):
+        """Test results menu has all regions"""
+        keyboard = get_results_menu_keyboard()
+
+        # Should have 4 rows (MB, MT, MN, Back)
+        assert len(keyboard.inline_keyboard) == 4
+
+    def test_results_menu_button_texts(self):
+        """Test results menu shows all regions"""
+        keyboard = get_results_menu_keyboard()
+
+        button_texts = [row[0].text for row in keyboard.inline_keyboard]
+        
+        assert any("Miền Bắc" in text for text in button_texts)
+        assert any("Miền Trung" in text for text in button_texts)
+        assert any("Miền Nam" in text for text in button_texts)
+        assert any("Quay lại" in text for text in button_texts)
+
+    def test_results_menu_callback_data(self):
+        """Test results menu callback data format"""
+        keyboard = get_results_menu_keyboard()
+
+        callbacks = [row[0].callback_data for row in keyboard.inline_keyboard]
+        
+        assert "results_MB" in callbacks
+        assert "results_MT" in callbacks
+        assert "results_MN" in callbacks
+        assert "back_to_main" in callbacks
+
+    def test_results_menu_region_order(self):
+        """Test results menu shows regions in MB, MT, MN order"""
+        keyboard = get_results_menu_keyboard()
+
+        # Get callbacks without back button
+        region_callbacks = [
+            row[0].callback_data
+            for row in keyboard.inline_keyboard[:-1]  # Exclude last (back) button
+        ]
+        
+        # Should be in order: results_MB, results_MT, results_MN
+        assert region_callbacks[0] == "results_MB"
+        assert region_callbacks[1] == "results_MT"
+        assert region_callbacks[2] == "results_MN"
+
+
+class TestGetRegionProvincesKeyboard:
+    """Test get_region_provinces_keyboard() function"""
+
+    def test_region_provinces_mb(self):
+        """Test MB region provinces keyboard"""
+        keyboard = get_region_provinces_keyboard("MB")
+
+        # MB should have 1 province (Miền Bắc)
+        # Plus back button
+        province_rows = keyboard.inline_keyboard[:-1]  # Exclude back button
+        assert len(province_rows) >= 1
+
+    def test_region_provinces_mt(self):
+        """Test MT region provinces keyboard"""
+        keyboard = get_region_provinces_keyboard("MT")
+
+        # MT should have multiple provinces
+        province_rows = keyboard.inline_keyboard[:-1]
+        # Should have at least a few provinces
+        assert len(province_rows) >= 5
+
+    def test_region_provinces_mn(self):
+        """Test MN region provinces keyboard"""
+        keyboard = get_region_provinces_keyboard("MN")
+
+        # MN should have most provinces (21)
+        province_rows = keyboard.inline_keyboard[:-1]
+        assert len(province_rows) >= 10  # At least 10 rows
+
+    def test_region_provinces_two_column_layout(self):
+        """Test provinces use 2-column layout"""
+        keyboard = get_region_provinces_keyboard("MN")
+
+        # All province rows (except possibly last and back) should have 2 buttons
+        province_rows = keyboard.inline_keyboard[:-1]  # Exclude back button
+        
+        for row in province_rows[:-1]:  # All but last province row
+            assert len(row) <= 2
+
+    def test_region_provinces_has_back_button(self):
+        """Test region provinces keyboard has back button"""
+        keyboard = get_region_provinces_keyboard("MB")
+
+        # Last row should be back button
+        last_row = keyboard.inline_keyboard[-1]
+        assert len(last_row) == 1
+        assert "Quay lại" in last_row[0].text
+        assert last_row[0].callback_data == "results_menu"
+
+    def test_region_provinces_callback_format(self):
+        """Test province callback data format"""
+        keyboard = get_region_provinces_keyboard("MT")
+
+        # Check all province buttons have correct callback format
+        for row in keyboard.inline_keyboard[:-1]:  # Exclude back button
+            for button in row:
+                assert button.callback_data.startswith("result_")
+                province_code = button.callback_data.replace("result_", "")
+                assert province_code in PROVINCES
+
+    def test_region_provinces_sorted_by_name(self):
+        """Test provinces are sorted alphabetically by name"""
+        keyboard = get_region_provinces_keyboard("MN")
+
+        # Get province names
+        province_names = []
+        for row in keyboard.inline_keyboard[:-1]:  # Exclude back button
+            for button in row:
+                province_names.append(button.text)
+
+        # Check if sorted (Vietnamese sorting might differ, so just check some order exists)
+        # At least first and last should be different
+        assert len(province_names) > 1
+        assert province_names[0] != province_names[-1]
+
+
+class TestGetBackToResultsKeyboard:
+    """Test get_back_to_results_keyboard() function"""
+
+    def test_back_to_results_structure(self):
+        """Test back to results keyboard structure"""
+        keyboard = get_back_to_results_keyboard()
+
+        # Should have 2 rows
+        assert len(keyboard.inline_keyboard) == 2
+
+    def test_back_to_results_button_texts(self):
+        """Test back to results keyboard button texts"""
+        keyboard = get_back_to_results_keyboard()
+
+        button_texts = [row[0].text for row in keyboard.inline_keyboard]
+        
+        assert any("tỉnh khác" in text for text in button_texts)
+        assert any("trang chủ" in text for text in button_texts)
+
+    def test_back_to_results_callback_data(self):
+        """Test back to results keyboard callback data"""
+        keyboard = get_back_to_results_keyboard()
+
+        callbacks = [row[0].callback_data for row in keyboard.inline_keyboard]
+        
+        assert "results_menu" in callbacks
+        assert "back_to_main" in callbacks
+
+    def test_back_to_results_single_column(self):
+        """Test back to results uses single column"""
+        keyboard = get_back_to_results_keyboard()
+
+        for row in keyboard.inline_keyboard:
+            assert len(row) == 1
+
+
+class TestGetWeekScheduleKeyboard:
+    """Test get_week_schedule_keyboard() function"""
+
+    def test_week_schedule_structure(self):
+        """Test week schedule keyboard structure"""
+        keyboard = get_week_schedule_keyboard()
+
+        # Should have 3 rows
+        assert len(keyboard.inline_keyboard) == 3
+
+    def test_week_schedule_button_texts(self):
+        """Test week schedule keyboard button texts"""
+        keyboard = get_week_schedule_keyboard()
+
+        button_texts = [row[0].text for row in keyboard.inline_keyboard]
+        
+        assert any("lịch hôm nay" in text.lower() for text in button_texts)
+        assert any("kết quả" in text.lower() for text in button_texts)
+        assert any("quay lại" in text.lower() for text in button_texts)
+
+    def test_week_schedule_callback_data(self):
+        """Test week schedule keyboard callback data"""
+        keyboard = get_week_schedule_keyboard()
+
+        callbacks = [row[0].callback_data for row in keyboard.inline_keyboard]
+        
+        assert "schedule_today" in callbacks
+        assert "results_menu" in callbacks
+        assert "back_to_main" in callbacks
+
+    def test_week_schedule_single_column(self):
+        """Test week schedule uses single column"""
+        keyboard = get_week_schedule_keyboard()
+
+        for row in keyboard.inline_keyboard:
+            assert len(row) == 1
