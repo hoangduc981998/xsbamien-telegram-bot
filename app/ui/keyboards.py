@@ -181,7 +181,7 @@ def get_stats_menu_keyboard() -> InlineKeyboardMarkup:
 def get_province_detail_keyboard(province_key: str) -> InlineKeyboardMarkup:
     """
     Keyboard for province detail view with statistics options
-    
+
     Args:
         province_key: Province code (e.g., TPHCM, DANA, MB)
     """
@@ -204,7 +204,7 @@ def get_province_detail_menu(province_key: str) -> InlineKeyboardMarkup:
 def get_region_menu_keyboard(region: str) -> InlineKeyboardMarkup:
     """
     Keyboard for region menu (same as province list)
-    
+
     Args:
         region: Region code (MB, MT, MN)
     """
