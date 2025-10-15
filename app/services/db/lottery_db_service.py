@@ -35,9 +35,33 @@ class LotteryDBService:
                 # Parse date
                 draw_date = result_data.get("date")
                 if isinstance(draw_date, str):
+            # Parse date - handle both DD/MM/YYYY and YYYY-MM-DD formats
+            draw_date = result_data.get("date")
+            if isinstance(draw_date, str):
+                # Try DD/MM/YYYY format first (from API)
+                try:
+                    draw_date = datetime.strptime(draw_date, "%d/%m/%Y").date()
+                except ValueError:
+                    # Fallback to YYYY-MM-DD format
                     draw_date = datetime.strptime(draw_date, "%Y-%m-%d").date()
-                elif isinstance(draw_date, datetime):
-                    draw_date = draw_date.date()
+            # Parse date - handle both DD/MM/YYYY and YYYY-MM-DD formats
+            draw_date = result_data.get("date")
+            if isinstance(draw_date, str):
+                # Try DD/MM/YYYY format first (from API)
+                try:
+                    draw_date = datetime.strptime(draw_date, "%d/%m/%Y").date()
+                except ValueError:
+                    # Fallback to YYYY-MM-DD format
+                    draw_date = datetime.strptime(draw_date, "%Y-%m-%d").date()
+            # Parse date - handle both DD/MM/YYYY and YYYY-MM-DD formats
+            draw_date = result_data.get("date")
+            if isinstance(draw_date, str):
+                # Try DD/MM/YYYY format first (from API)
+                try:
+                    draw_date = datetime.strptime(draw_date, "%d/%m/%Y").date()
+                except ValueError:
+                    # Fallback to YYYY-MM-DD format
+                    draw_date = datetime.strptime(draw_date, "%Y-%m-%d").date()
 
                 # Upsert (insert or update)
                 stmt = insert(LotteryResult).values(
