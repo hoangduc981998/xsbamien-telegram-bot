@@ -153,3 +153,78 @@ def get_week_schedule_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton("🔙 Quay lại", callback_data="back_to_main")],
     ]
     return InlineKeyboardMarkup(keyboard)
+
+
+def get_back_to_menu_keyboard() -> InlineKeyboardMarkup:
+    """Simple back to main menu button"""
+    keyboard = [
+        [InlineKeyboardButton("🔙 Quay lại menu chính", callback_data="back_to_main")],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_stats_menu_keyboard() -> InlineKeyboardMarkup:
+    """Statistics main menu keyboard"""
+    keyboard = [
+        [
+            InlineKeyboardButton("📊 Lô 2 Số MB", callback_data="stats_MB_2digit"),
+            InlineKeyboardButton("📊 Lô 2 Số MN", callback_data="stats_MN_2digit"),
+        ],
+        [InlineKeyboardButton("📊 Lô 2 Số MT", callback_data="stats_MT_2digit")],
+        [InlineKeyboardButton("📈 Đầu-Đuôi ĐB", callback_data="stats_headtail")],
+        [InlineKeyboardButton("❄️ Lô Gan", callback_data="stats_gan")],
+        [InlineKeyboardButton("🔙 Quay lại", callback_data="back_to_main")],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_province_detail_keyboard(province_key: str) -> InlineKeyboardMarkup:
+    """
+    Keyboard for province detail view with statistics options
+    
+    Args:
+        province_key: Province code (e.g., TPHCM, DANA, MB)
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton("📊 Thống kê Lô 2 số", callback_data=f"stats2_{province_key}"),
+            InlineKeyboardButton("📊 Thống kê Lô 3 số", callback_data=f"stats3_{province_key}"),
+        ],
+        [InlineKeyboardButton("🔙 Quay lại", callback_data="results_menu")],
+        [InlineKeyboardButton("🏠 Về trang chủ", callback_data="back_to_main")],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_province_detail_menu(province_key: str) -> InlineKeyboardMarkup:
+    """Alias for get_province_detail_keyboard for backward compatibility"""
+    return get_province_detail_keyboard(province_key)
+
+
+def get_region_menu_keyboard(region: str) -> InlineKeyboardMarkup:
+    """
+    Keyboard for region menu (same as province list)
+    
+    Args:
+        region: Region code (MB, MT, MN)
+    """
+    return get_region_provinces_keyboard(region)
+
+
+def get_schedule_menu() -> InlineKeyboardMarkup:
+    """Schedule menu keyboard"""
+    keyboard = [
+        [InlineKeyboardButton("🔥 Lịch hôm nay", callback_data="schedule_today")],
+        [InlineKeyboardButton("📅 Lịch cả tuần", callback_data="schedule_week")],
+        [InlineKeyboardButton("🔙 Quay lại", callback_data="back_to_main")],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_schedule_back_button() -> InlineKeyboardMarkup:
+    """Back button for schedule views"""
+    keyboard = [
+        [InlineKeyboardButton("🔙 Quay lại", callback_data="schedule_menu")],
+        [InlineKeyboardButton("🏠 Về trang chủ", callback_data="back_to_main")],
+    ]
+    return InlineKeyboardMarkup(keyboard)

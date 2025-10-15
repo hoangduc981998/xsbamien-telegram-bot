@@ -488,3 +488,124 @@ def format_lottery_result(result_data: dict, region: str = "MN") -> str:
         result = format_result_mn_mt_full(result_data)
         logger.info(f"🔍 MN/MT result first 100 chars: {result[:100]}")
         return result
+
+
+def format_lo_2_so_stats(stats_data: dict, province_name: str = "") -> str:
+    """
+    Format Lô 2 Số statistics for display
+    
+    Args:
+        stats_data: Dict from StatisticsService.analyze_lo_2_so()
+        province_name: Optional province name override
+        
+    Returns:
+        Formatted HTML message for Telegram
+    """
+    date = stats_data.get("date", "")
+    province = province_name or stats_data.get("province", "")
+    all_numbers = stats_data.get("all_numbers", [])
+    frequency = stats_data.get("frequency", {})
+    
+    message = f"📊 <b>THỐNG KÊ LÔ 2 SỐ - {province.upper()}</b>\n"
+    message += f"📅 Ngày: {date}\n\n"
+    
+    if not all_numbers:
+        message += "⚠️ Chưa có dữ liệu\n"
+        return message
+    
+    # Show all numbers that appeared
+    message += "🎯 <b>Các con số đã về:</b>\n"
+    message += ", ".join(all_numbers)
+    message += "\n\n"
+    
+    # Show frequency (top 10)
+    if frequency:
+        message += "📈 <b>Tần suất xuất hiện:</b>\n"
+        sorted_freq = sorted(frequency.items(), key=lambda x: x[1], reverse=True)
+        for num, count in sorted_freq[:10]:
+            if count > 1:
+                message += f"• <b>{num}</b>: {count} lần\n"
+    
+    message += "\n📝 <i>Dữ liệu từ kết quả ngày hôm nay</i>"
+    
+    return message
+
+
+def format_lo_3_so_stats(stats_data: dict, province_name: str = "") -> str:
+    """
+    Format Lô 3 Số statistics for display
+    
+    Args:
+        stats_data: Dict from StatisticsService.analyze_lo_3_so()
+        province_name: Optional province name override
+        
+    Returns:
+        Formatted HTML message for Telegram
+    """
+    date = stats_data.get("date", "")
+    province = province_name or stats_data.get("province", "")
+    all_numbers = stats_data.get("all_numbers", [])
+    frequency = stats_data.get("frequency", {})
+    
+    message = f"📊 <b>THỐNG KÊ LÔ 3 SỐ (BA CÀNG) - {province.upper()}</b>\n"
+    message += f"📅 Ngày: {date}\n\n"
+    
+    if not all_numbers:
+        message += "⚠️ Chưa có dữ liệu\n"
+        return message
+    
+    # Show all 3-digit numbers
+    message += "🎯 <b>Các bộ 3 số đã về:</b>\n"
+    message += ", ".join(all_numbers)
+    message += "\n\n"
+    
+    # Show frequency
+    if frequency:
+        message += "📈 <b>Tần suất xuất hiện:</b>\n"
+        sorted_freq = sorted(frequency.items(), key=lambda x: x[1], reverse=True)
+        for num, count in sorted_freq[:10]:
+            if count > 1:
+                message += f"• <b>{num}</b>: {count} lần\n"
+    
+    message += "\n📝 <i>Dữ liệu từ kết quả ngày hôm nay</i>"
+    
+    return message
+
+
+def format_lo_gan(gan_data: dict, province_name: str = "") -> str:
+    """
+    Format Lô Gan (numbers not appeared recently)
+    
+    Args:
+        gan_data: Mock data with gan_numbers list
+        province_name: Optional province name
+        
+    Returns:
+        Formatted HTML message for Telegram
+        
+    Note: Currently uses mock data
+    Future: Will query database for historical data
+    """
+    region = gan_data.get("region", "")
+    period = gan_data.get("period", "30 ngày")
+    gan_numbers = gan_data.get("gan_numbers", [])
+    
+    display_name = province_name or region
+    
+    message = f"❄️ <b>LÔ GAN (LÂU KHÔNG VỀ) - {display_name.upper()}</b>\n"
+    message += f"📊 Thống kê: {period}\n\n"
+    
+    if not gan_numbers:
+        message += "⚠️ Chưa có dữ liệu\n"
+        return message
+    
+    message += "🔢 <b>Các số lâu không xuất hiện:</b>\n"
+    for item in gan_numbers[:10]:
+        number = item.get("number", "")
+        days = item.get("days_not_appeared", 0)
+        message += f"• <b>{number}</b>: {days} ngày\n"
+    
+    message += "\n📝 <b>Dữ liệu mẫu - Phiên bản beta</b>\n"
+    message += "<i>Tính năng sẽ được hoàn thiện với dữ liệu thực trong phiên bản tiếp theo</i>"
+    
+    return message

@@ -209,6 +209,67 @@ class TestGetMockStats3Digit:
                 assert db_frequent[i][1] >= db_frequent[i + 1][1]
 
 
+class TestGetMockLoGan:
+    """Test get_mock_lo_gan() function"""
+
+    def test_lo_gan_basic(self):
+        """Test basic lo gan data structure"""
+        from app.services.mock_data import get_mock_lo_gan
+
+        result = get_mock_lo_gan("MB", days=30)
+
+        assert isinstance(result, dict)
+        assert "gan_numbers" in result
+        assert "region" in result
+        assert "period" in result
+
+    def test_lo_gan_has_numbers(self):
+        """Test that lo gan has numbers"""
+        from app.services.mock_data import get_mock_lo_gan
+
+        result = get_mock_lo_gan("MB", days=30)
+
+        assert len(result["gan_numbers"]) > 0
+        assert len(result["gan_numbers"]) <= 10
+
+    def test_lo_gan_number_format(self):
+        """Test lo gan number format"""
+        from app.services.mock_data import get_mock_lo_gan
+
+        result = get_mock_lo_gan("MB", days=30)
+
+        for item in result["gan_numbers"]:
+            assert "number" in item
+            assert "days_not_appeared" in item
+            assert len(item["number"]) == 2
+            assert item["days_not_appeared"] > 0
+
+    def test_lo_gan_sorted_by_days(self):
+        """Test that lo gan is sorted by days not appeared"""
+        from app.services.mock_data import get_mock_lo_gan
+
+        result = get_mock_lo_gan("MB", days=30)
+
+        if len(result["gan_numbers"]) > 1:
+            for i in range(len(result["gan_numbers"]) - 1):
+                days1 = result["gan_numbers"][i]["days_not_appeared"]
+                days2 = result["gan_numbers"][i + 1]["days_not_appeared"]
+                assert days1 >= days2
+
+    def test_lo_gan_different_regions(self):
+        """Test lo gan for different regions"""
+        from app.services.mock_data import get_mock_lo_gan
+
+        mb = get_mock_lo_gan("MB", days=30)
+        mn = get_mock_lo_gan("MN", days=30)
+        mt = get_mock_lo_gan("MT", days=30)
+
+        # Should all have data
+        assert len(mb["gan_numbers"]) > 0
+        assert len(mn["gan_numbers"]) > 0
+        assert len(mt["gan_numbers"]) > 0
+
+
 class TestMockDataConsistency:
     """Test consistency and quality of mock data"""
 
@@ -224,6 +285,8 @@ class TestMockDataConsistency:
 
     def test_stats_functions_dont_crash(self):
         """Test that stats functions handle various inputs"""
+        from app.services.mock_data import get_mock_lo_gan
+
         # Should not raise exceptions
         get_mock_stats_2digit("MB")
         get_mock_stats_2digit("MN")
@@ -233,6 +296,10 @@ class TestMockDataConsistency:
         get_mock_stats_3digit("MB")
         get_mock_stats_3digit("TPHCM")
         get_mock_stats_3digit("UNKNOWN")
+
+        get_mock_lo_gan("MB")
+        get_mock_lo_gan("MN")
+        get_mock_lo_gan("MT")
 
     def test_mock_functions_return_dicts(self):
         """Test that all mock functions return dicts"""

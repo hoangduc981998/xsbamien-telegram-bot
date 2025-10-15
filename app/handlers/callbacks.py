@@ -6,14 +6,19 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from app.config import PROVINCES
-from app.services.lottery_service import LotteryService  # ← THÊM IMPORT MỚI
+from app.services.lottery_service import LotteryService
+from app.services.statistics_service import StatisticsService
+from app.services.mock_data import get_mock_lo_gan
 from app.ui.formatters import (
     format_dau_lo,
     format_duoi_lo,
     format_lo_2_so_mb,
     format_lo_2_so_mn_mt,
+    format_lo_2_so_stats,
     format_lo_3_so_mb,
     format_lo_3_so_mn_mt,
+    format_lo_3_so_stats,
+    format_lo_gan,
     format_lottery_result,
     format_result_mb_full,
     format_result_mn_mt_full,
@@ -41,8 +46,9 @@ from app.ui.messages import (
 
 logger = logging.getLogger(__name__)
 
-# ← KHỞI TẠO SERVICE
+# Initialize services
 lottery_service = LotteryService()
+statistics_service = StatisticsService()
 
 
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -180,59 +186,133 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             region = callback_data.split("_")[1]
             region_names = {"MB": "Miền Bắc", "MT": "Miền Trung", "MN": "Miền Nam"}
 
-            await query.edit_message_text(
-                f"📊 <b>Thống Kê Lô 2 Số - {region_names.get(region, region)}</b>\n\n"
-                "🚧 Tính năng đang được phát triển.\n"
-                "💡 Sẽ sớm cập nhật trong phiên bản tiếp theo!",
-                reply_markup=get_back_to_menu_keyboard(),
-                parse_mode="HTML",
-            )
+            try:
+                # Get latest result for region
+                result = await lottery_service.get_latest_result(region)
+                
+                # Analyze statistics
+                stats = statistics_service.analyze_lo_2_so(result)
+                
+                # Format message
+                message = format_lo_2_so_stats(stats, region_names.get(region, region))
+                
+                await query.edit_message_text(
+                    message,
+                    reply_markup=get_back_to_menu_keyboard(),
+                    parse_mode="HTML",
+                )
+            except Exception as e:
+                logger.error(f"Error in stats by region: {e}")
+                await query.edit_message_text(
+                    f"❌ Lỗi khi lấy thống kê: {str(e)}",
+                    reply_markup=get_back_to_menu_keyboard(),
+                    parse_mode="HTML",
+                )
 
         # Thống kê lô 2 số theo tỉnh
         elif callback_data.startswith("stats2_"):
             province_key = callback_data.split("_")[1]
             province = PROVINCES.get(province_key, {})
 
-            await query.edit_message_text(
-                f"📊 <b>Thống Kê Lô 2 Số - {province.get('name', '')}</b>\n\n"
-                "🚧 Tính năng đang được phát triển.\n"
-                "💡 Sẽ sớm cập nhật trong phiên bản tiếp theo!",
-                reply_markup=get_province_detail_keyboard(province_key),
-                parse_mode="HTML",
-            )
+            try:
+                # Get latest result for province
+                result = await lottery_service.get_latest_result(province_key)
+                
+                # Analyze statistics
+                stats = statistics_service.analyze_lo_2_so(result)
+                
+                # Format message
+                message = format_lo_2_so_stats(stats, province.get("name", ""))
+                
+                await query.edit_message_text(
+                    message,
+                    reply_markup=get_province_detail_keyboard(province_key),
+                    parse_mode="HTML",
+                )
+            except Exception as e:
+                logger.error(f"Error in stats2 for {province_key}: {e}")
+                await query.edit_message_text(
+                    f"❌ Lỗi khi lấy thống kê: {str(e)}",
+                    reply_markup=get_province_detail_keyboard(province_key),
+                    parse_mode="HTML",
+                )
 
         # Thống kê lô 3 số theo tỉnh
         elif callback_data.startswith("stats3_"):
             province_key = callback_data.split("_")[1]
             province = PROVINCES.get(province_key, {})
 
-            await query.edit_message_text(
-                f"📊 <b>Thống Kê Lô 3 Số - {province.get('name', '')}</b>\n\n"
-                "🚧 Tính năng đang được phát triển.\n"
-                "�� Sẽ sớm cập nhật trong phiên bản tiếp theo!",
-                reply_markup=get_province_detail_keyboard(province_key),
-                parse_mode="HTML",
-            )
+            try:
+                # Get latest result for province
+                result = await lottery_service.get_latest_result(province_key)
+                
+                # Analyze statistics
+                stats = statistics_service.analyze_lo_3_so(result)
+                
+                # Format message
+                message = format_lo_3_so_stats(stats, province.get("name", ""))
+                
+                await query.edit_message_text(
+                    message,
+                    reply_markup=get_province_detail_keyboard(province_key),
+                    parse_mode="HTML",
+                )
+            except Exception as e:
+                logger.error(f"Error in stats3 for {province_key}: {e}")
+                await query.edit_message_text(
+                    f"❌ Lỗi khi lấy thống kê: {str(e)}",
+                    reply_markup=get_province_detail_keyboard(province_key),
+                    parse_mode="HTML",
+                )
+
 
         # Thống kê đầu-đuôi
         elif callback_data == "stats_headtail":
-            await query.edit_message_text(
-                "📊 <b>Thống Kê Đầu-Đuôi Giải Đặc Biệt</b>\n\n"
-                "🚧 Tính năng đang được phát triển.\n"
-                "💡 Sẽ sớm cập nhật trong phiên bản tiếp theo!",
-                reply_markup=get_back_to_menu_keyboard(),
-                parse_mode="HTML",
-            )
+            try:
+                # Get MB result (headtail usually for MB)
+                result = await lottery_service.get_latest_result("MB")
+                
+                # Use existing formatters
+                dau_message = format_dau_lo(result)
+                duoi_message = format_duoi_lo(result)
+                
+                # Combine messages
+                message = dau_message + "\n\n" + duoi_message
+                
+                await query.edit_message_text(
+                    message,
+                    reply_markup=get_back_to_menu_keyboard(),
+                    parse_mode="HTML",
+                )
+            except Exception as e:
+                logger.error(f"Error in stats_headtail: {e}")
+                await query.edit_message_text(
+                    f"❌ Lỗi khi lấy thống kê: {str(e)}",
+                    reply_markup=get_back_to_menu_keyboard(),
+                    parse_mode="HTML",
+                )
 
         # Lô gan
         elif callback_data == "stats_gan":
-            await query.edit_message_text(
-                "📊 <b>Thống Kê Lô Gan (Lâu Về)</b>\n\n"
-                "🚧 Tính năng đang được phát triển.\n"
-                "💡 Sẽ sớm cập nhật trong phiên bản tiếp theo!",
-                reply_markup=get_back_to_menu_keyboard(),
-                parse_mode="HTML",
-            )
+            try:
+                # Use mock data for now (will be real DB query in PR #2)
+                gan_data = get_mock_lo_gan("MB", days=30)
+                
+                # Format message
+                message = format_lo_gan(gan_data, "Miền Bắc")
+                
+                await query.edit_message_text(
+                    message,
+                    reply_markup=get_back_to_menu_keyboard(),
+                    parse_mode="HTML",
+                )
+            except Exception as e:
+                logger.error(f"Error in stats_gan: {e}")
+                await query.edit_message_text(
+                    f"❌ Lỗi khi lấy thống kê: {str(e)}",
+                    reply_markup=get_back_to_menu_keyboard(),
+                    parse_mode="HTML",
+                )
 
         # Đăng ký nhắc nhở
         elif callback_data.startswith("subscribe_"):

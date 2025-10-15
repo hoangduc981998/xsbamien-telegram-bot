@@ -127,3 +127,50 @@ def get_mock_stats_3digit(province_key: str) -> Dict:
         "db_frequent": db_frequent[:5],
         "triples": triples[:3],
     }
+
+
+def get_mock_lo_gan(region: str, days: int = 30) -> Dict:
+    """
+    Mock Lô Gan data (numbers not appeared recently)
+    
+    Args:
+        region: Region code (MB, MT, MN)
+        days: Analysis period (default 30 days)
+        
+    Returns:
+        {
+            'gan_numbers': [
+                {'number': '00', 'days_not_appeared': 15},
+                {'number': '99', 'days_not_appeared': 12},
+                ...
+            ],
+            'region': 'MB',
+            'period': '30 ngày'
+        }
+        
+    Note: This is mock data
+    Real implementation will query database in PR #2
+    """
+    random.seed(hash(region + "logan" + str(days)))
+    
+    # Generate 15 random "gan" numbers (not appeared)
+    all_numbers = list(range(100))
+    random.shuffle(all_numbers)
+    
+    gan_numbers = []
+    for i in range(15):
+        num = all_numbers[i]
+        days_not_appeared = random.randint(10, 45)
+        gan_numbers.append({
+            "number": f"{num:02d}",
+            "days_not_appeared": days_not_appeared
+        })
+    
+    # Sort by days not appeared (descending)
+    gan_numbers.sort(key=lambda x: x["days_not_appeared"], reverse=True)
+    
+    return {
+        "gan_numbers": gan_numbers[:10],  # Top 10
+        "region": region,
+        "period": f"{days} ngày"
+    }

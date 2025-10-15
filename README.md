@@ -40,10 +40,12 @@
 - ✅ Hiển thị đẹp mắt với bảng Unicode
 
 ### 📊 Thống Kê & Phân Tích
-- 📈 Thống kê lô 2 số (00-99)
-- 📈 Thống kê lô 3 số (000-999)
-- 📈 Phân tích đầu-đuôi
-- 📈 Tính lô gan (số lâu chưa về)
+- ✅ **Lô 2 Số** - Tần suất và phân bố số 2 chữ số
+- ✅ **Lô 3 Số** - Phân tích ba càng (3 chữ số)
+- ✅ **Đầu Lô / Đuôi Lô** - Thống kê theo chữ số đầu/đuôi
+- 🚧 **Lô Gan** - Số lâu không về (mock data - beta)
+
+_📝 Chi tiết xem [STATISTICS.md](docs/STATISTICS.md)_
 
 ### 🔔 Thông Báo Thông Minh
 - ⏰ Nhắc trước giờ quay (15 phút)
