@@ -47,8 +47,8 @@ from app.ui.messages import (
 logger = logging.getLogger(__name__)
 
 # Initialize services
-lottery_service = LotteryService()
-statistics_service = StatisticsService()
+lottery_service = LotteryService(use_database=True)
+statistics_service = StatisticsService(use_database=True)
 
 
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -187,15 +187,23 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             region_names = {"MB": "Miền Bắc", "MT": "Miền Trung", "MN": "Miền Nam"}
 
             try:
-                # Get latest result for region
-                result = await lottery_service.get_latest_result(region)
-                
-                # Analyze statistics
-                stats = statistics_service.analyze_lo_2_so(result)
+                # Query frequency từ database (50 ngày)
+                frequency = await statistics_service.get_frequency_stats(region, days=50)
                 
                 # Format message
-                message = format_lo_2_so_stats(stats, region_names.get(region, region))
-                
+                if frequency:
+                    sorted_freq = sorted(frequency.items(), key=lambda x: x[1], reverse=True)[:30]
+                    
+                    message = f"📊 <b>THỐNG KÊ LÔ 2 SỐ - {region_names.get(region, region)}</b>\n"
+                    message += f"📅 Dữ liệu: 50 ngày gần nhất từ database\n\n"
+                    
+                    message += "🔥 <b>Top 30 số hay về:</b>\n"
+                    for idx, (num, count) in enumerate(sorted_freq, 1):
+                        message += f"  {idx:2d}. <code>{num}</code> - {count:2d} lần\n"
+                    
+                    message += f"\n💾 Tổng: {len(frequency)} số đã xuất hiện"
+                else:
+                    message = "⚠️ Chưa có dữ liệu trong database"
                 await query.edit_message_text(
                     message,
                     reply_markup=get_back_to_menu_keyboard(),
