@@ -18,3 +18,8 @@ venv/
 .coverage
 htmlcov/
 .pytest_cache/
+
+# Logs
+logs/
+*.log
+*.log.*
