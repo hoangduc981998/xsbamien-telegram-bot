@@ -2,7 +2,7 @@
 
 import pytest
 from unittest.mock import patch
-from datetime import datetime
+from datetime import datetime, date
 
 from app.ui.keyboards import (
     get_schedule_today_keyboard,
@@ -10,10 +10,15 @@ from app.ui.keyboards import (
 )
 from app.ui.messages import get_today_schedule_message
 from app.config import PROVINCES, SCHEDULE
+from app.utils.cache import ScheduleCache
 
 
 class TestCompleteWeekIntegration:
     """Integration tests for all 7 days of the week"""
+
+    def setup_method(self):
+        """Clear cache before each test"""
+        ScheduleCache.clear_cache()
 
     @pytest.mark.parametrize("python_weekday,day_name,schedule_day", [
         (0, "Thứ Hai", 1),
@@ -26,11 +31,12 @@ class TestCompleteWeekIntegration:
     ])
     def test_complete_day_flow(self, python_weekday, day_name, schedule_day):
         """Test complete flow: message generation + button generation for each day"""
-        with patch('app.ui.keyboards.datetime') as mock_kb_dt, \
+        with patch('app.utils.cache.datetime') as mock_kb_dt, \
              patch('app.ui.messages.datetime') as mock_msg_dt:
 
             # Mock datetime for both modules
             mock_kb_dt.now.return_value.weekday.return_value = python_weekday
+            mock_kb_dt.now.return_value.date.return_value = date(2025, 10, 14)
             mock_msg_dt.now.return_value.weekday.return_value = python_weekday
             mock_msg_dt.now.return_value.strftime.return_value = "14/10/2025"
 
@@ -68,8 +74,9 @@ class TestCompleteWeekIntegration:
 
     def test_thursday_has_most_provinces(self):
         """Thursday should have 7 provinces (most in the week)"""
-        with patch('app.ui.keyboards.datetime') as mock_dt:
+        with patch('app.utils.cache.datetime') as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 3  # Thursday
+            mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
             keyboard = get_schedule_today_keyboard()
 
@@ -83,8 +90,9 @@ class TestCompleteWeekIntegration:
 
     def test_saturday_has_most_mn_provinces(self):
         """Saturday should have 4 MN provinces (most MN in the week)"""
-        with patch('app.ui.keyboards.datetime') as mock_dt:
+        with patch('app.utils.cache.datetime') as mock_dt:
             mock_dt.now.return_value.weekday.return_value = 5  # Saturday
+            mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
             keyboard = get_schedule_today_keyboard()
 
@@ -106,10 +114,11 @@ class TestCompleteWeekIntegration:
     @pytest.mark.parametrize("python_weekday", range(7))
     def test_message_button_province_consistency(self, python_weekday):
         """Verify provinces in message exactly match provinces in buttons"""
-        with patch('app.ui.keyboards.datetime') as mock_kb_dt, \
+        with patch('app.utils.cache.datetime') as mock_kb_dt, \
              patch('app.ui.messages.datetime') as mock_msg_dt:
 
             mock_kb_dt.now.return_value.weekday.return_value = python_weekday
+            mock_kb_dt.now.return_value.date.return_value = date(2025, 10, 14)
             mock_msg_dt.now.return_value.weekday.return_value = python_weekday
             mock_msg_dt.now.return_value.strftime.return_value = "14/10/2025"
 
@@ -136,8 +145,9 @@ class TestCompleteWeekIntegration:
     def test_region_order_consistent(self):
         """Verify provinces are always ordered MB → MT → MN"""
         for weekday in range(7):
-            with patch('app.ui.keyboards.datetime') as mock_dt:
+            with patch('app.utils.cache.datetime') as mock_dt:
                 mock_dt.now.return_value.weekday.return_value = weekday
+                mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
                 keyboard = get_schedule_today_keyboard()
 
@@ -176,12 +186,17 @@ class TestCompleteWeekIntegration:
 class TestScheduleActionsIntegration:
     """Integration tests for get_today_schedule_actions()"""
 
+    def setup_method(self):
+        """Clear cache before each test"""
+        ScheduleCache.clear_cache()
+
     @pytest.mark.parametrize("python_weekday", range(7))
     def test_actions_match_schedule_keyboard(self, python_weekday):
         """Verify get_today_schedule_actions() returns same provinces
         as get_schedule_today_keyboard()"""
-        with patch('app.ui.keyboards.datetime') as mock_dt:
+        with patch('app.utils.cache.datetime') as mock_dt:
             mock_dt.now.return_value.weekday.return_value = python_weekday
+            mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
             keyboard1 = get_schedule_today_keyboard()
             keyboard2 = get_today_schedule_actions()
@@ -206,8 +221,9 @@ class TestScheduleActionsIntegration:
     def test_navigation_buttons_present_all_days(self):
         """Verify navigation buttons are present for all 7 days"""
         for weekday in range(7):
-            with patch('app.ui.keyboards.datetime') as mock_dt:
+            with patch('app.utils.cache.datetime') as mock_dt:
                 mock_dt.now.return_value.weekday.return_value = weekday
+                mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
                 keyboard = get_today_schedule_actions()
 
@@ -221,11 +237,16 @@ class TestScheduleActionsIntegration:
 class TestButtonCallbackDataIntegration:
     """Integration tests for button callback data"""
 
+    def setup_method(self):
+        """Clear cache before each test"""
+        ScheduleCache.clear_cache()
+
     @pytest.mark.parametrize("python_weekday", range(7))
     def test_all_callback_data_valid(self, python_weekday):
         """Verify all button callback_data references valid province codes"""
-        with patch('app.ui.keyboards.datetime') as mock_dt:
+        with patch('app.utils.cache.datetime') as mock_dt:
             mock_dt.now.return_value.weekday.return_value = python_weekday
+            mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
             keyboard = get_schedule_today_keyboard()
 
@@ -240,8 +261,9 @@ class TestButtonCallbackDataIntegration:
     def test_callback_format_consistency(self):
         """Verify callback_data format is consistent across all days"""
         for weekday in range(7):
-            with patch('app.ui.keyboards.datetime') as mock_dt:
+            with patch('app.utils.cache.datetime') as mock_dt:
                 mock_dt.now.return_value.weekday.return_value = weekday
+                mock_dt.now.return_value.date.return_value = date(2025, 10, 14)
 
                 keyboard = get_schedule_today_keyboard()
 
