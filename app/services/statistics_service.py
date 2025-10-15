@@ -1,12 +1,27 @@
 """Statistics Service - Lottery statistics and analysis"""
 
 import logging
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class StatisticsService:
     """Service for lottery statistics and analysis"""
+    
+    def __init__(self, use_database: bool = False):
+        self.use_database = use_database
+        self.db_service = None
+        
+        # Initialize database service if enabled
+        if use_database:
+            try:
+                from .db.statistics_db_service import StatisticsDBService
+                self.db_service = StatisticsDBService()
+                logger.info("✅ Database statistics enabled")
+            except Exception as e:
+                logger.warning(f"⚠️  Database statistics disabled: {e}")
+                self.use_database = False
 
     def analyze_lo_2_so(self, result_data: dict) -> dict:
         """
@@ -148,29 +163,119 @@ class StatisticsService:
                 'province': '',
             }
 
-    def get_frequency_stats(self, numbers: list, days: int = 30) -> dict:
+    async def get_frequency_stats(
+        self, 
+        province_code: str, 
+        days: int = 30
+    ) -> dict:
         """
-        Calculate frequency statistics (currently mock, DB later)
+        Calculate frequency statistics from database or mock data
 
         Args:
-            numbers: List of numbers to analyze
-            days: Number of days to analyze (for future DB implementation)
+            province_code: Province code
+            days: Number of days to analyze
 
         Returns:
-            Mock frequency stats
+            Frequency stats dict {number: count}
         """
-        # For now, return mock data
-        # In PR #2, this will query the database
-        logger.info(f"Getting frequency stats for {len(numbers)} numbers over {days} days (mock)")
-
+        # Use database if available
+        if self.use_database and self.db_service:
+            try:
+                logger.info(f"Getting frequency stats from DB for {province_code} ({days} days)")
+                frequency = await self.db_service.get_lo2so_frequency(province_code, days)
+                return frequency
+            except Exception as e:
+                logger.warning(f"⚠️  DB query failed, using mock data: {e}")
+        
+        # Fallback to mock data
+        logger.info(f"Getting frequency stats (mock) for {province_code} over {days} days")
+        
         import random
-        random.seed(hash(str(numbers)))
-
+        random.seed(hash(str(province_code) + str(days)))
+        
         stats = {}
-        for num in numbers[:10]:  # Top 10
+        for i in range(10):  # Top 10
+            num = f"{random.randint(0, 99):02d}"
             stats[num] = random.randint(5, 30)
-
+        
         return stats
+    
+    async def get_lo_gan(
+        self, 
+        province_code: str, 
+        days: int = 30, 
+        limit: int = 10
+    ) -> List[Dict]:
+        """
+        Get Lô Gan (cold numbers) from database or mock data
+
+        Args:
+            province_code: Province code
+            days: Number of days to look back
+            limit: Maximum number of results
+
+        Returns:
+            List of dicts with {number, days_since_last, last_seen_date}
+        """
+        # Use database if available
+        if self.use_database and self.db_service:
+            try:
+                logger.info(f"Getting lô gan from DB for {province_code} ({days} days)")
+                lo_gan = await self.db_service.get_lo_gan(province_code, days, limit)
+                return lo_gan
+            except Exception as e:
+                logger.warning(f"⚠️  DB query failed, using mock data: {e}")
+        
+        # Fallback to mock data
+        logger.info(f"Getting lô gan (mock) for {province_code}")
+        
+        import random
+        random.seed(hash(str(province_code) + str(days)))
+        
+        lo_gan = []
+        for i in range(limit):
+            num = f"{random.randint(0, 99):02d}"
+            lo_gan.append({
+                "number": num,
+                "days_since_last": random.randint(10, 30),
+                "last_seen_date": None
+            })
+        
+        return lo_gan
+    
+    async def get_hot_numbers(
+        self, 
+        province_code: str, 
+        days: int = 30, 
+        limit: int = 10
+    ) -> List[Dict]:
+        """
+        Get hot numbers (most frequent) from database or mock data
+
+        Args:
+            province_code: Province code
+            days: Number of days to look back
+            limit: Maximum number of results
+
+        Returns:
+            List of dicts with {number, count}
+        """
+        # Use database if available
+        if self.use_database and self.db_service:
+            try:
+                logger.info(f"Getting hot numbers from DB for {province_code} ({days} days)")
+                hot = await self.db_service.get_hot_numbers(province_code, days, limit)
+                return hot
+            except Exception as e:
+                logger.warning(f"⚠️  DB query failed, using mock data: {e}")
+        
+        # Fallback to mock data
+        frequency = await self.get_frequency_stats(province_code, days)
+        hot = [
+            {"number": num, "count": count}
+            for num, count in sorted(frequency.items(), key=lambda x: x[1], reverse=True)
+        ]
+        return hot[:limit]
 
     def format_frequency_table(self, freq_data: dict) -> str:
         """
