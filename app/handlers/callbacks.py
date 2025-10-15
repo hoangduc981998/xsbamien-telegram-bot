@@ -78,11 +78,11 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Results menu
         elif callback_data == "results_menu":
             await query.answer()
-            from app.ui.keyboards import get_region_keyboard
+            from app.ui.keyboards import get_results_menu_keyboard
             
             message = "🎯 <b>XEM KẾT QUẢ XỔ SỐ</b>\n\n"
             message += "Chọn khu vực để xem kết quả:"
-            keyboard = get_region_keyboard()
+            keyboard = get_results_menu_keyboard()
             await query.edit_message_text(
                 message,
                 reply_markup=keyboard,
