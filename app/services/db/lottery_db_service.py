@@ -35,7 +35,13 @@ class LotteryDBService:
                 # Parse date
                 draw_date = result_data.get("date")
                 if isinstance(draw_date, str):
-                    draw_date = datetime.strptime(draw_date, "%Y-%m-%d").date()
+                    # Thử format DD/MM/YYYY trước (từ API)
+                    try:
+                        draw_date = datetime.strptime(draw_date, "%d/%m/%Y").date()
+                    except ValueError:
+                        # Nếu không được thì dùng format YYYY-MM-DD
+                        draw_date = datetime.strptime(draw_date, "%Y-%m-%d").date()
+
                 elif isinstance(draw_date, datetime):
                     draw_date = draw_date.date()
 
