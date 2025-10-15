@@ -1,0 +1,71 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Git
+.git/
+.github/
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Tests
+tests/
+test_*.py
+*_test.py
+pytest.ini
+.pytest_cache/
+
+# Documentation
+*.md
+docs/
+samples/
+CODE_REVIEW.md
+
+# Environment
+.env
+.env.*
+!.env.example
+venv/
+.venv/
+env/
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# CI/CD
+.github/
+cloudbuild.yaml
+app.yaml
+
+# Scripts
+scripts/
+
+# Other
+*.bak
+*.tmp
+*.swp
+Dockerfile
+docker-compose.yml
+.dockerignore
+tash save Old keyboard changes before PR merge
