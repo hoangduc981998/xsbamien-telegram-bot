@@ -24,7 +24,7 @@ def get_database_url() -> str:
     """Get database URL from environment"""
     return os.getenv(
         "DATABASE_URL",
-        "postgresql+asyncpg://lottery_user:lottery_pass@localhost:5432/lottery_db"
+        "sqlite+aiosqlite:///./xoso.db"
     )
 
 
@@ -36,13 +36,20 @@ def get_engine() -> AsyncEngine:
         database_url = get_database_url()
         logger.info(f"Creating database engine: {database_url.split('@')[1] if '@' in database_url else 'local'}")
 
-        _engine = create_async_engine(
-            database_url,
-            echo=os.getenv("DB_ECHO", "false").lower() == "true",
-            pool_size=10,
-            max_overflow=20,
-            pool_pre_ping=True,
-        )
+        # Engine kwargs - different for SQLite vs PostgreSQL
+        engine_kwargs = {
+            "echo": os.getenv("DB_ECHO", "false").lower() == "true",
+        }
+
+        # Only add pool settings for PostgreSQL (not SQLite)
+        if not database_url.startswith("sqlite"):
+            engine_kwargs.update({
+                "pool_size": 10,
+                "max_overflow": 20,
+                "pool_pre_ping": True,
+            })
+
+        _engine = create_async_engine(database_url, **engine_kwargs)
 
     return _engine
 
