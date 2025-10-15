@@ -40,7 +40,7 @@ class HistoricalDataCrawler:
         """
         try:
             logger.info(f"🔍 Starting crawl for {province_code} (limit: {limit})")
-            
+
             # Check if we should skip
             if skip_existing:
                 existing_count = await self.db_service.get_results_count(province_code)
@@ -53,11 +53,11 @@ class HistoricalDataCrawler:
                         "fetched": 0,
                         "saved": 0
                     }
-            
+
             # Fetch from API
             logger.info(f"📡 Fetching {limit} results for {province_code}")
             api_response = await self.api_client.fetch_results(province_code, limit)
-            
+
             if not api_response:
                 logger.warning(f"⚠️  API failed for {province_code}")
                 return {
@@ -65,29 +65,29 @@ class HistoricalDataCrawler:
                     "status": "error",
                     "error": "API failed"
                 }
-            
+
             # Transform results
             results = self.transformer.transform_results(api_response)
             logger.info(f"✅ Transformed {len(results)} results for {province_code}")
-            
+
             # Get province info
             province_info = PROVINCES.get(province_code, {})
             region = province_info.get("region", "MN")
-            
+
             # Save to database
             saved_count = 0
             for result in results:
                 # Add metadata
                 result["province_code"] = province_code
                 result["region"] = region
-                
+
                 # Save to DB
                 saved = await self.db_service.save_result(result)
                 if saved:
                     saved_count += 1
-            
+
             logger.info(f"✅ Saved {saved_count}/{len(results)} results for {province_code}")
-            
+
             return {
                 "province_code": province_code,
                 "status": "success",
@@ -121,27 +121,27 @@ class HistoricalDataCrawler:
             Dict with overall crawl statistics
         """
         logger.info(f"🚀 Starting crawl for all provinces (limit: {limit})")
-        
+
         start_time = datetime.now()
         results = []
-        
+
         for province_code in PROVINCES.keys():
             result = await self.crawl_province(province_code, limit, skip_existing)
             results.append(result)
-            
+
             # Add delay to avoid rate limiting
             if delay > 0:
                 await asyncio.sleep(delay)
-        
+
         # Calculate statistics
         total_fetched = sum(r.get("fetched", 0) for r in results)
         total_saved = sum(r.get("saved", 0) for r in results)
         success_count = sum(1 for r in results if r.get("status") == "success")
         error_count = sum(1 for r in results if r.get("status") == "error")
         skipped_count = sum(1 for r in results if r.get("status") == "skipped")
-        
+
         duration = (datetime.now() - start_time).total_seconds()
-        
+
         summary = {
             "start_time": start_time.isoformat(),
             "duration_seconds": duration,
@@ -153,10 +153,10 @@ class HistoricalDataCrawler:
             "total_saved": total_saved,
             "results": results
         }
-        
+
         logger.info(f"✅ Crawl completed: {success_count} success, {error_count} errors, {skipped_count} skipped")
         logger.info(f"📊 Total: {total_saved} results saved in {duration:.2f}s")
-        
+
         return summary
 
     async def crawl_region(
@@ -179,33 +179,33 @@ class HistoricalDataCrawler:
             Dict with crawl statistics
         """
         logger.info(f"🚀 Starting crawl for region {region} (limit: {limit})")
-        
+
         start_time = datetime.now()
         results = []
-        
+
         # Filter provinces by region
         region_provinces = [
             code for code, info in PROVINCES.items()
             if info.get("region") == region
         ]
-        
+
         for province_code in region_provinces:
             result = await self.crawl_province(province_code, limit, skip_existing)
             results.append(result)
-            
+
             # Add delay to avoid rate limiting
             if delay > 0:
                 await asyncio.sleep(delay)
-        
+
         # Calculate statistics
         total_fetched = sum(r.get("fetched", 0) for r in results)
         total_saved = sum(r.get("saved", 0) for r in results)
         success_count = sum(1 for r in results if r.get("status") == "success")
         error_count = sum(1 for r in results if r.get("status") == "error")
         skipped_count = sum(1 for r in results if r.get("status") == "skipped")
-        
+
         duration = (datetime.now() - start_time).total_seconds()
-        
+
         summary = {
             "region": region,
             "start_time": start_time.isoformat(),
@@ -218,10 +218,10 @@ class HistoricalDataCrawler:
             "total_saved": total_saved,
             "results": results
         }
-        
+
         logger.info(f"✅ Region {region} crawl completed: {success_count} success, {error_count} errors")
         logger.info(f"📊 Total: {total_saved} results saved in {duration:.2f}s")
-        
+
         return summary
 
     async def update_latest(self, province_codes: Optional[List[str]] = None) -> Dict:
@@ -236,18 +236,18 @@ class HistoricalDataCrawler:
         """
         if province_codes is None:
             province_codes = list(PROVINCES.keys())
-        
+
         logger.info(f"🔄 Updating latest results for {len(province_codes)} provinces")
-        
+
         results = []
         for province_code in province_codes:
             result = await self.crawl_province(province_code, limit=1, skip_existing=False)
             results.append(result)
-        
+
         success_count = sum(1 for r in results if r.get("status") == "success")
-        
+
         logger.info(f"✅ Update completed: {success_count}/{len(province_codes)} successful")
-        
+
         return {
             "updated_count": success_count,
             "total_requested": len(province_codes),

@@ -45,7 +45,7 @@ class StatisticsDBService:
                     end_date = date.today()
                 if not start_date:
                     start_date = end_date - timedelta(days=days)
-                
+
                 # Query frequency
                 query = select(
                     Lo2SoHistory.number,
@@ -57,13 +57,13 @@ class StatisticsDBService:
                         Lo2SoHistory.draw_date <= end_date
                     )
                 ).group_by(Lo2SoHistory.number)
-                
+
                 result = await session.execute(query)
-                
+
                 frequency = {}
                 for row in result:
                     frequency[row.number] = row.count
-                
+
                 logger.info(f"✅ Got frequency for {province_code}: {len(frequency)} unique numbers")
                 return frequency
 
@@ -92,10 +92,10 @@ class StatisticsDBService:
             async with DatabaseSession() as session:
                 end_date = date.today()
                 start_date = end_date - timedelta(days=days)
-                
+
                 # Get all numbers (00-99)
                 all_numbers = [f"{i:02d}" for i in range(100)]
-                
+
                 # Get last appearance date for each number
                 query = select(
                     Lo2SoHistory.number,
@@ -106,20 +106,20 @@ class StatisticsDBService:
                         Lo2SoHistory.draw_date <= end_date
                     )
                 ).group_by(Lo2SoHistory.number)
-                
+
                 result = await session.execute(query)
-                
+
                 last_appearances = {}
                 for row in result:
                     last_appearances[row.number] = row.last_date
-                
+
                 # Calculate days since last appearance
                 lo_gan = []
                 for num in all_numbers:
                     if num in last_appearances:
                         last_date = last_appearances[num]
                         days_since = (end_date - last_date).days
-                        
+
                         # Only include if not appeared in last N days
                         if days_since > 0:
                             lo_gan.append({
@@ -134,10 +134,10 @@ class StatisticsDBService:
                             "days_since_last": days,
                             "last_seen_date": None
                         })
-                
+
                 # Sort by days_since_last (descending)
                 lo_gan.sort(key=lambda x: x["days_since_last"], reverse=True)
-                
+
                 logger.info(f"✅ Got {len(lo_gan)} lo gan numbers for {province_code}")
                 return lo_gan[:limit]
 
@@ -164,13 +164,13 @@ class StatisticsDBService:
         """
         try:
             frequency = await self.get_lo2so_frequency(province_code, days)
-            
+
             # Sort by count (descending)
             hot = [
                 {"number": num, "count": count}
                 for num, count in sorted(frequency.items(), key=lambda x: x[1], reverse=True)
             ]
-            
+
             logger.info(f"✅ Got {len(hot)} hot numbers for {province_code}")
             return hot[:limit]
 
@@ -197,13 +197,13 @@ class StatisticsDBService:
         """
         try:
             frequency = await self.get_lo2so_frequency(province_code, days)
-            
+
             # Sort by count (ascending)
             cold = [
                 {"number": num, "count": count}
                 for num, count in sorted(frequency.items(), key=lambda x: x[1])
             ]
-            
+
             logger.info(f"✅ Got {len(cold)} cold numbers for {province_code}")
             return cold[:limit]
 
@@ -239,16 +239,16 @@ class StatisticsDBService:
                         Lo2SoHistory.number == number
                     )
                 ).order_by(desc(Lo2SoHistory.draw_date)).limit(limit)
-                
+
                 result = await session.execute(query)
-                
+
                 history = []
                 for row in result:
                     history.append({
                         "date": row.draw_date.strftime("%Y-%m-%d"),
                         "prize_type": row.prize_type
                     })
-                
+
                 logger.info(f"✅ Got history for number {number}: {len(history)} occurrences")
                 return history
 
@@ -271,7 +271,7 @@ class StatisticsDBService:
             async with DatabaseSession() as session:
                 end_date = date.today()
                 start_date = end_date - timedelta(days=days)
-                
+
                 # Get total draws count
                 draws_query = select(func.count(LotteryResult.id)).where(
                     and_(
@@ -282,7 +282,7 @@ class StatisticsDBService:
                 )
                 draws_result = await session.execute(draws_query)
                 total_draws = draws_result.scalar() or 0
-                
+
                 # Get unique numbers count
                 numbers_query = select(func.count(func.distinct(Lo2SoHistory.number))).where(
                     and_(
@@ -293,10 +293,10 @@ class StatisticsDBService:
                 )
                 numbers_result = await session.execute(numbers_query)
                 unique_numbers = numbers_result.scalar() or 0
-                
+
                 # Get frequency stats
                 frequency = await self.get_lo2so_frequency(province_code, days)
-                
+
                 return {
                     "province_code": province_code,
                     "days": days,

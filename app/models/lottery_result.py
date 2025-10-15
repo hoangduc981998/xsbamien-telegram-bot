@@ -1,9 +1,9 @@
 """Lottery Result Database Model"""
 
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict
 
-from sqlalchemy import Column, Integer, String, DateTime, Date, Text, Index, JSON
+from sqlalchemy import Integer, String, DateTime, Date, Index, JSON
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
@@ -23,17 +23,17 @@ class LotteryResult(Base):
     province_name: Mapped[str] = mapped_column(String(100), nullable=False)
     region: Mapped[str] = mapped_column(String(10), nullable=False, index=True)  # MB, MN, MT
     draw_date: Mapped[datetime] = mapped_column(Date, nullable=False, index=True)
-    
+
     # Store all prizes in JSON format
     # Example: {"DB": ["12345"], "G1": ["67890"], "G2": ["11111", "22222"], ...}
     prizes: Mapped[Dict] = mapped_column(JSON, nullable=False)
-    
+
     # Metadata
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
-    
+
     # Composite unique constraint - one result per province per day
     __table_args__ = (
         Index('idx_province_date', 'province_code', 'draw_date', unique=True),
@@ -71,19 +71,19 @@ class Lo2SoHistory(Base):
     province_code: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     region: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
     draw_date: Mapped[datetime] = mapped_column(Date, nullable=False, index=True)
-    
+
     # The 2-digit number (00-99)
     number: Mapped[str] = mapped_column(String(2), nullable=False, index=True)
-    
+
     # Which prize this number came from (DB, G1, G2, etc.)
     prize_type: Mapped[str] = mapped_column(String(10), nullable=False)
-    
+
     # Position in the original number (last 2 digits)
     # This helps track if it's from special prizes
     position: Mapped[str] = mapped_column(String(20), default="last_2", nullable=False)
-    
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    
+
     __table_args__ = (
         # Fast lookup for specific number history
         Index('idx_number_date', 'number', 'draw_date', postgresql_ops={'draw_date': 'DESC'}),

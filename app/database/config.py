@@ -31,11 +31,11 @@ def get_database_url() -> str:
 def get_engine() -> AsyncEngine:
     """Get or create database engine"""
     global _engine
-    
+
     if _engine is None:
         database_url = get_database_url()
         logger.info(f"Creating database engine: {database_url.split('@')[1] if '@' in database_url else 'local'}")
-        
+
         _engine = create_async_engine(
             database_url,
             echo=os.getenv("DB_ECHO", "false").lower() == "true",
@@ -43,14 +43,14 @@ def get_engine() -> AsyncEngine:
             max_overflow=20,
             pool_pre_ping=True,
         )
-    
+
     return _engine
 
 
 def get_session_factory() -> async_sessionmaker[AsyncSession]:
     """Get or create session factory"""
     global _session_factory
-    
+
     if _session_factory is None:
         engine = get_engine()
         _session_factory = async_sessionmaker(
@@ -58,7 +58,7 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
             class_=AsyncSession,
             expire_on_commit=False,
         )
-    
+
     return _session_factory
 
 
@@ -79,18 +79,18 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 async def init_db() -> None:
     """Initialize database - create all tables"""
     engine = get_engine()
-    
+
     logger.info("Creating database tables...")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
+
     logger.info("✅ Database tables created successfully")
 
 
 async def close_db() -> None:
     """Close database connections"""
     global _engine, _session_factory
-    
+
     if _engine:
         logger.info("Closing database connections...")
         await _engine.dispose()

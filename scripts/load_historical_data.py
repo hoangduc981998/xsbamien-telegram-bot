@@ -70,18 +70,18 @@ async def main():
         action="store_true",
         help="Initialize database tables before loading"
     )
-    
+
     args = parser.parse_args()
-    
+
     try:
         # Initialize database if requested
         if args.init_db:
             logger.info("🗄️  Initializing database tables...")
             await init_db()
-        
+
         # Create crawler
         crawler = HistoricalDataCrawler()
-        
+
         # Determine what to crawl
         if args.all:
             logger.info(f"📊 Loading {args.days} days of data for ALL provinces")
@@ -96,7 +96,7 @@ async def main():
                 logger.error(f"❌ Unknown province: {province}")
                 logger.info(f"Available provinces: {', '.join(PROVINCES.keys())}")
                 return 1
-            
+
             logger.info(f"📊 Loading {args.days} days of data for {province}")
             result = await crawler.crawl_province(
                 province,
@@ -117,12 +117,12 @@ async def main():
             logger.error("❌ Must specify --all, --province, or --region")
             parser.print_help()
             return 1
-        
+
         # Print summary
         print("\n" + "=" * 60)
         print("📊 CRAWL SUMMARY")
         print("=" * 60)
-        
+
         if "results" in result:
             for res in result["results"]:
                 status_emoji = {
@@ -130,12 +130,12 @@ async def main():
                     "error": "❌",
                     "skipped": "⏭️ "
                 }.get(res.get("status"), "❓")
-                
+
                 print(f"{status_emoji} {res.get('province_code', 'N/A'):8s} - "
                       f"Status: {res.get('status', 'unknown'):8s} - "
                       f"Fetched: {res.get('fetched', 0):3d} - "
                       f"Saved: {res.get('saved', 0):3d}")
-        
+
         if "total_saved" in result:
             print("\n" + "-" * 60)
             print(f"Total provinces: {result.get('total_provinces', 0)}")
@@ -144,11 +144,11 @@ async def main():
             print(f"Skipped: {result.get('skipped', 0)}")
             print(f"Total saved: {result.get('total_saved', 0)} results")
             print(f"Duration: {result.get('duration_seconds', 0):.2f}s")
-        
+
         print("=" * 60)
         print("\n✅ Data loading completed!")
         return 0
-        
+
     except KeyboardInterrupt:
         logger.info("\n⚠️  Interrupted by user")
         return 130
