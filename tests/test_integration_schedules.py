@@ -48,9 +48,9 @@ class TestCompleteWeekIntegration:
             button_provinces = []
             for row in keyboard.inline_keyboard[:-1]:
                 for button in row:
-                    if button.callback_data.startswith("province_"):
+                    if button.callback_data.startswith("result_"):
                         button_provinces.append(
-                            button.callback_data.replace("province_", "")
+                            button.callback_data.replace("result_", "")
                         )
 
             # Get expected provinces for this day
@@ -80,13 +80,13 @@ class TestCompleteWeekIntegration:
 
             keyboard = get_schedule_today_keyboard()
 
-            province_count = sum(
+            result_count = sum(
                 1 for row in keyboard.inline_keyboard[:-1]
                 for button in row
-                if button.callback_data.startswith("province_")
+                if button.callback_data.startswith("result_")
             )
 
-            assert province_count == 7, "Thursday should have 7 provinces"
+            assert result_count == 7, "Thursday should have 7 provinces"
 
     def test_saturday_has_most_mn_provinces(self):
         """Saturday should have 4 MN provinces (most MN in the week)"""
@@ -99,8 +99,8 @@ class TestCompleteWeekIntegration:
             button_provinces = []
             for row in keyboard.inline_keyboard[:-1]:
                 for button in row:
-                    if button.callback_data.startswith("province_"):
-                        code = button.callback_data.replace("province_", "")
+                    if button.callback_data.startswith("result_"):
+                        code = button.callback_data.replace("result_", "")
                         button_provinces.append(code)
 
             mn_provinces = [
@@ -112,7 +112,7 @@ class TestCompleteWeekIntegration:
                 f"Saturday should have 4 MN provinces, got {len(mn_provinces)}"
 
     @pytest.mark.parametrize("python_weekday", range(7))
-    def test_message_button_province_consistency(self, python_weekday):
+    def test_message_button_result_consistency(self, python_weekday):
         """Verify provinces in message exactly match provinces in buttons"""
         with patch('app.utils.cache.datetime') as mock_kb_dt, \
              patch('app.ui.messages.datetime') as mock_msg_dt:
@@ -129,9 +129,9 @@ class TestCompleteWeekIntegration:
             button_codes = []
             for row in keyboard.inline_keyboard[:-1]:
                 for button in row:
-                    if button.callback_data.startswith("province_"):
+                    if button.callback_data.startswith("result_"):
                         button_codes.append(
-                            button.callback_data.replace("province_", "")
+                            button.callback_data.replace("result_", "")
                         )
 
             # Verify each province in buttons is mentioned in message
@@ -155,8 +155,8 @@ class TestCompleteWeekIntegration:
                 provinces_in_order = []
                 for row in keyboard.inline_keyboard[:-1]:
                     for button in row:
-                        if button.callback_data.startswith("province_"):
-                            code = button.callback_data.replace("province_", "")
+                        if button.callback_data.startswith("result_"):
+                            code = button.callback_data.replace("result_", "")
                             if code in PROVINCES:
                                 region = PROVINCES[code]["region"]
                                 provinces_in_order.append(region)
@@ -205,13 +205,13 @@ class TestScheduleActionsIntegration:
             provinces1 = []
             for row in keyboard1.inline_keyboard[:-1]:
                 for button in row:
-                    if button.callback_data.startswith("province_"):
+                    if button.callback_data.startswith("result_"):
                         provinces1.append(button.callback_data)
 
             provinces2 = []
             for row in keyboard2.inline_keyboard[:-1]:
                 for button in row:
-                    if button.callback_data.startswith("province_"):
+                    if button.callback_data.startswith("result_"):
                         provinces2.append(button.callback_data)
 
             assert provinces1 == provinces2, \
@@ -227,11 +227,17 @@ class TestScheduleActionsIntegration:
 
                 keyboard = get_today_schedule_actions()
 
-                last_row = keyboard.inline_keyboard[-1]
-                assert len(last_row) == 2, \
-                    f"Weekday {weekday}: Should have 2 navigation buttons"
-                assert last_row[0].callback_data == "schedule_week"
-                assert last_row[1].callback_data == "main_menu"
+                # Check last 2 rows (separate navigation buttons)
+                schedule_week_row = keyboard.inline_keyboard[-2]
+                back_row = keyboard.inline_keyboard[-1]
+                
+                assert len(schedule_week_row) == 1, \
+                    f"Weekday {weekday}: Schedule week row should have 1 button"
+                assert schedule_week_row[0].callback_data == "schedule_week"
+                
+                assert len(back_row) == 1, \
+                    f"Weekday {weekday}: Back row should have 1 button"
+                assert back_row[0].callback_data == "back_to_main"
 
 
 class TestButtonCallbackDataIntegration:
@@ -252,8 +258,8 @@ class TestButtonCallbackDataIntegration:
 
             for row in keyboard.inline_keyboard[:-1]:
                 for button in row:
-                    if button.callback_data.startswith("province_"):
-                        code = button.callback_data.replace("province_", "")
+                    if button.callback_data.startswith("result_"):
+                        code = button.callback_data.replace("result_", "")
                         assert code in PROVINCES, \
                             f"Weekday {python_weekday}: " \
                             f"Invalid province code '{code}'"
@@ -269,12 +275,12 @@ class TestButtonCallbackDataIntegration:
 
                 for row in keyboard.inline_keyboard[:-1]:
                     for button in row:
-                        if button.callback_data != "main_menu":
-                            assert button.callback_data.startswith("province_"), \
+                        if button.callback_data != "back_to_main":
+                            assert button.callback_data.startswith("result_"), \
                                 f"Weekday {weekday}: " \
                                 f"Invalid callback format: {button.callback_data}"
 
-                            code = button.callback_data.replace("province_", "")
+                            code = button.callback_data.replace("result_", "")
                             assert code.isupper(), \
                                 f"Weekday {weekday}: " \
                                 f"Province code should be uppercase: {code}"

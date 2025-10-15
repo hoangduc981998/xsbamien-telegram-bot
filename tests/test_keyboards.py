@@ -47,8 +47,8 @@ class TestGetScheduleTodayKeyboard:
             actual_provinces = []
             for row in keyboard.inline_keyboard[:-1]:  # Exclude last row (Back button)
                 for button in row:
-                    if button.callback_data.startswith("province_"):
-                        actual_provinces.append(button.callback_data.replace("province_", ""))
+                    if button.callback_data.startswith("result_"):
+                        actual_provinces.append(button.callback_data.replace("result_", ""))
 
             # Verify
             error_msg = (f"Weekday {python_weekday} → Schedule day {schedule_day}: "
@@ -65,13 +65,13 @@ class TestGetScheduleTodayKeyboard:
             keyboard = get_schedule_today_keyboard()
 
             # Count province buttons
-            province_count = 0
+            result_count = 0
             for row in keyboard.inline_keyboard[:-1]:
                 for button in row:
-                    if button.callback_data.startswith("province_"):
-                        province_count += 1
+                    if button.callback_data.startswith("result_"):
+                        result_count += 1
 
-            assert province_count == 6, f"Expected 6 provinces on Tuesday, got {province_count}"
+            assert result_count == 6, f"Expected 6 provinces on Tuesday, got {result_count}"
 
     def test_two_column_layout(self):
         """Test buttons are arranged in 2-column layout"""
@@ -91,8 +91,8 @@ class TestGetScheduleTodayKeyboard:
 
         last_row = keyboard.inline_keyboard[-1]
         assert len(last_row) == 1
-        assert last_row[0].text == "◀️ Quay Lại"
-        assert last_row[0].callback_data == "main_menu"
+        assert last_row[0].text == "🔙 Quay lại"
+        assert last_row[0].callback_data == "back_to_main"
 
     def test_button_display_name_truncation(self):
         """Test long province names are truncated"""
@@ -106,7 +106,7 @@ class TestGetScheduleTodayKeyboard:
             tphcm_button = None
             for row in keyboard.inline_keyboard:
                 for button in row:
-                    if button.callback_data == "province_TPHCM":
+                    if button.callback_data == "result_TPHCM":
                         tphcm_button = button
                         break
 
@@ -125,12 +125,12 @@ class TestGetScheduleTodayKeyboard:
             # Check all province buttons have correct callback format
             for row in keyboard.inline_keyboard[:-1]:
                 for button in row:
-                    if button.callback_data.startswith("province_"):
+                    if button.callback_data.startswith("result_"):
                         # Extract province code
-                        province_code = button.callback_data.replace("province_", "")
+                        result_code = button.callback_data.replace("result_", "")
                         # Verify it exists in PROVINCES
-                        assert province_code in PROVINCES, \
-                            f"Province code {province_code} not found in PROVINCES"
+                        assert result_code in PROVINCES, \
+                            f"Province code {result_code} not found in PROVINCES"
 
     def test_provinces_grouped_by_region_order(self):
         """Test provinces appear in correct order: MB → MT → MN"""
@@ -141,14 +141,14 @@ class TestGetScheduleTodayKeyboard:
             keyboard = get_schedule_today_keyboard()
 
             # Extract all province codes
-            province_codes = []
+            result_codes = []
             for row in keyboard.inline_keyboard[:-1]:
                 for button in row:
-                    if button.callback_data.startswith("province_"):
-                        province_codes.append(button.callback_data.replace("province_", ""))
+                    if button.callback_data.startswith("result_"):
+                        result_codes.append(button.callback_data.replace("result_", ""))
 
             # Check they appear in MB, MT, MN order
-            regions = [PROVINCES[code]["region"] for code in province_codes]
+            regions = [PROVINCES[code]["region"] for code in result_codes]
 
             # MB should come first
             if "MB" in regions:
@@ -201,8 +201,8 @@ class TestGetTodayScheduleActions:
             actual_provinces = []
             for row in keyboard.inline_keyboard[:-1]:  # Exclude last row
                 for button in row:
-                    if button.callback_data.startswith("province_"):
-                        actual_provinces.append(button.callback_data.replace("province_", ""))
+                    if button.callback_data.startswith("result_"):
+                        actual_provinces.append(button.callback_data.replace("result_", ""))
 
             # Verify
             error_msg = (f"Weekday {python_weekday} → Schedule day {schedule_day}: "
@@ -213,12 +213,17 @@ class TestGetTodayScheduleActions:
         """Test navigation buttons are at the end"""
         keyboard = get_today_schedule_actions()
 
-        last_row = keyboard.inline_keyboard[-1]
-        assert len(last_row) == 2
-        assert last_row[0].text == "📅 Xem Lịch Cả Tuần"
-        assert last_row[0].callback_data == "schedule_week"
-        assert last_row[1].text == "◀️ Quay Lại"
-        assert last_row[1].callback_data == "main_menu"
+        # Check last 2 rows (separate buttons)
+        schedule_week_row = keyboard.inline_keyboard[-2]
+        back_row = keyboard.inline_keyboard[-1]
+        
+        assert len(schedule_week_row) == 1
+        assert schedule_week_row[0].text == "📅 Lịch cả tuần"
+        assert schedule_week_row[0].callback_data == "schedule_week"
+        
+        assert len(back_row) == 1
+        assert back_row[0].text == "🔙 Quay lại"
+        assert back_row[0].callback_data == "back_to_main"
 
     def test_all_provinces_shown_no_limit(self):
         """Test that all provinces are shown (not limited to [:2])"""
@@ -230,13 +235,13 @@ class TestGetTodayScheduleActions:
             keyboard = get_today_schedule_actions()
 
             # Count province buttons (excluding navigation buttons in last row)
-            province_count = 0
+            result_count = 0
             for row in keyboard.inline_keyboard[:-1]:
                 for button in row:
-                    if button.callback_data.startswith("province_"):
-                        province_count += 1
+                    if button.callback_data.startswith("result_"):
+                        result_count += 1
 
-            assert province_count == 6, f"Expected 6 provinces on Tuesday, got {province_count}"
+            assert result_count == 6, f"Expected 6 provinces on Tuesday, got {result_count}"
 
     def test_two_column_layout(self):
         """Test buttons are arranged in 2-column layout"""
@@ -262,7 +267,7 @@ class TestGetTodayScheduleActions:
             tphcm_button = None
             for row in keyboard.inline_keyboard:
                 for button in row:
-                    if button.callback_data == "province_TPHCM":
+                    if button.callback_data == "result_TPHCM":
                         tphcm_button = button
                         break
 
@@ -280,10 +285,10 @@ class TestGetTodayScheduleActions:
             # Check all province buttons have correct callback format
             for row in keyboard.inline_keyboard[:-1]:
                 for button in row:
-                    if button.callback_data.startswith("province_"):
-                        province_code = button.callback_data.replace("province_", "")
-                        assert province_code in PROVINCES, \
-                            f"Province code {province_code} not found in PROVINCES"
+                    if button.callback_data.startswith("result_"):
+                        result_code = button.callback_data.replace("result_", "")
+                        assert result_code in PROVINCES, \
+                            f"Province code {result_code} not found in PROVINCES"
 
     def test_provinces_before_navigation_buttons(self):
         """Test province buttons come before navigation buttons"""
@@ -293,16 +298,17 @@ class TestGetTodayScheduleActions:
 
             keyboard = get_today_schedule_actions()
 
-            # Last row should be navigation buttons
-            last_row = keyboard.inline_keyboard[-1]
-            for button in last_row:
-                assert not button.callback_data.startswith("province_"), \
-                    "Navigation row should not contain province buttons"
+            # Last 2 rows should be navigation buttons (schedule_week + back)
+            last_two_rows = keyboard.inline_keyboard[-2:]
+            for row in last_two_rows:
+                for button in row:
+                    assert not button.callback_data.startswith("result_"), \
+                        "Navigation rows should not contain province buttons"
 
             # All other rows should contain province buttons (if any buttons exist)
-            for row in keyboard.inline_keyboard[:-1]:
+            for row in keyboard.inline_keyboard[:-2]:
                 for button in row:
-                    assert button.callback_data.startswith("province_"), \
+                    assert button.callback_data.startswith("result_"), \
                         "Province rows should only contain province buttons"
 
     def test_provinces_grouped_by_region_order(self):
@@ -314,14 +320,14 @@ class TestGetTodayScheduleActions:
             keyboard = get_today_schedule_actions()
 
             # Extract all province codes
-            province_codes = []
+            result_codes = []
             for row in keyboard.inline_keyboard[:-1]:
                 for button in row:
-                    if button.callback_data.startswith("province_"):
-                        province_codes.append(button.callback_data.replace("province_", ""))
+                    if button.callback_data.startswith("result_"):
+                        result_codes.append(button.callback_data.replace("result_", ""))
 
             # Check they appear in MB, MT, MN order
-            regions = [PROVINCES[code]["region"] for code in province_codes]
+            regions = [PROVINCES[code]["region"] for code in result_codes]
 
             # MB should come first
             if "MB" in regions:
@@ -348,11 +354,11 @@ class TestGetTodayScheduleActions:
             keyboard = get_today_schedule_actions()
 
             # Count province buttons
-            province_count = 0
+            result_count = 0
             for row in keyboard.inline_keyboard[:-1]:
                 for button in row:
-                    if button.callback_data.startswith("province_"):
-                        province_count += 1
+                    if button.callback_data.startswith("result_"):
+                        result_count += 1
 
             # Thursday should have 7 provinces: MB + BIDI/QUBI/QUTR + TANI/ANGI/BITH
-            assert province_count == 7, f"Expected 7 provinces on Thursday, got {province_count}"
+            assert result_count == 7, f"Expected 7 provinces on Thursday, got {result_count}"
