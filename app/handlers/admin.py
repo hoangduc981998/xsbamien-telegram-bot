@@ -1,10 +1,11 @@
 # app/handlers/admin.py (nếu có)
 from app.utils.cache import ScheduleCache
 
+
 def show_cache_status():
     """Hiển thị status của cache"""
     info = ScheduleCache.get_cache_info()
-    
+
     message = f"""
 📊 **Cache Status**
 
@@ -13,5 +14,5 @@ def show_cache_status():
 📆 Weekday: {info['cached_data'].get('weekday')}
 ✅ Valid: {info['is_valid']}
     """
-    
+
     return message
