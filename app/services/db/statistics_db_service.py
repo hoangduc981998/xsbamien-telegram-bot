@@ -151,7 +151,7 @@ class StatisticsDBService:
                                 max_cycle = gap
                         
                         # Only include if gan >= 10 days
-                        if days_since >= 10:
+                        if days_since >= 10 and days_since <= days:
                             # Categorize
                             if days_since >= 21:
                                 category = "cuc_gan"
