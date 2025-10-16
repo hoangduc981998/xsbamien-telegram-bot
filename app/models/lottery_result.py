@@ -1,12 +1,26 @@
-"""Lottery Result Database Model"""
+"""Lottery result models"""
 
 from datetime import datetime
 from typing import Dict
 
-from sqlalchemy import Integer, String, DateTime, Date, Index, JSON
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Date,
+    DateTime,
+    JSON,
+    ForeignKey,
+    Index,
+)
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.sql import func
 
-from .base import Base
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.sql import func
+
+from app.models.base import Base
+
 
 
 class LotteryResult(Base):
@@ -110,3 +124,32 @@ class Lo2SoHistory(Base):
             "prize_type": self.prize_type,
             "position": self.position,
         }
+
+
+
+class Lo3SoHistory(Base):
+    """Lịch sử xuất hiện của lô 3 số (ba càng)"""
+    
+    __tablename__ = "lo_3_so_history"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    lottery_result_id = Column(Integer, ForeignKey("lottery_results.id"), nullable=False, index=True)
+    province_code = Column(String(20), nullable=False, index=True)
+    region = Column(String(10), nullable=False, index=True)
+    draw_date = Column(Date, nullable=False, index=True)
+    number = Column(String(3), nullable=False, index=True)  # 3 chữ số
+    prize_type = Column(String(10), nullable=False)  # Loại giải (DB, G1, G2, etc.)
+    position = Column(String(20), nullable=False)  # Vị trí trong giải
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Indexes for efficient queries
+    __table_args__ = (
+        Index("idx_lo3so_number_date", "number", "draw_date"),
+        Index("idx_lo3so_province_number_date", "province_code", "number", "draw_date"),
+        Index("idx_lo3so_region_number_date", "region", "number", "draw_date"),
+        Index("idx_lo3so_draw_date_number", "draw_date", "number"),
+    )
+    
+    def __repr__(self):
+        return f"<Lo3SoHistory(number={self.number}, province={self.province_code}, date={self.draw_date})>"
+

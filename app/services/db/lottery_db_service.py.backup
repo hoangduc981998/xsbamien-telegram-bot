@@ -4,12 +4,11 @@ import logging
 from datetime import date, datetime
 from typing import List, Dict, Optional
 
-from sqlalchemy import select, and_, desc, func, delete
+from sqlalchemy import select, and_, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
-from app.models import LotteryResult, Lo2SoHistory, Lo3SoHistory
+from app.models import LotteryResult, Lo2SoHistory
 from app.database import DatabaseSession
 
 logger = logging.getLogger(__name__)
@@ -36,12 +35,7 @@ class LotteryDBService:
                 # Parse date
                 draw_date = result_data.get("date")
                 if isinstance(draw_date, str):
-                    # Thử format DD/MM/YYYY trước (từ API)
-                    try:
-                        draw_date = datetime.strptime(draw_date, "%d/%m/%Y").date()
-                    except ValueError:
-                        # Nếu không được thì dùng format YYYY-MM-DD
-                        draw_date = datetime.strptime(draw_date, "%Y-%m-%d").date()
+                    draw_date = datetime.strptime(draw_date, "%Y-%m-%d").date()
                 elif isinstance(draw_date, datetime):
                     draw_date = draw_date.date()
 
@@ -51,7 +45,7 @@ class LotteryDBService:
                     province_name=result_data.get("province", result_data.get("province_name")),
                     region=result_data.get("region"),
                     draw_date=draw_date,
-                    prizes=result_data.get("prizes", result_data),
+                    prizes=result_data.get("prizes", result_data),  # Handle both formats
                     created_at=datetime.utcnow(),
                     updated_at=datetime.utcnow(),
                 )
@@ -83,9 +77,6 @@ class LotteryDBService:
 
                     # Extract and save lo 2 so numbers
                     await self._extract_and_save_lo2so(session, lottery_result)
-                    
-                    # Extract and save lo 3 so numbers
-                    await self._extract_and_save_lo3so(session, lottery_result)
 
                 return lottery_result
 
@@ -105,6 +96,7 @@ class LotteryDBService:
             prizes = lottery_result.prizes
 
             # Delete existing lo2so records for this result
+            from sqlalchemy import delete
             stmt = delete(Lo2SoHistory).where(Lo2SoHistory.lottery_result_id == lottery_result.id)
             await session.execute(stmt)
 
@@ -114,13 +106,10 @@ class LotteryDBService:
 
             for prize_key in prize_keys:
                 if prize_key in prizes and prizes[prize_key]:
-                    prize_values = prizes[prize_key]
-                    if isinstance(prize_values, str):
-                        prize_values = [prize_values]
-                    
-                    for num_str in prize_values:
+                    for num_str in prizes[prize_key]:
                         if len(num_str) >= 2:
                             lo2 = num_str[-2:]  # Last 2 digits
+
                             lo2so_records.append({
                                 "lottery_result_id": lottery_result.id,
                                 "province_code": lottery_result.province_code,
@@ -140,54 +129,6 @@ class LotteryDBService:
 
         except Exception as e:
             logger.error(f"❌ Error extracting lo2so: {e}")
-
-    async def _extract_and_save_lo3so(self, session: AsyncSession, lottery_result: LotteryResult) -> None:
-        """
-        Extract 3-digit numbers from lottery result and save to lo_3_so_history
-        
-        Args:
-            session: Database session
-            lottery_result: LotteryResult object
-        """
-        try:
-            prizes = lottery_result.prizes
-
-            # Delete existing lo3so records for this result
-            stmt = delete(Lo3SoHistory).where(Lo3SoHistory.lottery_result_id == lottery_result.id)
-            await session.execute(stmt)
-
-            # Extract all 3-digit numbers
-            prize_keys = ["DB", "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8"]
-            lo3so_records = []
-
-            for prize_key in prize_keys:
-                if prize_key in prizes and prizes[prize_key]:
-                    prize_values = prizes[prize_key]
-                    if isinstance(prize_values, str):
-                        prize_values = [prize_values]
-                    
-                    for idx, num_str in enumerate(prize_values):
-                        if len(num_str) >= 3:
-                            lo3 = num_str[-3:]  # Last 3 digits
-                            lo3so_records.append({
-                                "lottery_result_id": lottery_result.id,
-                                "province_code": lottery_result.province_code,
-                                "region": lottery_result.region,
-                                "draw_date": lottery_result.draw_date,
-                                "number": lo3,
-                                "prize_type": prize_key,
-                                "position": f"{prize_key}_{idx}",
-                                "created_at": datetime.utcnow(),
-                            })
-
-            # Bulk insert
-            if lo3so_records:
-                stmt = insert(Lo3SoHistory).values(lo3so_records)
-                await session.execute(stmt)
-                logger.info(f"✅ Saved {len(lo3so_records)} lo3so numbers for {lottery_result.province_code}")
-
-        except Exception as e:
-            logger.error(f"❌ Error extracting lo3so: {e}")
 
     async def get_result(self, province_code: str, draw_date: date) -> Optional[LotteryResult]:
         """
@@ -333,4 +274,3 @@ class LotteryDBService:
         except Exception as e:
             logger.error(f"❌ Error getting date range: {e}")
             return None
-            

@@ -1,7 +1,7 @@
 """Data models"""
 
 from .base import Base
-from .lottery_result import LotteryResult, Lo2SoHistory
+from app.models.lottery_result import LotteryResult, Lo2SoHistory, Lo3SoHistory
 from .user import User
 
-__all__ = ["Base", "LotteryResult", "Lo2SoHistory", "User"]
+__all__ = ["Base", "User", "LotteryResult", "Lo2SoHistory", "Lo3SoHistory"]

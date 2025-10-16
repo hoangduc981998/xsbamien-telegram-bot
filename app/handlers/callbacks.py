@@ -289,14 +289,27 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             province = PROVINCES.get(province_key, {})
 
             try:
-                # Get latest result for province
-                result = await lottery_service.get_latest_result(province_key)
-                
-                # Analyze statistics
-                stats = statistics_service.analyze_lo_3_so(result)
+                # Query frequency từ database (50 ngày)
+                frequency = await statistics_service.get_lo3so_frequency_stats(province_key, days=50)
                 
                 # Format message
-                message = format_lo_3_so_stats(stats, province.get("name", ""))
+                if frequency:
+                    sorted_freq = sorted(frequency.items(), key=lambda x: x[1], reverse=True)[:30]
+                    
+                    message = f"📊 <b>THỐNG KÊ LÔ 3 SỐ (BA CÀNG) - {province.get('name', '')}</b>\n"
+                    message += f"📅 Dữ liệu: 50 ngày gần nhất từ database\n\n"
+                    
+                    message += "🔥 <b>Top 30 số hay về:</b>\n"
+                    for i, (num, count) in enumerate(sorted_freq, 1):
+                        message += f"  {i:2d}. <code>{num}</code> - {count:2d} lần\n"
+                    
+                    message += f"\n💾 Tổng: {len(frequency)} số đã xuất hiện"
+                else:
+                    # Fallback to 1-day stats if no database data
+                    result = await lottery_service.get_latest_result(province_key)
+                    stats = statistics_service.analyze_lo_3_so(result)
+                    message = format_lo_3_so_stats(stats, province.get("name", ""))
+                    message += "\n\n⚠️ <i>Chưa có dữ liệu dài hạn trong database</i>"
                 
                 await query.edit_message_text(
                     message,

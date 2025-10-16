@@ -311,3 +311,54 @@ class StatisticsDBService:
         except Exception as e:
             logger.error(f"❌ Error getting statistics summary: {e}")
             return {}
+            
+    async def get_lo3so_frequency_stats(
+        self, 
+        province_code: str, 
+        days: int = 30
+    ) -> dict[str, int]:
+        """
+        Get frequency statistics for lo 3 so (3-digit numbers)
+        
+        Args:
+            province_code: Province code (e.g., "MB", "TPHCM")
+            days: Number of days to look back
+            
+        Returns:
+            Dictionary of {number: frequency}
+        """
+        from app.models import LotteryResult, Lo3SoHistory
+        from sqlalchemy import select, func
+        from datetime import datetime, timedelta
+        
+        try:
+            async with DatabaseSession() as session:
+                # Calculate date range
+                end_date = datetime.now().date()
+                start_date = end_date - timedelta(days=days)
+                
+                # Query: Count lo3so numbers in date range
+                query = (
+                    select(
+                        Lo3SoHistory.number,
+                        func.count(Lo3SoHistory.number).label("count")
+                    )
+                    .where(Lo3SoHistory.province_code == province_code)
+                    .where(Lo3SoHistory.draw_date >= start_date)
+                    .where(Lo3SoHistory.draw_date <= end_date)
+                    .group_by(Lo3SoHistory.number)
+                    .order_by(func.count(Lo3SoHistory.number).desc())
+                )
+                
+                result = await session.execute(query)
+                rows = result.all()
+                
+                # Convert to dict
+                frequency = {row[0]: row[1] for row in rows}
+                
+                logger.info(f"✅ Got lo3so frequency for {province_code}: {len(frequency)} unique numbers")
+                return frequency
+                
+        except Exception as e:
+            logger.error(f"❌ Error getting lo3so frequency: {e}")
+            return {}
