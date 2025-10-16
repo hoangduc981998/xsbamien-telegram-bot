@@ -67,7 +67,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             from app.ui.messages import WELCOME_MESSAGE
             from app.ui.keyboards import get_main_menu_keyboard
             
-            message = get_welcome_message()
+            message = WELCOME_MESSAGE
             keyboard = get_main_menu_keyboard()
             await query.edit_message_text(
                 message,
