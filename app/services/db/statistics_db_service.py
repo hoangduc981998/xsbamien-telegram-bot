@@ -105,7 +105,6 @@ class StatisticsDBService:
                 ).where(
                     and_(
                         Lo2SoHistory.province_code == province_code,
-                        Lo2SoHistory.draw_date >= start_date,  # ← THÊM LẠI!
                         Lo2SoHistory.draw_date <= end_date
                         )
                 ).group_by(Lo2SoHistory.number)
