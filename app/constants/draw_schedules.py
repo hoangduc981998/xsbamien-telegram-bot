@@ -9,7 +9,7 @@ The weekday mapping follows Python's datetime.weekday() convention:
 PROVINCE_DRAW_SCHEDULE = {
     # Miền Bắc - daily
     'MB': [0, 1, 2, 3, 4, 5, 6],  # Every day
-    
+
     # Miền Nam (quay 1-2 lần/tuần)
     'ANGI': [3],        # Thursday only
     'BALI': [2, 5],     # Wednesday, Saturday
@@ -32,7 +32,7 @@ PROVINCE_DRAW_SCHEDULE = {
     'BIPH': [5],        # Saturday (Bình Phước)
     'BITH': [3],        # Thursday (Bình Thuận)
     'DOTH': [0],        # Monday (Đồng Tháp)
-    
+
     # Miền Trung
     'BIDI': [3],        # Thursday (Bình Định)
     'DALAK': [1],       # Tuesday (Đắk Lắk)
