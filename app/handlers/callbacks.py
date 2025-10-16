@@ -64,7 +64,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Back to main menu
         if callback_data == "back_to_main":
             await query.answer()
-            from app.ui.messages import get_welcome_message
+            from app.ui.messages import WELCOME_MESSAGE
             from app.ui.keyboards import get_main_menu_keyboard
             
             message = get_welcome_message()
@@ -474,6 +474,43 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.edit_message_text(
                 message,
                 reply_markup=get_province_detail_menu(province_code),
+                parse_mode="HTML",
+            )
+
+        # Region results (show provinces list)
+        elif callback_data == "results_MB":
+            from app.ui.keyboards import get_region_provinces_keyboard
+            
+            message = "🏔️ <b>MIỀN BẮC</b>\n\n"
+            message += "Chọn tỉnh để xem kết quả:"
+            
+            await query.edit_message_text(
+                message,
+                reply_markup=get_region_provinces_keyboard("MB"),
+                parse_mode="HTML",
+            )
+        
+        elif callback_data == "results_MT":
+            from app.ui.keyboards import get_region_provinces_keyboard
+            
+            message = "🏖️ <b>MIỀN TRUNG</b>\n\n"
+            message += "Chọn tỉnh để xem kết quả:"
+            
+            await query.edit_message_text(
+                message,
+                reply_markup=get_region_provinces_keyboard("MT"),
+                parse_mode="HTML",
+            )
+        
+        elif callback_data == "results_MN":
+            from app.ui.keyboards import get_region_provinces_keyboard
+            
+            message = "🌴 <b>MIỀN NAM</b>\n\n"
+            message += "Chọn tỉnh để xem kết quả:"
+            
+            await query.edit_message_text(
+                message,
+                reply_markup=get_region_provinces_keyboard("MN"),
                 parse_mode="HTML",
             )
 
