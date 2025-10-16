@@ -74,9 +74,9 @@ class StatisticsDBService:
     async def get_lo_gan(
         self,
         province_code: str,
-        days: int = 30,
-        limit: int = 20
-    ) -> List[Dict]:
+        days: int = 100,
+        limit: int = 15
+    ) -> list[dict]:
         """
         Get "Lô Gan" (numbers that haven't appeared recently)
         
@@ -86,63 +86,78 @@ class StatisticsDBService:
             limit: Maximum number of results
             
         Returns:
-            List of dicts with {number, days_since_last, last_seen_date}
+            List of dicts with {number, days_since_last, last_seen_date, max_cycle, category}
         """
         try:
             async with DatabaseSession() as session:
                 end_date = date.today()
                 start_date = end_date - timedelta(days=days)
-
-                # Get all numbers (00-99)
+                
+                # Get all numbers 00-99
                 all_numbers = [f"{i:02d}" for i in range(100)]
-
-                # Get last appearance date for each number
+                
+                # Query: Get last appearance date for each number
                 query = select(
                     Lo2SoHistory.number,
                     func.max(Lo2SoHistory.draw_date).label("last_date")
                 ).where(
                     and_(
                         Lo2SoHistory.province_code == province_code,
+                        Lo2SoHistory.draw_date >= start_date,
                         Lo2SoHistory.draw_date <= end_date
                     )
                 ).group_by(Lo2SoHistory.number)
-
+                
                 result = await session.execute(query)
-
-                last_appearances = {}
-                for row in result:
-                    last_appearances[row.number] = row.last_date
-
-                # Calculate days since last appearance
+                last_appearances = {row.number: row.last_date for row in result}
+                
+                # Calculate gan data
                 lo_gan = []
                 for num in all_numbers:
                     if num in last_appearances:
                         last_date = last_appearances[num]
                         days_since = (end_date - last_date).days
-
-                        # Only include if not appeared in last N days
-                        if days_since > 0:
+                        
+                        # Only include if gan (>= 10 days)
+                        if days_since >= 10:
+                            # Categorize
+                            if days_since >= 21:
+                                category = "cuc_gan"
+                            elif days_since >= 16:
+                                category = "gan_lon"
+                            else:
+                                category = "gan_thuong"
+                            
+                            # Calculate max cycle (simple version - just use current days_since)
+                            max_cycle = days_since
+                            
                             lo_gan.append({
                                 "number": num,
                                 "days_since_last": days_since,
-                                "last_seen_date": last_date.strftime("%Y-%m-%d")
+                                "last_seen_date": last_date.strftime("%d/%m/%Y"),
+                                "max_cycle": max_cycle,
+                                "category": category
                             })
                     else:
-                        # Never appeared in our database
+                        # Never appeared in this period
                         lo_gan.append({
                             "number": num,
                             "days_since_last": days,
-                            "last_seen_date": None
+                            "last_seen_date": "Chưa về",
+                            "max_cycle": days,
+                            "category": "cuc_gan"
                         })
-
+                
                 # Sort by days_since_last (descending)
                 lo_gan.sort(key=lambda x: x["days_since_last"], reverse=True)
-
+                
                 logger.info(f"✅ Got {len(lo_gan)} lo gan numbers for {province_code}")
                 return lo_gan[:limit]
-
+                
         except Exception as e:
             logger.error(f"❌ Error getting lo gan: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return []
 
     async def get_hot_numbers(
@@ -311,7 +326,7 @@ class StatisticsDBService:
         except Exception as e:
             logger.error(f"❌ Error getting statistics summary: {e}")
             return {}
-            
+
     async def get_lo3so_frequency_stats(
         self, 
         province_code: str, 
