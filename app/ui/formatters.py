@@ -586,8 +586,13 @@ def format_lo_gan(gan_data: list, province_name: str) -> str:
     if not gan_data:
         return f"📊 <b>LÔ GAN {province_name.upper()}</b>\n\n⚠️ Chưa có dữ liệu"
     
+    # Determine unit and display text based on first item
+    is_daily = gan_data[0].get('is_daily', True)
+    unit = "ngày" if is_daily else "kỳ"
+    analysis_unit = "ngày" if is_daily else "kỳ quay"
+    
     message = f"📊 <b>LÔ GAN {province_name.upper()}</b>\n"
-    message += f"📅 Phân tích 50 ngày gần nhất\n\n"
+    message += f"📅 Phân tích 50 {analysis_unit} gần nhất\n\n"
     
     message += "🔢 <b>Top 15 Lô Gan Dài Nhất:</b>\n"
     message += "━━━━━━━━━━━━━━━━━━━━\n"
@@ -601,15 +606,23 @@ def format_lo_gan(gan_data: list, province_name: str) -> str:
         else:
             icon = "🟢"  # Gan thường
         
+        value = item['gan_value']
         message += f"{icon} {i:2d}. <code>{item['number']}</code> - "
-        message += f"<b>{item['days_since_last']}</b> ngày\n"
+        message += f"<b>{value}</b> {unit}\n"
         message += f"     └ Lần cuối: {item['last_seen_date']}\n"
-        message += f"     └ Gan max: {item['max_cycle']} ngày\n"
+        message += f"     └ Gan max: {item['max_cycle']} {unit}\n"
     
     message += "\n━━━━━━━━━━━━━━━━━━━━\n"
-    message += "🟢 Gan thường (10-15 ngày)\n"
-    message += "🟠 Gan lớn (16-20 ngày)\n"
-    message += "🔴 Cực gan (21+ ngày)\n"
+    
+    # Different thresholds for daily vs periodic draws
+    if is_daily:
+        message += "🟢 Gan thường (10-15 ngày)\n"
+        message += "🟠 Gan lớn (16-20 ngày)\n"
+        message += "🔴 Cực gan (21+ ngày)\n"
+    else:
+        message += "🟢 Gan thường (3-5 kỳ)\n"
+        message += "🟠 Gan lớn (6-8 kỳ)\n"
+        message += "🔴 Cực gan (9+ kỳ)\n"
     
     message += f"\n💡 <i>Dữ liệu từ database</i>"
     

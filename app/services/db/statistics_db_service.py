@@ -87,16 +87,25 @@ class StatisticsDBService:
             limit: Maximum number of results
             
         Returns:
-            List of dicts with {number, days_since_last, last_seen_date, max_cycle, category}
+            List of dicts with {number, gan_value, days_since_last, periods_since_last, 
+                                last_seen_date, max_cycle, is_daily, category}
         """
         try:
             async with DatabaseSession() as session:
                 from app.utils.timezone import get_vietnam_today
+                from app.utils.lottery_helpers import (
+                    count_draw_periods, 
+                    is_daily_draw_province,
+                    categorize_gan
+                )
                 
                 end_date = get_vietnam_today()
                 start_date = end_date - timedelta(days=days)
                 
-                logger.info(f"Analyzing lo gan for {province_code}: {start_date} to {end_date} ({days} days)")
+                is_daily = is_daily_draw_province(province_code)
+                unit = "days" if is_daily else "periods"
+                
+                logger.info(f"Analyzing lo gan for {province_code}: {start_date} to {end_date} ({days} days, counting {unit})")
                 
                 # Get all 2-digit numbers (00-99)
                 all_numbers = [f"{i:02d}" for i in range(100)]
@@ -132,64 +141,86 @@ class StatisticsDBService:
                         dates = sorted(number_dates[num])
                         last_date = dates[-1]
                         
-                        # Days since last appearance (fix off-by-1 error)
-                        # If last seen yesterday, days_since should be 0, not 1
+                        # Calculate BOTH days and periods since last appearance
                         days_since = (end_date - last_date).days - 1
-                        # Handle same-day case (when days_since would be -1)
                         if days_since < 0:
                             days_since = 0
                         
-                        # Calculate max cycle (longest gap between appearances in window)
-                        # Gap from last appearance to end of window
-                        gap_from_last = (end_date - last_date).days - 1
-                        if gap_from_last < 0:
-                            gap_from_last = 0
-                        max_cycle = gap_from_last
+                        periods_since = count_draw_periods(province_code, last_date, end_date)
                         
-                        # Check gaps within the window
-                        for i in range(len(dates)):
-                            if i == 0:
-                                # Gap from window start to first appearance
-                                gap = (dates[i] - start_date).days - 1
-                            else:
-                                # Gap between consecutive appearances
-                                gap = (dates[i] - dates[i-1]).days - 1
-                            
-                            if gap < 0:
-                                gap = 0
-                            
-                            if gap > max_cycle:
-                                max_cycle = gap
+                        # Determine which metric to use
+                        gan_value = days_since if is_daily else periods_since
                         
-                        # Only include if gan >= 10 days
-                        if days_since >= 10 and days_since <= days:
-                            # Categorize
-                            if days_since >= 21:
-                                category = "cuc_gan"
-                            elif days_since >= 16:
-                                category = "gan_lon"
-                            else:
-                                category = "gan_thuong"
+                        # Calculate max cycle
+                        if is_daily:
+                            # For MB, use days
+                            gap_from_last = (end_date - last_date).days - 1
+                            if gap_from_last < 0:
+                                gap_from_last = 0
+                            max_cycle = gap_from_last
+                            
+                            for i in range(len(dates)):
+                                if i == 0:
+                                    gap = (dates[i] - start_date).days - 1
+                                else:
+                                    gap = (dates[i] - dates[i-1]).days - 1
+                                
+                                if gap < 0:
+                                    gap = 0
+                                
+                                if gap > max_cycle:
+                                    max_cycle = gap
+                        else:
+                            # For MN/MT, use periods
+                            max_cycle = periods_since
+                            
+                            for i in range(len(dates)):
+                                if i == 0:
+                                    gap = count_draw_periods(province_code, start_date, dates[i])
+                                else:
+                                    gap = count_draw_periods(province_code, dates[i-1], dates[i])
+                                
+                                if gap > max_cycle:
+                                    max_cycle = gap
+                        
+                        # Threshold: 10 days for MB, 3 periods for MN/MT
+                        threshold = 10 if is_daily else 3
+                        
+                        if gan_value >= threshold and gan_value <= days:
+                            category = categorize_gan(gan_value, is_daily)
                             
                             lo_gan.append({
                                 "number": num,
+                                "gan_value": gan_value,  # Primary display value
                                 "days_since_last": days_since,
+                                "periods_since_last": periods_since,
                                 "last_seen_date": last_date.strftime("%d/%m/%Y"),
                                 "max_cycle": max_cycle,
+                                "is_daily": is_daily,
                                 "category": category
                             })
                     else:
                         # Never appeared in analysis window
+                        if is_daily:
+                            gan_value = days
+                            max_cycle = days
+                        else:
+                            gan_value = count_draw_periods(province_code, start_date, end_date)
+                            max_cycle = gan_value
+                        
                         lo_gan.append({
                             "number": num,
+                            "gan_value": gan_value,
                             "days_since_last": days,
+                            "periods_since_last": gan_value if not is_daily else 0,
                             "last_seen_date": "Chưa về",
-                            "max_cycle": days,
+                            "max_cycle": max_cycle,
+                            "is_daily": is_daily,
                             "category": "cuc_gan"
                         })
                 
-                # Sort by days_since_last (descending)
-                lo_gan.sort(key=lambda x: x["days_since_last"], reverse=True)
+                # Sort by gan_value (descending)
+                lo_gan.sort(key=lambda x: x["gan_value"], reverse=True)
                 
                 logger.info(f"✅ Got {len(lo_gan)} lo gan numbers for {province_code}")
                 return lo_gan[:limit]
