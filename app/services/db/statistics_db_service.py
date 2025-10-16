@@ -132,20 +132,31 @@ class StatisticsDBService:
                         dates = sorted(number_dates[num])
                         last_date = dates[-1]
                         
-                        # Days since last appearance
-                        days_since = (end_date - last_date).days
+                        # Days since last appearance (fix off-by-1 error)
+                        # If last seen yesterday, days_since should be 0, not 1
+                        days_since = (end_date - last_date).days - 1
+                        # Handle same-day case (when days_since would be -1)
+                        if days_since < 0:
+                            days_since = 0
                         
-                        # Calculate max cycle (longest gap between appearances)
-                        max_cycle = days_since  # Gap from last to now
+                        # Calculate max cycle (longest gap between appearances in window)
+                        # Gap from last appearance to end of window
+                        gap_from_last = (end_date - last_date).days - 1
+                        if gap_from_last < 0:
+                            gap_from_last = 0
+                        max_cycle = gap_from_last
                         
-                        # Also check gaps between appearances
+                        # Check gaps within the window
                         for i in range(len(dates)):
                             if i == 0:
-                                # Gap from start_date to first appearance
-                                gap = (dates[i] - start_date).days
+                                # Gap from window start to first appearance
+                                gap = (dates[i] - start_date).days - 1
                             else:
                                 # Gap between consecutive appearances
-                                gap = (dates[i] - dates[i-1]).days
+                                gap = (dates[i] - dates[i-1]).days - 1
+                            
+                            if gap < 0:
+                                gap = 0
                             
                             if gap > max_cycle:
                                 max_cycle = gap
