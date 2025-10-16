@@ -350,7 +350,31 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     reply_markup=get_back_to_menu_keyboard(),
                     parse_mode="HTML",
                 )
-
+        # Lô gan theo tỉnh
+        elif callback_data.startswith("stats_gan_"):
+            province_key = callback_data.split("_")[2]
+            province = PROVINCES.get(province_key, {})
+            
+            try:
+                # Query lô gan từ database (100 ngày)
+                gan_data = await statistics_service.get_lo_gan(province_key, days=100, limit=15)
+                
+                # Format message
+                message = format_lo_gan(gan_data, province.get("name", province_key))
+                
+                await query.edit_message_text(
+                    message,
+                    reply_markup=get_province_detail_keyboard(province_key),
+                    parse_mode="HTML",
+                )
+            except Exception as e:
+                logger.error(f"Error in stats_gan for {province_key}: {e}")
+                await query.edit_message_text(
+                    f"❌ Lỗi khi lấy thống kê lô gan: {str(e)}",
+                    reply_markup=get_province_detail_keyboard(province_key),
+                    parse_mode="HTML",
+                )
+        
         # Lô gan
         elif callback_data == "stats_gan":
             try:
@@ -537,7 +561,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         province_code: str,
         days: int = 100,  # Cần 100 ngày để tính gan cực đại
         limit: int = 15
-    ) -> List[Dict]:
+        ) -> list[dict]:
         """
         Get "Lô Gan" (numbers that haven't appeared recently)
         

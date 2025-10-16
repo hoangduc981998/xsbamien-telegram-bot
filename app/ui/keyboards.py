@@ -190,6 +190,9 @@ def get_province_detail_keyboard(province_key: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton("📊 Thống kê Lô 2 số", callback_data=f"stats2_{province_key}"),
             InlineKeyboardButton("📊 Thống kê Lô 3 số", callback_data=f"stats3_{province_key}"),
         ],
+        [
+            InlineKeyboardButton("🔥 Lô Gan", callback_data=f"stats_gan_{province_key}"),
+        ],
         [InlineKeyboardButton("🔙 Quay lại", callback_data="results_menu")],
         [InlineKeyboardButton("🏠 Về trang chủ", callback_data="back_to_main")],
     ]
