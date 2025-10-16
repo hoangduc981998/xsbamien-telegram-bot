@@ -231,7 +231,7 @@ class StatisticsService:
     async def get_lo_gan(
         self, 
         province_code: str, 
-        days: int = 30, 
+        draws: int = 200,
         limit: int = 10
     ) -> List[Dict]:
         """
@@ -239,17 +239,23 @@ class StatisticsService:
 
         Args:
             province_code: Province code
-            days: Number of days to look back
+            draws: Number of draw periods to analyze (default: 200)
             limit: Maximum number of results
 
         Returns:
-            List of dicts with {number, days_since_last, last_seen_date}
+            List of dicts with {number, gan_value, days_since_last, periods_since_last, 
+                                last_seen_date, max_cycle, is_daily, category,
+                                analysis_draws, analysis_days, analysis_window}
         """
         # Use database if available
         if self.use_database and self.db_service:
             try:
-                logger.info(f"Getting lô gan from DB for {province_code} ({days} days)")
-                lo_gan = await self.db_service.get_lo_gan(province_code, days, limit)
+                logger.info(f"Getting lô gan from DB for {province_code} ({draws} draws)")
+                lo_gan = await self.db_service.get_lo_gan(
+                    province_code,
+                    draws=draws,
+                    limit=limit
+                )
                 return lo_gan
             except Exception as e:
                 logger.warning(f"⚠️  DB query failed, using mock data: {e}")
@@ -258,15 +264,23 @@ class StatisticsService:
         logger.info(f"Getting lô gan (mock) for {province_code}")
         
         import random
-        random.seed(hash(str(province_code) + str(days)))
+        random.seed(hash(str(province_code) + str(draws)))
         
         lo_gan = []
         for i in range(limit):
             num = f"{random.randint(0, 99):02d}"
             lo_gan.append({
                 "number": num,
+                "gan_value": random.randint(10, 30),
                 "days_since_last": random.randint(10, 30),
-                "last_seen_date": None
+                "periods_since_last": random.randint(3, 10),
+                "last_seen_date": None,
+                "max_cycle": random.randint(15, 40),
+                "is_daily": province_code == "MB",
+                "category": "gan_thuong",
+                "analysis_draws": draws,
+                "analysis_days": draws if province_code == "MB" else draws * 7,
+                "analysis_window": f"{draws} {'ngày' if province_code == 'MB' else 'kỳ'}"
             })
         
         return lo_gan

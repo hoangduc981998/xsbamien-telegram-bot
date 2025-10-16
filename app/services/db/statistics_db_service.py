@@ -75,20 +75,30 @@ class StatisticsDBService:
     async def get_lo_gan(
         self,
         province_code: str,
-        days: int = 100,
+        draws: int | None = None,
+        days: int | None = None,
         limit: int = 15
     ) -> list[dict]:
         """
-        Get "Lô Gan" - numbers that haven't appeared recently
+        Analyze gan (overdue) lottery numbers
         
         Args:
-            province_code: Province code
-            days: Number of days to analyze (analysis window)
+            province_code: Province code (e.g., 'ANGI', 'TPHCM', 'MB')
+            draws: Number of recent draw periods to analyze (recommended)
+            days: Number of calendar days (deprecated, use draws instead)
             limit: Maximum number of results
-            
+        
         Returns:
-            List of dicts with {number, gan_value, days_since_last, periods_since_last, 
-                                last_seen_date, max_cycle, is_daily, category}
+            List of gan numbers with statistics
+        
+        Examples:
+            # Recommended (using draws):
+            await get_lo_gan('ANGI', draws=200)  # 200 draws = ~1400 days
+            await get_lo_gan('TPHCM', draws=200)  # 200 draws = ~700 days
+            await get_lo_gan('MB', draws=200)  # 200 draws = 200 days
+            
+            # Backward compatible (using days):
+            await get_lo_gan('ANGI', days=1400)
         """
         try:
             async with DatabaseSession() as session:
@@ -98,14 +108,60 @@ class StatisticsDBService:
                     is_daily_draw_province,
                     categorize_gan
                 )
+                from app.constants.draw_schedules import PROVINCE_DRAW_SCHEDULE
                 
                 end_date = get_vietnam_today()
-                start_date = end_date - timedelta(days=days)
-                
                 is_daily = is_daily_draw_province(province_code)
+                
+                # Determine analysis period
+                if draws is not None:
+                    # Calculate days from draws based on province schedule
+                    if is_daily:
+                        # MB: 1 draw per day
+                        analysis_days = draws
+                        actual_draws = draws
+                    else:
+                        # MN/MT: Get draw frequency from schedule
+                        schedule = PROVINCE_DRAW_SCHEDULE.get(province_code, [3])  # Default Thursday
+                        draws_per_week = len(schedule)
+                        
+                        # Calculate days needed to cover 'draws' periods
+                        # Add buffer to ensure we get enough data
+                        analysis_days = int((draws / draws_per_week) * 7) + 7
+                        actual_draws = draws
+                    
+                    logger.info(
+                        f"Analyzing lo gan for {province_code}: "
+                        f"{draws} draws ≈ {analysis_days} days"
+                    )
+                elif days is not None:
+                    # Use days parameter (backward compatibility)
+                    analysis_days = days
+                    actual_draws = None
+                    logger.warning(
+                        f"Using deprecated 'days' parameter for {province_code}. "
+                        f"Consider using 'draws' instead."
+                    )
+                else:
+                    # Default: 200 draws
+                    draws = 200
+                    if is_daily:
+                        analysis_days = 200
+                        actual_draws = 200
+                    else:
+                        schedule = PROVINCE_DRAW_SCHEDULE.get(province_code, [3])
+                        draws_per_week = len(schedule)
+                        analysis_days = int((200 / draws_per_week) * 7) + 7
+                        actual_draws = 200
+                
+                start_date = end_date - timedelta(days=analysis_days)
                 unit = "days" if is_daily else "periods"
                 
-                logger.info(f"Analyzing lo gan for {province_code}: {start_date} to {end_date} ({days} days, counting {unit})")
+                logger.info(
+                    f"Analyzing lo gan for {province_code}: "
+                    f"{start_date} to {end_date} "
+                    f"({analysis_days} days, {actual_draws or '?'} draws)"
+                )
                 
                 # Get all 2-digit numbers (00-99)
                 all_numbers = [f"{i:02d}" for i in range(100)]
@@ -192,7 +248,7 @@ class StatisticsDBService:
                         # Threshold: 10 days for MB, 3 periods for MN/MT
                         threshold = 10 if is_daily else 3
                         
-                        if gan_value >= threshold and gan_value <= days:
+                        if gan_value >= threshold and gan_value <= (actual_draws if actual_draws and not is_daily else analysis_days):
                             category = categorize_gan(gan_value, is_daily)
                             
                             lo_gan.append({
@@ -213,7 +269,9 @@ class StatisticsDBService:
                 
                 # Add analysis window metadata to results
                 for item in lo_gan:
-                    item['analysis_window'] = days
+                    item['analysis_draws'] = actual_draws
+                    item['analysis_days'] = analysis_days
+                    item['analysis_window'] = f"{actual_draws or analysis_days} {'kỳ' if actual_draws else 'ngày'}"
                 
                 logger.info(f"✅ Got {len(lo_gan)} lo gan numbers for {province_code}")
                 return lo_gan[:limit]

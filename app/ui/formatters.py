@@ -586,16 +586,20 @@ def format_lo_gan(gan_data: list, province_name: str) -> str:
     if not gan_data:
         return f"📊 <b>LÔ GAN {province_name.upper()}</b>\n\n⚠️ Chưa có dữ liệu"
     
-    # Determine unit and display text based on first item
-    is_daily = gan_data[0].get('is_daily', True)
-    unit = "ngày" if is_daily else "kỳ"
-    analysis_unit = "ngày" if is_daily else "kỳ quay"
+    # Get metadata from first item
+    analysis_draws = gan_data[0].get('analysis_draws')
+    analysis_days = gan_data[0].get('analysis_days')
+    is_daily = gan_data[0].get('is_daily', False)
     
-    # Get window size from data
-    window_size = gan_data[0].get('analysis_window', 50)
+    # Determine display text
+    if analysis_draws:
+        unit = "ngày" if is_daily else "kỳ"
+        window_text = f"{analysis_draws} {unit} quay gần nhất"
+    else:
+        window_text = f"{analysis_days} ngày (chỉ số đã từng về)"
     
     message = f"📊 <b>LÔ GAN {province_name.upper()}</b>\n"
-    message += f"📅 Phân tích {window_size} {analysis_unit} (chỉ số đã từng về)\n\n"
+    message += f"📅 Phân tích {window_text}\n\n"
     
     message += "🔢 <b>Top 15 Lô Gan Dài Nhất:</b>\n"
     message += "━━━━━━━━━━━━━━━━━━━━\n"
@@ -610,6 +614,7 @@ def format_lo_gan(gan_data: list, province_name: str) -> str:
             icon = "🟢"  # Gan thường
         
         value = item['gan_value']
+        unit = "ngày" if is_daily else "kỳ"
         message += f"{icon} {i:2d}. <code>{item['number']}</code> - "
         message += f"<b>{value}</b> {unit}\n"
         message += f"     └ Lần cuối: {item['last_seen_date']}\n"

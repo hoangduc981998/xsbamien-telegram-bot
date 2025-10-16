@@ -372,8 +372,9 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             province = PROVINCES.get(province_key, {})
             
             try:
-                # Query lô gan từ database (200 ngày)
-                gan_data = await statistics_service.get_lo_gan(province_key, days=200, limit=15)
+                # Query lô gan từ database (200 draws)
+                logger.info(f"Getting lô gan from DB for {province_key} (200 draws)")
+                gan_data = await statistics_service.get_lo_gan(province_key, draws=200, limit=15)
                 
                 # Format message
                 message = format_lo_gan(gan_data, province.get("name", province_key))
@@ -390,8 +391,9 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Lô gan
         elif callback_data == "stats_gan":
             try:
-                # Use REAL DATABASE query (50 days for max cycle calculation)
-                gan_data = await statistics_service.get_lo_gan("MB", days=200, limit=15)
+                # Use REAL DATABASE query (200 draws)
+                logger.info(f"Getting lô gan from DB for MB (200 draws)")
+                gan_data = await statistics_service.get_lo_gan("MB", draws=200, limit=15)
                 
                 # Format message
                 message = format_lo_gan(gan_data, "Miền Bắc")
