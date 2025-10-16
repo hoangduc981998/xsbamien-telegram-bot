@@ -100,8 +100,8 @@ class StatisticsService:
             return {
                 'all_numbers': [],
                 'frequency': {},
-                'by_head': {i: [] for i in range(10)},
-                'by_tail': {i: [] for i in range(10)},
+                'by_head': {str(i): [] for i in range(10)},
+                'by_tail': {str(i): [] for i in range(10)},
                 'date': '',
                 'province': '',
             }
