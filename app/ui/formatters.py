@@ -591,8 +591,11 @@ def format_lo_gan(gan_data: list, province_name: str) -> str:
     unit = "ngày" if is_daily else "kỳ"
     analysis_unit = "ngày" if is_daily else "kỳ quay"
     
+    # Get window size from data
+    window_size = gan_data[0].get('analysis_window', 50)
+    
     message = f"📊 <b>LÔ GAN {province_name.upper()}</b>\n"
-    message += f"📅 Phân tích 50 {analysis_unit} gần nhất\n\n"
+    message += f"📅 Phân tích {window_size} {analysis_unit} (chỉ số đã từng về)\n\n"
     
     message += "🔢 <b>Top 15 Lô Gan Dài Nhất:</b>\n"
     message += "━━━━━━━━━━━━━━━━━━━━\n"

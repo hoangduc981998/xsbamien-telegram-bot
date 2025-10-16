@@ -237,7 +237,8 @@ class TestFormatLoGan:
         assert isinstance(result, str)
         assert "LÔ GAN" in result
         assert "MIỀN BẮC" in result
-        assert "50 ngày gần nhất" in result
+        assert "50 ngày" in result
+        assert "chỉ số đã từng về" in result
 
     def test_format_lo_gan_basic_mn(self, sample_gan_data_mn):
         """Test basic formatting for MN"""
@@ -246,7 +247,8 @@ class TestFormatLoGan:
         assert isinstance(result, str)
         assert "LÔ GAN" in result
         assert "AN GIANG" in result
-        assert "50 kỳ quay gần nhất" in result
+        assert "50 kỳ quay" in result
+        assert "chỉ số đã từng về" in result
 
     def test_format_lo_gan_shows_numbers_mb(self, sample_gan_data_mb):
         """Test that gan numbers are shown for MB with days"""

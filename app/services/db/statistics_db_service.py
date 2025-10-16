@@ -75,7 +75,7 @@ class StatisticsDBService:
     async def get_lo_gan(
         self,
         province_code: str,
-        days: int = 50,
+        days: int = 100,
         limit: int = 15
     ) -> list[dict]:
         """
@@ -199,28 +199,15 @@ class StatisticsDBService:
                                 "is_daily": is_daily,
                                 "category": category
                             })
-                    else:
-                        # Never appeared in analysis window
-                        if is_daily:
-                            gan_value = days
-                            max_cycle = days
-                        else:
-                            gan_value = count_draw_periods(province_code, start_date, end_date)
-                            max_cycle = gan_value
-                        
-                        lo_gan.append({
-                            "number": num,
-                            "gan_value": gan_value,
-                            "days_since_last": days,
-                            "periods_since_last": gan_value if not is_daily else 0,
-                            "last_seen_date": "Chưa về",
-                            "max_cycle": max_cycle,
-                            "is_daily": is_daily,
-                            "category": "cuc_gan"
-                        })
+                    # Don't include numbers that never appeared in window
+                    # They have no historical pattern to analyze
                 
                 # Sort by gan_value (descending)
                 lo_gan.sort(key=lambda x: x["gan_value"], reverse=True)
+                
+                # Add analysis window metadata to results
+                for item in lo_gan:
+                    item['analysis_window'] = days
                 
                 logger.info(f"✅ Got {len(lo_gan)} lo gan numbers for {province_code}")
                 return lo_gan[:limit]
