@@ -146,7 +146,8 @@ class StatisticsDBService:
                         if days_since < 0:
                             days_since = 0
                         
-                        periods_since = count_draw_periods(province_code, last_date, end_date)
+                        periods_since = count_draw_periods(province_code, last_date, end_date,
+                                                          exclude_start=True, exclude_end=True)
                         
                         # Determine which metric to use
                         gan_value = days_since if is_daily else periods_since
@@ -154,34 +155,46 @@ class StatisticsDBService:
                         # Calculate max cycle
                         if is_daily:
                             # For MB, use days
-                            gap_from_last = (end_date - last_date).days - 1
-                            if gap_from_last < 0:
-                                gap_from_last = 0
-                            max_cycle = gap_from_last
+                            # Initialize to 0, not to current gan value
+                            max_cycle = 0
                             
                             for i in range(len(dates)):
                                 if i == 0:
+                                    # First gap: from window start to first appearance
                                     gap = (dates[i] - start_date).days - 1
                                 else:
+                                    # Subsequent gaps: between consecutive appearances
                                     gap = (dates[i] - dates[i-1]).days - 1
                                 
-                                if gap < 0:
-                                    gap = 0
-                                
-                                if gap > max_cycle:
-                                    max_cycle = gap
+                                # Gap in days = actual days - 1 (exclude the appearance day)
+                                gan_gap = max(0, gap)
+                                if gan_gap > max_cycle:
+                                    max_cycle = gan_gap
+                            
+                            # Compare with current gan
+                            if days_since > max_cycle:
+                                max_cycle = days_since
                         else:
                             # For MN/MT, use periods
-                            max_cycle = periods_since
+                            # Initialize to 0, not to periods_since
+                            max_cycle = 0
                             
                             for i in range(len(dates)):
                                 if i == 0:
-                                    gap = count_draw_periods(province_code, start_date, dates[i])
+                                    # First gap: from window start to first appearance
+                                    gap = count_draw_periods(province_code, start_date, dates[i],
+                                                           exclude_start=False, exclude_end=True)
                                 else:
-                                    gap = count_draw_periods(province_code, dates[i-1], dates[i])
+                                    # Subsequent gaps: between consecutive appearances
+                                    gap = count_draw_periods(province_code, dates[i-1], dates[i],
+                                                           exclude_start=True, exclude_end=True)
                                 
                                 if gap > max_cycle:
                                     max_cycle = gap
+                            
+                            # Compare with current gan period
+                            if periods_since > max_cycle:
+                                max_cycle = periods_since
                         
                         # Threshold: 10 days for MB, 3 periods for MN/MT
                         threshold = 10 if is_daily else 3
