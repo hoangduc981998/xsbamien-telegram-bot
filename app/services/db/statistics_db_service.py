@@ -154,32 +154,38 @@ class StatisticsDBService:
                         # Calculate max cycle
                         if is_daily:
                             # For MB, use days
-                            gap_from_last = (end_date - last_date).days - 1
-                            if gap_from_last < 0:
-                                gap_from_last = 0
-                            max_cycle = gap_from_last
+                            # Start with current gan value
+                            max_cycle = days_since
                             
-                            for i in range(len(dates)):
-                                if i == 0:
-                                    gap = (dates[i] - start_date).days - 1
-                                else:
-                                    gap = (dates[i] - dates[i-1]).days - 1
-                                
-                                if gap < 0:
-                                    gap = 0
-                                
-                                if gap > max_cycle:
-                                    max_cycle = gap
+                            # 1. Gap from window start to first appearance
+                            if dates:
+                                gap = (dates[0] - start_date).days
+                                gan_gap = max(0, gap - 1)
+                                if gan_gap > max_cycle:
+                                    max_cycle = gan_gap
+                            
+                            # 2. Gaps between consecutive appearances
+                            for i in range(1, len(dates)):
+                                gap = (dates[i] - dates[i-1]).days
+                                gan_gap = max(0, gap - 1)
+                                if gan_gap > max_cycle:
+                                    max_cycle = gan_gap
                         else:
                             # For MN/MT, use periods
+                            # Start with current gan value
                             max_cycle = periods_since
                             
-                            for i in range(len(dates)):
-                                if i == 0:
-                                    gap = count_draw_periods(province_code, start_date, dates[i])
-                                else:
-                                    gap = count_draw_periods(province_code, dates[i-1], dates[i])
-                                
+                            # 1. Gap from window start to first appearance
+                            if dates:
+                                gap = count_draw_periods(province_code, start_date, dates[0],
+                                                        exclude_start=True, exclude_end=True)
+                                if gap > max_cycle:
+                                    max_cycle = gap
+                            
+                            # 2. Gaps between consecutive appearances
+                            for i in range(1, len(dates)):
+                                gap = count_draw_periods(province_code, dates[i-1], dates[i],
+                                                        exclude_start=True, exclude_end=True)
                                 if gap > max_cycle:
                                     max_cycle = gap
                         
