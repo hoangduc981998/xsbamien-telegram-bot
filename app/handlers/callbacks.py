@@ -241,7 +241,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             try:
                 # Query frequency từ database (50 ngày)
-                frequency = await statistics_service.get_frequency_stats(region, days=50)
+                frequency = await statistics_service.get_frequency_stats(region, days=200)
                 
                 # Format message
                 if frequency:
@@ -277,7 +277,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             try:
                 # Query frequency từ database (50 ngày)
-                frequency = await statistics_service.get_frequency_stats(province_key, days=50)
+                frequency = await statistics_service.get_frequency_stats(province_key, days=200)
                 
                 # Format message
                 if frequency:
@@ -310,7 +310,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             try:
                 # Query frequency từ database (50 ngày)
-                frequency = await statistics_service.get_lo3so_frequency_stats(province_key, days=50)
+                frequency = await statistics_service.get_lo3so_frequency_stats(province_key, days=200)
                 
                 # Format message
                 if frequency:
@@ -372,8 +372,8 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             province = PROVINCES.get(province_key, {})
             
             try:
-                # Query lô gan từ database (50 ngày)
-                gan_data = await statistics_service.get_lo_gan(province_key, days=50, limit=15)
+                # Query lô gan từ database (200 ngày)
+                gan_data = await statistics_service.get_lo_gan(province_key, days=200, limit=15)
                 
                 # Format message
                 message = format_lo_gan(gan_data, province.get("name", province_key))
@@ -391,7 +391,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif callback_data == "stats_gan":
             try:
                 # Use REAL DATABASE query (50 days for max cycle calculation)
-                gan_data = await statistics_service.get_lo_gan("MB", days=50, limit=15)
+                gan_data = await statistics_service.get_lo_gan("MB", days=200, limit=15)
                 
                 # Format message
                 message = format_lo_gan(gan_data, "Miền Bắc")
