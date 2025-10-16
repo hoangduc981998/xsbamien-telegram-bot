@@ -200,34 +200,34 @@ class StatisticsService:
         
         return stats
     
-    async def get_lo3so_frequency_stats(
-        self, 
-        province_code: str, 
-        days: int = 30
-    ) -> dict[str, int]:
-        """
-        Get lo 3 so frequency from database
-    
-        Args:
-            province_code: Province code
-            days: Number of days to analyze
+        async def get_lo3so_frequency_stats(
+            self, 
+            province_code: str, 
+            days: int = 30
+        ) -> dict[str, int]:
+            """
+            Get lo 3 so frequency from database
         
-        Returns:
-            Frequency stats dict {number: count}
-        """
-        # Use database if available
-        if self.use_database and self.db_service:
-            try:
-                logger.info(f"Getting lo3so frequency stats from DB for {province_code} ({days} days)")
-                frequency = await self.db_service.get_lo3so_frequency_stats(province_code, days)
-                return frequency
-            except Exception as e:
-                logger.warning(f"⚠️  DB query failed for lo3so: {e}")
-                return {}
-    
-        # No fallback - return empty if DB not available
-        logger.warning(f"Database not enabled for lo3so frequency stats")
-        return {}
+            Args:
+                province_code: Province code
+                days: Number of days to analyze
+            
+            Returns:
+                Frequency stats dict {number: count}
+            """
+            # Use database if available
+            if self.use_database and self.db_service:
+                try:
+                    logger.info(f"Getting lo3so frequency stats from DB for {province_code} ({days} days)")
+                    frequency = await self.db_service.get_lo3so_frequency_stats(province_code, days)
+                    return frequency
+                except Exception as e:
+                    logger.warning(f"⚠️  DB query failed for lo3so: {e}")
+                    return {}
+        
+            # No fallback - return empty if DB not available
+            logger.warning(f"Database not enabled for lo3so frequency stats")
+            return {}
     async def get_lo_gan(
         self, 
         province_code: str, 

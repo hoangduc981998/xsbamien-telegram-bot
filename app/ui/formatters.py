@@ -572,40 +572,45 @@ def format_lo_3_so_stats(stats_data: dict, province_name: str = "") -> str:
     return message
 
 
-def format_lo_gan(gan_data: dict, province_name: str = "") -> str:
+def format_lo_gan(gan_data: list, province_name: str) -> str:
     """
-    Format Lô Gan (numbers not appeared recently)
+    Format Lô Gan message với phân loại màu sắc
     
     Args:
-        gan_data: Mock data with gan_numbers list
-        province_name: Optional province name
+        gan_data: List of gan numbers with metadata
+        province_name: Province name
         
     Returns:
-        Formatted HTML message for Telegram
-        
-    Note: Currently uses mock data
-    Future: Will query database for historical data
+        Formatted HTML message
     """
-    region = gan_data.get("region", "")
-    period = gan_data.get("period", "30 ngày")
-    gan_numbers = gan_data.get("gan_numbers", [])
+    if not gan_data:
+        return f"📊 <b>LÔ GAN {province_name.upper()}</b>\n\n⚠️ Chưa có dữ liệu"
     
-    display_name = province_name or region
+    message = f"📊 <b>LÔ GAN {province_name.upper()}</b>\n"
+    message += f"📅 Phân tích 100 ngày gần nhất\n\n"
     
-    message = f"❄️ <b>LÔ GAN (LÂU KHÔNG VỀ) - {display_name.upper()}</b>\n"
-    message += f"📊 Thống kê: {period}\n\n"
+    message += "🔢 <b>Top 15 Lô Gan Dài Nhất:</b>\n"
+    message += "━━━━━━━━━━━━━━━━━━━━\n"
     
-    if not gan_numbers:
-        message += "⚠️ Chưa có dữ liệu\n"
-        return message
+    for i, item in enumerate(gan_data[:15], 1):
+        # Icon theo category
+        if item["category"] == "cuc_gan":
+            icon = "🔴"  # Cực gan
+        elif item["category"] == "gan_lon":
+            icon = "🟠"  # Gan lớn
+        else:
+            icon = "🟢"  # Gan thường
+        
+        message += f"{icon} {i:2d}. <code>{item['number']}</code> - "
+        message += f"<b>{item['days_since_last']}</b> ngày\n"
+        message += f"     └ Lần cuối: {item['last_seen_date']}\n"
+        message += f"     └ Gan max: {item['max_cycle']} ngày\n"
     
-    message += "🔢 <b>Các số lâu không xuất hiện:</b>\n"
-    for item in gan_numbers[:10]:
-        number = item.get("number", "")
-        days = item.get("days_not_appeared", 0)
-        message += f"• <b>{number}</b>: {days} ngày\n"
+    message += "\n━━━━━━━━━━━━━━━━━━━━\n"
+    message += "🟢 Gan thường (10-15 ngày)\n"
+    message += "🟠 Gan lớn (16-20 ngày)\n"
+    message += "🔴 Cực gan (21+ ngày)\n"
     
-    message += "\n📝 <b>Dữ liệu mẫu - Phiên bản beta</b>\n"
-    message += "<i>Tính năng sẽ được hoàn thiện với dữ liệu thực trong phiên bản tiếp theo</i>"
+    message += f"\n💡 <i>Dữ liệu từ database</i>"
     
     return message

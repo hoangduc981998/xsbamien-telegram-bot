@@ -354,8 +354,8 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Lô gan
         elif callback_data == "stats_gan":
             try:
-                # Use mock data for now (will be real DB query in PR #2)
-                gan_data = get_mock_lo_gan("MB", days=30)
+                # Use REAL DATABASE query (100 days for max cycle calculation)
+                gan_data = await statistics_service.get_lo_gan("MB", days=100, limit=15)
                 
                 # Format message
                 message = format_lo_gan(gan_data, "Miền Bắc")
@@ -368,7 +368,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             except Exception as e:
                 logger.error(f"Error in stats_gan: {e}")
                 await query.edit_message_text(
-                    f"❌ Lỗi khi lấy thống kê: {str(e)}",
+                    f"❌ Lỗi khi lấy thống kê lô gan: {str(e)}",
                     reply_markup=get_back_to_menu_keyboard(),
                     parse_mode="HTML",
                 )
@@ -531,3 +531,113 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         except Exception:
             pass
+
+    async def get_lo_gan(
+        self,
+        province_code: str,
+        days: int = 100,  # Cần 100 ngày để tính gan cực đại
+        limit: int = 15
+    ) -> List[Dict]:
+        """
+        Get "Lô Gan" (numbers that haven't appeared recently)
+        
+        Args:
+            province_code: Province code (MB, TPHCM, etc.)
+            days: Number of days to look back (default: 100 for max cycle)
+            limit: Maximum number of results (default: 15)
+            
+        Returns:
+            List of dicts with {
+                number, 
+                days_since_last,      # Số ngày chưa về
+                last_seen_date,       # Lần cuối xuất hiện
+                max_cycle,            # Gan cực đại trong lịch sử
+                category              # gan_thuong, gan_lon, cuc_gan
+            }
+        """
+        try:
+            async with DatabaseSession() as session:
+                from datetime import datetime, timedelta
+                
+                end_date = date.today()
+                start_date = end_date - timedelta(days=days)
+                
+                # Get all numbers 00-99
+                all_numbers = [f"{i:02d}" for i in range(100)]
+                
+                # Query: Get last appearance date for each number
+                query = select(
+                    Lo2SoHistory.number,
+                    func.max(Lo2SoHistory.draw_date).label("last_date")
+                ).where(
+                    and_(
+                        Lo2SoHistory.province_code == province_code,
+                        Lo2SoHistory.draw_date >= start_date,
+                        Lo2SoHistory.draw_date <= end_date
+                    )
+                ).group_by(Lo2SoHistory.number)
+                
+                result = await session.execute(query)
+                last_appearances = {row.number: row.last_date for row in result}
+                
+                # Calculate gan data
+                lo_gan = []
+                for num in all_numbers:
+                    if num in last_appearances:
+                        last_date = last_appearances[num]
+                        days_since = (end_date - last_date).days
+                        
+                        # Only include if gan (>= 10 days)
+                        if days_since >= 10:
+                            # Calculate max cycle (gan cực đại) in history
+                            max_cycle_query = select(
+                                func.max(
+                                    func.julianday(Lo2SoHistory.draw_date) - 
+                                    func.lag(func.julianday(Lo2SoHistory.draw_date)).over(
+                                        partition_by=Lo2SoHistory.number,
+                                        order_by=Lo2SoHistory.draw_date
+                                    )
+                                ).label("max_gap")
+                            ).where(
+                                Lo2SoHistory.province_code == province_code,
+                                Lo2SoHistory.number == num
+                            )
+                            
+                            max_result = await session.execute(max_cycle_query)
+                            max_cycle = max_result.scalar() or days_since
+                            max_cycle = int(max_cycle) if max_cycle else days_since
+                            
+                            # Categorize
+                            if days_since >= 21:
+                                category = "cuc_gan"
+                            elif days_since >= 16:
+                                category = "gan_lon"
+                            else:
+                                category = "gan_thuong"
+                            
+                            lo_gan.append({
+                                "number": num,
+                                "days_since_last": days_since,
+                                "last_seen_date": last_date.strftime("%d/%m/%Y"),
+                                "max_cycle": max_cycle,
+                                "category": category
+                            })
+                    else:
+                        # Never appeared in this period
+                        lo_gan.append({
+                            "number": num,
+                            "days_since_last": days,
+                            "last_seen_date": "Chưa về",
+                            "max_cycle": days,
+                            "category": "cuc_gan"
+                        })
+                
+                # Sort by days_since_last (descending)
+                lo_gan.sort(key=lambda x: x["days_since_last"], reverse=True)
+                
+                logger.info(f"✅ Got {len(lo_gan)} lo gan numbers for {province_code}")
+                return lo_gan[:limit]
+                
+        except Exception as e:
+            logger.error(f"❌ Error getting lo gan: {e}")
+            return []
