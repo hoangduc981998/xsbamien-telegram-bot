@@ -10,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import LotteryResult, Lo2SoHistory
 from app.database import DatabaseSession
 
+from app.utils.timezone import get_vietnam_today
+
 logger = logging.getLogger(__name__)
 
 
@@ -42,7 +44,7 @@ class StatisticsDBService:
             async with DatabaseSession() as session:
                 # Set date range
                 if not end_date:
-                    end_date = date.today()
+                    end_date = get_vietnam_today()
                 if not start_date:
                     start_date = end_date - timedelta(days=days)
 
@@ -90,7 +92,7 @@ class StatisticsDBService:
         """
         try:
             async with DatabaseSession() as session:
-                end_date = date.today()
+                end_date = get_vietnam_today()
                 start_date = end_date - timedelta(days=days)
                 
                 # Get all numbers 00-99
@@ -286,7 +288,7 @@ class StatisticsDBService:
         """
         try:
             async with DatabaseSession() as session:
-                end_date = date.today()
+                end_date = get_vietnam_today()
                 start_date = end_date - timedelta(days=days)
 
                 # Get total draws count

@@ -1,6 +1,7 @@
 """Cache helper để tối ưu performance với comprehensive logging"""
 
 from datetime import datetime
+from app.utils.timezone import get_vietnam_today
 import logging
 
 logger = logging.getLogger("app.utils.cache")
@@ -22,7 +23,7 @@ class ScheduleCache:
         Returns:
             int: Schedule day (0=Chủ Nhật, 1=Thứ Hai, ..., 6=Thứ Bảy)
         """
-        today = datetime.now().date()
+        today = get_vietnam_today()
 
         # Log cache check
         logger.debug(f"Cache check: today={today}, last_update={cls._last_update_date}")
@@ -76,7 +77,7 @@ class ScheduleCache:
         info = {
             "last_update": cls._last_update_date,
             "cached_data": cls._cache.copy(),
-            "is_valid": cls._last_update_date == datetime.now().date(),
+            "is_valid": cls._last_update_date == get_vietnam_today(),
             "stats": {
                 "cache_hits": cls._cache_hits,
                 "cache_misses": cls._cache_misses,
