@@ -101,7 +101,11 @@ class StatisticsDBService:
                     Lo2SoHistory.number,
                     func.max(Lo2SoHistory.draw_date).label("last_date")
                 ).where(
-                    Lo2SoHistory.province_code == province_code  # Chỉ filter province
+                    and_(
+                        Lo2SoHistory.province_code == province_code,
+                        Lo2SoHistory.draw_date >= start_date,  # ← THÊM LẠI!
+                        Lo2SoHistory.draw_date <= end_date
+                        )
                 ).group_by(Lo2SoHistory.number)
                 
                 result = await session.execute(query)
