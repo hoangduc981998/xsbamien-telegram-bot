@@ -72,19 +72,18 @@ class StatisticsDBService:
         except Exception as e:
             logger.error(f"❌ Error getting lo2so frequency: {e}")
             return {}
-
     async def get_lo_gan(
         self,
         province_code: str,
-        days: int = 100,
+        days: int = 50,
         limit: int = 15
     ) -> list[dict]:
         """
-        Get "Lô Gan" (numbers that haven't appeared recently)
+        Get "Lô Gan" - numbers that haven't appeared recently
         
         Args:
             province_code: Province code
-            days: Number of days to look back
+            days: Number of days to analyze (analysis window)
             limit: Maximum number of results
             
         Returns:
@@ -92,36 +91,66 @@ class StatisticsDBService:
         """
         try:
             async with DatabaseSession() as session:
+                from app.utils.timezone import get_vietnam_today
+                
                 end_date = get_vietnam_today()
                 start_date = end_date - timedelta(days=days)
                 
-                # Get all numbers 00-99
+                logger.info(f"Analyzing lo gan for {province_code}: {start_date} to {end_date} ({days} days)")
+                
+                # Get all 2-digit numbers (00-99)
                 all_numbers = [f"{i:02d}" for i in range(100)]
                 
-                # Query: Get last appearance date for each number (TOÀN BỘ LỊCH SỬ)
+                # Query: Get ALL appearances within the analysis window
                 query = select(
                     Lo2SoHistory.number,
-                    func.max(Lo2SoHistory.draw_date).label("last_date")
+                    Lo2SoHistory.draw_date
                 ).where(
                     and_(
                         Lo2SoHistory.province_code == province_code,
+                        Lo2SoHistory.draw_date >= start_date,
                         Lo2SoHistory.draw_date <= end_date
-                        )
-                ).group_by(Lo2SoHistory.number)
+                    )
+                ).order_by(Lo2SoHistory.draw_date)
                 
                 result = await session.execute(query)
-                last_appearances = {row.number: row.last_date for row in result}
+                all_appearances = result.all()
                 
-                # Calculate gan data
+                # Group by number
+                number_dates = {}
+                for row in all_appearances:
+                    num = row.number
+                    if num not in number_dates:
+                        number_dates[num] = []
+                    number_dates[num].append(row.draw_date)
+                
+                # Calculate gan for each number
                 lo_gan = []
+                
                 for num in all_numbers:
-                    if num in last_appearances:
-                        last_date = last_appearances[num]
-                        days_since = (end_date - last_date).days - 1
-                        if days_since < 0:
-                            days_since = 0
+                    if num in number_dates:
+                        dates = sorted(number_dates[num])
+                        last_date = dates[-1]
                         
-                        # Only include if gan (>= 10 days)
+                        # Days since last appearance
+                        days_since = (end_date - last_date).days
+                        
+                        # Calculate max cycle (longest gap between appearances)
+                        max_cycle = days_since  # Gap from last to now
+                        
+                        # Also check gaps between appearances
+                        for i in range(len(dates)):
+                            if i == 0:
+                                # Gap from start_date to first appearance
+                                gap = (dates[i] - start_date).days
+                            else:
+                                # Gap between consecutive appearances
+                                gap = (dates[i] - dates[i-1]).days
+                            
+                            if gap > max_cycle:
+                                max_cycle = gap
+                        
+                        # Only include if gan >= 10 days
                         if days_since >= 10:
                             # Categorize
                             if days_since >= 21:
@@ -131,9 +160,6 @@ class StatisticsDBService:
                             else:
                                 category = "gan_thuong"
                             
-                            # Calculate max cycle (simple version - just use current days_since)
-                            max_cycle = days_since
-                            
                             lo_gan.append({
                                 "number": num,
                                 "days_since_last": days_since,
@@ -142,7 +168,7 @@ class StatisticsDBService:
                                 "category": category
                             })
                     else:
-                        # Never appeared in this period
+                        # Never appeared in analysis window
                         lo_gan.append({
                             "number": num,
                             "days_since_last": days,
