@@ -96,16 +96,12 @@ class StatisticsDBService:
                 # Get all numbers 00-99
                 all_numbers = [f"{i:02d}" for i in range(100)]
                 
-                # Query: Get last appearance date for each number
+                # Query: Get last appearance date for each number (TOÀN BỘ LỊCH SỬ)
                 query = select(
                     Lo2SoHistory.number,
                     func.max(Lo2SoHistory.draw_date).label("last_date")
                 ).where(
-                    and_(
-                        Lo2SoHistory.province_code == province_code,
-                        Lo2SoHistory.draw_date >= start_date,
-                        Lo2SoHistory.draw_date <= end_date
-                    )
+                    Lo2SoHistory.province_code == province_code  # Chỉ filter province
                 ).group_by(Lo2SoHistory.number)
                 
                 result = await session.execute(query)
@@ -116,7 +112,9 @@ class StatisticsDBService:
                 for num in all_numbers:
                     if num in last_appearances:
                         last_date = last_appearances[num]
-                        days_since = (end_date - last_date).days
+                        days_since = (end_date - last_date).days - 1
+                        if days_since < 0:
+                            days_since = 0
                         
                         # Only include if gan (>= 10 days)
                         if days_since >= 10:
