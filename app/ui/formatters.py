@@ -587,7 +587,7 @@ def format_lo_gan(gan_data: list, province_name: str) -> str:
         return f"📊 <b>LÔ GAN {province_name.upper()}</b>\n\n⚠️ Chưa có dữ liệu"
     
     message = f"📊 <b>LÔ GAN {province_name.upper()}</b>\n"
-    message += f"📅 Phân tích 50 ngày gần nhất\n\n"
+    message += f"📅 Phân tích 200 ngày gần nhất\n\n"
     
     message += "🔢 <b>Top 15 Lô Gan Dài Nhất:</b>\n"
     message += "━━━━━━━━━━━━━━━━━━━━\n"

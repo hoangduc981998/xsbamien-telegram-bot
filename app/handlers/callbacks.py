@@ -50,6 +50,30 @@ logger = logging.getLogger(__name__)
 lottery_service = LotteryService(use_database=True)
 statistics_service = StatisticsService(use_database=True)
 
+async def safe_edit_message(query, message, reply_markup, parse_mode="HTML"):
+    """
+    Safely edit message, catching duplicate content errors
+    
+    Args:
+        query: CallbackQuery object
+        message: New message text
+        reply_markup: New keyboard
+        parse_mode: Parse mode (default: HTML)
+    """
+    try:
+        await query.edit_message_text(
+            message,
+            reply_markup=reply_markup,
+            parse_mode=parse_mode,
+        )
+    except Exception as e:
+        error_msg = str(e).lower()
+        if "message is not modified" in error_msg:
+            # Message content is same, just answer callback silently
+            logger.info(f"Message content unchanged, skipping edit")
+        else:
+            # Other errors, re-raise
+            raise
 
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Xử lý tất cả callback queries từ inline buttons"""
@@ -217,7 +241,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             try:
                 # Query frequency từ database (50 ngày)
-                frequency = await statistics_service.get_frequency_stats(region, days=50)
+                frequency = await statistics_service.get_frequency_stats(region, days=200)
                 
                 # Format message
                 if frequency:
@@ -253,7 +277,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             try:
                 # Query frequency từ database (50 ngày)
-                frequency = await statistics_service.get_frequency_stats(province_key, days=50)
+                frequency = await statistics_service.get_frequency_stats(province_key, days=200)
                 
                 # Format message
                 if frequency:
@@ -270,11 +294,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 else:
                     message = "⚠️ Chưa có dữ liệu trong database"
                 
-                await query.edit_message_text(
-                    message,
-                    reply_markup=get_province_detail_keyboard(province_key),
-                    parse_mode="HTML",
-                )
+                await safe_edit_message(query, message, get_province_detail_keyboard(province_key))
             except Exception as e:
                 logger.error(f"Error in stats2 for {province_key}: {e}")
                 await query.edit_message_text(
@@ -290,7 +310,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             try:
                 # Query frequency từ database (50 ngày)
-                frequency = await statistics_service.get_lo3so_frequency_stats(province_key, days=50)
+                frequency = await statistics_service.get_lo3so_frequency_stats(province_key, days=200)
                 
                 # Format message
                 if frequency:
@@ -311,11 +331,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     message = format_lo_3_so_stats(stats, province.get("name", ""))
                     message += "\n\n⚠️ <i>Chưa có dữ liệu dài hạn trong database</i>"
                 
-                await query.edit_message_text(
-                    message,
-                    reply_markup=get_province_detail_keyboard(province_key),
-                    parse_mode="HTML",
-                )
+                await safe_edit_message(query, message, get_province_detail_keyboard(province_key))
             except Exception as e:
                 logger.error(f"Error in stats3 for {province_key}: {e}")
                 await query.edit_message_text(
@@ -356,17 +372,13 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             province = PROVINCES.get(province_key, {})
             
             try:
-                # Query lô gan từ database (100 ngày)
-                gan_data = await statistics_service.get_lo_gan(province_key, days=100, limit=15)
+                # Query lô gan từ database (50 ngày)
+                gan_data = await statistics_service.get_lo_gan(province_key, days=200, limit=15)
                 
                 # Format message
                 message = format_lo_gan(gan_data, province.get("name", province_key))
                 
-                await query.edit_message_text(
-                    message,
-                    reply_markup=get_province_detail_keyboard(province_key),
-                    parse_mode="HTML",
-                )
+                await safe_edit_message(query, message, get_province_detail_keyboard(province_key))
             except Exception as e:
                 logger.error(f"Error in stats_gan for {province_key}: {e}")
                 await query.edit_message_text(
@@ -378,8 +390,8 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Lô gan
         elif callback_data == "stats_gan":
             try:
-                # Use REAL DATABASE query (100 days for max cycle calculation)
-                gan_data = await statistics_service.get_lo_gan("MB", days=100, limit=15)
+                # Use REAL DATABASE query (50 days for max cycle calculation)
+                gan_data = await statistics_service.get_lo_gan("MB", days=200, limit=15)
                 
                 # Format message
                 message = format_lo_gan(gan_data, "Miền Bắc")
