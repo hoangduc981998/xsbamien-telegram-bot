@@ -178,6 +178,72 @@ def get_stats_menu_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(keyboard)
 
 
+def get_statistics_menu_keyboard(province_code: str) -> InlineKeyboardMarkup:
+    """
+    Get statistics menu keyboard with 4 main buttons
+    
+    Layout:
+    ┌──────────────┬──────────────┐
+    │ 📊 Lô 2 số   │ 🎰 Lô 3 số   │
+    ├──────────────┼──────────────┤
+    │ 🔢 Đầu Lô    │ 🔢 Đuôi Lô   │
+    └──────────────┴──────────────┘
+    
+    Args:
+        province_code: Province code (e.g., MB, TPHCM, DANA)
+        
+    Returns:
+        InlineKeyboardMarkup with 2x2 grid of statistics buttons
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton("📊 Lô 2 số", callback_data=f"stats_lo2_{province_code}"),
+            InlineKeyboardButton("🎰 Lô 3 số", callback_data=f"stats_lo3_{province_code}"),
+        ],
+        [
+            InlineKeyboardButton("🔢 Đầu Lô", callback_data=f"stats_dau_{province_code}"),
+            InlineKeyboardButton("🔢 Đuôi Lô", callback_data=f"stats_duoi_{province_code}"),
+        ],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_result_display_keyboard(province_code: str) -> InlineKeyboardMarkup:
+    """
+    Get combined keyboard for result display:
+    - Statistics menu (4 buttons in 2x2 grid)
+    - Existing province detail options
+    
+    Args:
+        province_code: Province code (e.g., MB, TPHCM, DANA)
+        
+    Returns:
+        InlineKeyboardMarkup with combined buttons
+    """
+    keyboard = [
+        # New statistics menu (2x2 grid)
+        [
+            InlineKeyboardButton("📊 Lô 2 số", callback_data=f"stats_lo2_{province_code}"),
+            InlineKeyboardButton("🎰 Lô 3 số", callback_data=f"stats_lo3_{province_code}"),
+        ],
+        [
+            InlineKeyboardButton("🔢 Đầu Lô", callback_data=f"stats_dau_{province_code}"),
+            InlineKeyboardButton("🔢 Đuôi Lô", callback_data=f"stats_duoi_{province_code}"),
+        ],
+        # Existing buttons (keep for backward compatibility)
+        [
+            InlineKeyboardButton("📊 Thống kê Lô 2 số", callback_data=f"stats2_{province_code}"),
+            InlineKeyboardButton("📊 Thống kê Lô 3 số", callback_data=f"stats3_{province_code}"),
+        ],
+        [
+            InlineKeyboardButton("🔥 Lô Gan", callback_data=f"stats_gan_{province_code}"),
+        ],
+        [InlineKeyboardButton("🔙 Quay lại", callback_data="results_menu")],
+        [InlineKeyboardButton("🏠 Về trang chủ", callback_data="back_to_main")],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
 def get_province_detail_keyboard(province_key: str) -> InlineKeyboardMarkup:
     """
     Keyboard for province detail view with statistics options
