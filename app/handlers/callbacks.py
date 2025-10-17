@@ -2,7 +2,7 @@
 
 import logging
 
-from telegram import Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 from app.config import PROVINCES
@@ -29,9 +29,11 @@ from app.ui.keyboards import (
     get_province_detail_keyboard,
     get_province_detail_menu,
     get_region_menu_keyboard,
+    get_result_display_keyboard,
     get_schedule_back_button,
     get_schedule_menu,
     get_schedule_today_keyboard,
+    get_statistics_menu_keyboard,
     get_stats_menu_keyboard,
     get_today_schedule_actions,
 )
@@ -221,9 +223,10 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             # Format result
             formatted_result = format_lottery_result(result_data, region)
 
+            # Use combined keyboard with new statistics buttons
             await query.edit_message_text(
                 formatted_result,
-                reply_markup=get_province_detail_keyboard(province_key),
+                reply_markup=get_result_display_keyboard(province_key),
                 parse_mode="HTML",
             )
 
@@ -408,6 +411,151 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await query.edit_message_text(
                     f"❌ Lỗi khi lấy thống kê lô gan: {str(e)}",
                     reply_markup=get_back_to_menu_keyboard(),
+                    parse_mode="HTML",
+                )
+
+        # New Statistics Handlers
+        # Handler for Lô 2 số (stats_lo2_*)
+        elif callback_data.startswith("stats_lo2_"):
+            province_code = callback_data.replace("stats_lo2_", "")
+            province = PROVINCES.get(province_code, {})
+            
+            try:
+                # Get statistics service data (30 days)
+                frequency = await statistics_service.get_frequency_stats(province_code, days=30)
+                
+                # Format stats
+                if frequency:
+                    sorted_freq = sorted(frequency.items(), key=lambda x: x[1], reverse=True)[:30]
+                    
+                    message = f"📊 <b>THỐNG KÊ LÔ 2 SỐ - {province.get('name', province_code).upper()}</b>\n"
+                    message += f"📅 Dữ liệu: 30 ngày gần nhất\n\n"
+                    
+                    message += "🔥 <b>Top 30 số hay về:</b>\n"
+                    for idx, (num, count) in enumerate(sorted_freq, 1):
+                        message += f"  {idx:2d}. <code>{num}</code> - {count:2d} lần\n"
+                    
+                    message += f"\n💾 Tổng: {len(frequency)} số đã xuất hiện"
+                else:
+                    message = f"📊 <b>THỐNG KÊ LÔ 2 SỐ - {province.get('name', province_code).upper()}</b>\n\n"
+                    message += "⚠️ Chưa có dữ liệu"
+                
+                # Show with back button to return to result
+                keyboard = [
+                    [InlineKeyboardButton("🔙 Quay lại kết quả", callback_data=f"result_{province_code}")],
+                    [InlineKeyboardButton("🏠 Về trang chủ", callback_data="back_to_main")],
+                ]
+                await query.edit_message_text(
+                    message,
+                    reply_markup=InlineKeyboardMarkup(keyboard),
+                    parse_mode="HTML",
+                )
+            except Exception as e:
+                logger.error(f"Error in stats_lo2 for {province_code}: {e}")
+                await query.edit_message_text(
+                    f"❌ Lỗi khi lấy thống kê: {str(e)}",
+                    reply_markup=get_result_display_keyboard(province_code),
+                    parse_mode="HTML",
+                )
+
+        # Handler for Lô 3 số (stats_lo3_*)
+        elif callback_data.startswith("stats_lo3_"):
+            province_code = callback_data.replace("stats_lo3_", "")
+            province = PROVINCES.get(province_code, {})
+            
+            try:
+                # Get 3-digit statistics (30 days)
+                frequency = await statistics_service.get_lo3so_frequency_stats(province_code, days=30)
+                
+                # Format stats
+                if frequency:
+                    sorted_freq = sorted(frequency.items(), key=lambda x: x[1], reverse=True)[:30]
+                    
+                    message = f"🎰 <b>THỐNG KÊ LÔ 3 SỐ - {province.get('name', province_code).upper()}</b>\n"
+                    message += f"📅 Dữ liệu: 30 ngày gần nhất\n\n"
+                    
+                    message += "🔥 <b>Top 30 số hay về:</b>\n"
+                    for idx, (num, count) in enumerate(sorted_freq, 1):
+                        message += f"  {idx:2d}. <code>{num}</code> - {count:2d} lần\n"
+                    
+                    message += f"\n💾 Tổng: {len(frequency)} số đã xuất hiện"
+                else:
+                    message = f"🎰 <b>THỐNG KÊ LÔ 3 SỐ - {province.get('name', province_code).upper()}</b>\n\n"
+                    message += "⚠️ Chưa có dữ liệu"
+                
+                # Show with back button
+                keyboard = [
+                    [InlineKeyboardButton("🔙 Quay lại kết quả", callback_data=f"result_{province_code}")],
+                    [InlineKeyboardButton("🏠 Về trang chủ", callback_data="back_to_main")],
+                ]
+                await query.edit_message_text(
+                    message,
+                    reply_markup=InlineKeyboardMarkup(keyboard),
+                    parse_mode="HTML",
+                )
+            except Exception as e:
+                logger.error(f"Error in stats_lo3 for {province_code}: {e}")
+                await query.edit_message_text(
+                    f"❌ Lỗi khi lấy thống kê: {str(e)}",
+                    reply_markup=get_result_display_keyboard(province_code),
+                    parse_mode="HTML",
+                )
+
+        # Handler for Đầu Lô (stats_dau_*)
+        elif callback_data.startswith("stats_dau_"):
+            province_code = callback_data.replace("stats_dau_", "")
+            
+            try:
+                # Get latest result
+                result = await lottery_service.get_latest_result(province_code)
+                
+                # Format Đầu Lô display
+                message = format_dau_lo(result)
+                
+                # Show with back button
+                keyboard = [
+                    [InlineKeyboardButton("🔙 Quay lại kết quả", callback_data=f"result_{province_code}")],
+                    [InlineKeyboardButton("🏠 Về trang chủ", callback_data="back_to_main")],
+                ]
+                await query.edit_message_text(
+                    message,
+                    reply_markup=InlineKeyboardMarkup(keyboard),
+                    parse_mode="HTML",
+                )
+            except Exception as e:
+                logger.error(f"Error in stats_dau for {province_code}: {e}")
+                await query.edit_message_text(
+                    f"❌ Lỗi khi lấy thống kê đầu lô: {str(e)}",
+                    reply_markup=get_result_display_keyboard(province_code),
+                    parse_mode="HTML",
+                )
+
+        # Handler for Đuôi Lô (stats_duoi_*)
+        elif callback_data.startswith("stats_duoi_"):
+            province_code = callback_data.replace("stats_duoi_", "")
+            
+            try:
+                # Get latest result
+                result = await lottery_service.get_latest_result(province_code)
+                
+                # Format Đuôi Lô display
+                message = format_duoi_lo(result)
+                
+                # Show with back button
+                keyboard = [
+                    [InlineKeyboardButton("🔙 Quay lại kết quả", callback_data=f"result_{province_code}")],
+                    [InlineKeyboardButton("🏠 Về trang chủ", callback_data="back_to_main")],
+                ]
+                await query.edit_message_text(
+                    message,
+                    reply_markup=InlineKeyboardMarkup(keyboard),
+                    parse_mode="HTML",
+                )
+            except Exception as e:
+                logger.error(f"Error in stats_duoi for {province_code}: {e}")
+                await query.edit_message_text(
+                    f"❌ Lỗi khi lấy thống kê đuôi lô: {str(e)}",
+                    reply_markup=get_result_display_keyboard(province_code),
                     parse_mode="HTML",
                 )
 
