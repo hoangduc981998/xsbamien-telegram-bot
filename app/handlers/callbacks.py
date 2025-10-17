@@ -24,6 +24,7 @@ from app.ui.formatters import (
     format_result_mn_mt_full,
 )
 from app.ui.keyboards import (
+    get_statistics_buttons_keyboard,
     get_back_to_menu_keyboard,
     get_main_menu_keyboard,
     get_province_detail_keyboard,
@@ -223,7 +224,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             await query.edit_message_text(
                 formatted_result,
-                reply_markup=get_province_detail_keyboard(province_key),
+                reply_markup=get_statistics_buttons_keyboard(province_key),
                 parse_mode="HTML",
             )
 
@@ -553,6 +554,153 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
         # Fallback
+
+        # ========== NEW: 4 Statistics Buttons ==========
+        
+        elif callback_data.startswith("stats_lo2_"):
+            """📊 Lô 2 số button"""
+            province_code = callback_data.replace("stats_lo2_", "")
+            await query.answer()
+            
+            try:
+                result = await lottery_service.get_latest_result(province_code)
+                if not result:
+                    await query.edit_message_text(
+                        text=f"❌ Không tìm thấy kết quả cho {province_code}",
+                        reply_markup=get_back_to_results_keyboard(),
+                        parse_mode=ParseMode.HTML
+                    )
+                    return
+                
+                region = result.get('region', 'MN')
+                
+                if region == 'MB':
+                    from app.ui.formatters import format_lo_2_so_mb
+                    text = format_lo_2_so_mb(result)
+                else:
+                    from app.ui.formatters import format_lo_2_so_mn_mt
+                    text = format_lo_2_so_mn_mt(result)
+                
+                keyboard = [[InlineKeyboardButton("🔙 Quay lại", callback_data=f"result_{province_code}")]]
+                
+                await query.edit_message_text(
+                    text=text,
+                    reply_markup=InlineKeyboardMarkup(keyboard),
+                    parse_mode=ParseMode.HTML
+                )
+            except Exception as e:
+                logger.error(f"Error in stats_lo2: {e}")
+                await query.edit_message_text(
+                    text="❌ Có lỗi xảy ra",
+                    reply_markup=get_back_to_results_keyboard(),
+                    parse_mode=ParseMode.HTML
+                )
+        
+        elif callback_data.startswith("stats_lo3_"):
+            """🎰 Lô 3 số button"""
+            province_code = callback_data.replace("stats_lo3_", "")
+            await query.answer()
+            
+            try:
+                result = await lottery_service.get_latest_result(province_code)
+                if not result:
+                    await query.edit_message_text(
+                        text=f"❌ Không tìm thấy kết quả cho {province_code}",
+                        reply_markup=get_back_to_results_keyboard(),
+                        parse_mode=ParseMode.HTML
+                    )
+                    return
+                
+                region = result.get('region', 'MN')
+                
+                if region == 'MB':
+                    from app.ui.formatters import format_lo_3_so_mb
+                    text = format_lo_3_so_mb(result)
+                else:
+                    from app.ui.formatters import format_lo_3_so_mn_mt
+                    text = format_lo_3_so_mn_mt(result)
+                
+                keyboard = [[InlineKeyboardButton("�� Quay lại", callback_data=f"result_{province_code}")]]
+                
+                await query.edit_message_text(
+                    text=text,
+                    reply_markup=InlineKeyboardMarkup(keyboard),
+                    parse_mode=ParseMode.HTML
+                )
+            except Exception as e:
+                logger.error(f"Error in stats_lo3: {e}")
+                await query.edit_message_text(
+                    text="❌ Có lỗi xảy ra",
+                    reply_markup=get_back_to_results_keyboard(),
+                    parse_mode=ParseMode.HTML
+                )
+        
+        elif callback_data.startswith("stats_dau_"):
+            """🔢 Đầu Lô button"""
+            province_code = callback_data.replace("stats_dau_", "")
+            await query.answer()
+            
+            try:
+                result = await lottery_service.get_latest_result(province_code)
+                if not result:
+                    await query.edit_message_text(
+                        text=f"❌ Không tìm thấy kết quả cho {province_code}",
+                        reply_markup=get_back_to_results_keyboard(),
+                        parse_mode=ParseMode.HTML
+                    )
+                    return
+                
+                from app.ui.formatters import format_dau_lo
+                text = format_dau_lo(result)
+                
+                keyboard = [[InlineKeyboardButton("🔙 Quay lại", callback_data=f"result_{province_code}")]]
+                
+                await query.edit_message_text(
+                    text=text,
+                    reply_markup=InlineKeyboardMarkup(keyboard),
+                    parse_mode=ParseMode.HTML
+                )
+            except Exception as e:
+                logger.error(f"Error in stats_dau: {e}")
+                await query.edit_message_text(
+                    text="❌ Có lỗi xảy ra",
+                    reply_markup=get_back_to_results_keyboard(),
+                    parse_mode=ParseMode.HTML
+                )
+        
+        elif callback_data.startswith("stats_duoi_"):
+            """🔢 Đuôi Lô button"""
+            province_code = callback_data.replace("stats_duoi_", "")
+            await query.answer()
+            
+            try:
+                result = await lottery_service.get_latest_result(province_code)
+                if not result:
+                    await query.edit_message_text(
+                        text=f"❌ Không tìm thấy kết quả cho {province_code}",
+                        reply_markup=get_back_to_results_keyboard(),
+                        parse_mode=ParseMode.HTML
+                    )
+                    return
+                
+                from app.ui.formatters import format_duoi_lo
+                text = format_duoi_lo(result)
+                
+                keyboard = [[InlineKeyboardButton("🔙 Quay lại", callback_data=f"result_{province_code}")]]
+                
+                await query.edit_message_text(
+                    text=text,
+                    reply_markup=InlineKeyboardMarkup(keyboard),
+                    parse_mode=ParseMode.HTML
+                )
+            except Exception as e:
+                logger.error(f"Error in stats_duoi: {e}")
+                await query.edit_message_text(
+                    text="❌ Có lỗi xảy ra",
+                    reply_markup=get_back_to_results_keyboard(),
+                    parse_mode=ParseMode.HTML
+                )
+
         else:
             await query.edit_message_text(
                 f"⚠️ Chức năng <code>{callback_data}</code> đang phát triển...",

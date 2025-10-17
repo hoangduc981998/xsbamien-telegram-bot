@@ -231,3 +231,35 @@ def get_schedule_back_button() -> InlineKeyboardMarkup:
         [InlineKeyboardButton("🏠 Về trang chủ", callback_data="back_to_main")],
     ]
     return InlineKeyboardMarkup(keyboard)
+
+
+def get_statistics_buttons_keyboard(province_code: str) -> InlineKeyboardMarkup:
+    """
+    Get statistics buttons keyboard with 4 main analysis options
+    
+    Layout:
+    ┌──────────────┬──────────────┐
+    │ 📊 Lô 2 số   │ 🎰 Lô 3 số   │
+    ├──────────────┼──────────────┤
+    │ 🔢 Đầu Lô    │ 🔢 Đuôi Lô   │
+    └──────────────┴──────────────┘
+    
+    Args:
+        province_code: Province code (e.g., 'MB', 'TPHCM', 'ANGI')
+    
+    Returns:
+        InlineKeyboardMarkup with 4 statistics buttons
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton("📊 Lô 2 số", callback_data=f"stats_lo2_{province_code}"),
+            InlineKeyboardButton("🎰 Lô 3 số", callback_data=f"stats_lo3_{province_code}"),
+        ],
+        [
+            InlineKeyboardButton("🔢 Đầu Lô", callback_data=f"stats_dau_{province_code}"),
+            InlineKeyboardButton("🔢 Đuôi Lô", callback_data=f"stats_duoi_{province_code}"),
+        ],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
