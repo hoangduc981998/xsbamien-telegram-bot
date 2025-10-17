@@ -290,8 +290,7 @@ def format_lo_3_so_mb(result_data: dict) -> str:
     if "G6" in prizes and prizes["G6"]:
         message += f"🎗️ <b>G6:</b> {' '.join(prizes['G6'])}\n"
 
-    # G7 - Không có
-    message += "🎪 <b>G7:</b> không có\n"
+    # G7 - Removed (only has 2 digits, not applicable for 3-digit lottery)
 
     return message
 
@@ -311,8 +310,7 @@ def format_lo_3_so_mn_mt(result_data: dict) -> str:
     message = "🎯 <b>KẾT QUẢ LÔ 3 SỐ</b>\n"
     message += f"📅 Ngày: {date}\n\n"
 
-    # G8 - Không có
-    message += "🎊 <b>G8:</b> Không có\n"
+    # G8 - Removed (only has 2 digits, not applicable for 3-digit lottery)
 
     # G7
     if "G7" in prizes and prizes["G7"]:
