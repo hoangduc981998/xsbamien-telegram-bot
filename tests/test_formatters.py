@@ -277,14 +277,15 @@ class TestFormatLo3SoMB:
         assert "🥇 <b>G1:</b> 890" in result
         # G6 should remain as-is (already 3 digits)
         assert "🎗️ <b>G6:</b> 111 222 333" in result
-        # G7 should show "không có"
-        assert "🎪 <b>G7:</b> không có" in result
+        # G7 should NOT be shown (only has 2 digits)
+        assert "G7" not in result
 
     def test_format_g7_not_available(self, sample_mb_data):
-        """Test that G7 shows 'không có' for Lô 3 số MB"""
+        """Test that G7 is not shown for Lô 3 số MB (only has 2 digits)"""
         result = format_lo_3_so_mb(sample_mb_data)
 
-        assert "🎪 <b>G7:</b> không có" in result
+        # G7 should not appear at all in 3-digit lottery
+        assert "G7" not in result
 
 
 class TestFormatLo3SoMNMT:
@@ -295,18 +296,19 @@ class TestFormatLo3SoMNMT:
         result = format_lo_3_so_mn_mt(sample_mn_mt_data)
 
         assert "🎯 <b>KẾT QUẢ LÔ 3 SỐ</b>" in result
-        # G8 should show "Không có"
-        assert "🎊 <b>G8:</b> Không có" in result
+        # G8 should NOT be shown (only has 2 digits)
+        assert "G8" not in result
         # G7: 123 -> 123 (already 3 digits)
         assert "🎪 <b>G7:</b> 123" in result
         # DB: 456789 -> 789
         assert "🏆 <b>ĐB:</b> 789" in result
 
     def test_format_g8_not_available(self, sample_mn_mt_data):
-        """Test that G8 shows 'Không có' for Lô 3 số MN/MT"""
+        """Test that G8 is not shown for Lô 3 số MN/MT (only has 2 digits)"""
         result = format_lo_3_so_mn_mt(sample_mn_mt_data)
 
-        assert "🎊 <b>G8:</b> Không có" in result
+        # G8 should not appear at all in 3-digit lottery
+        assert "G8" not in result
 
 
 class TestFormatDauLo:
