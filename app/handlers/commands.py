@@ -1,93 +1,115 @@
-"""Command handlers - Xử lý các lệnh /start, /help, /mb, /mt, /mn"""
+"""Command handlers - Xử lý các lệnh từ user"""
 
 import logging
 
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from app.services.mock_data import get_mock_lottery_result
-from app.ui.formatters import format_lottery_result
 from app.ui.keyboards import get_main_menu_keyboard
-from app.ui.messages import HELP_MESSAGE, WELCOME_MESSAGE
 
 logger = logging.getLogger(__name__)
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Xử lý lệnh /start - Hiển thị menu chính"""
-    try:
-        await update.message.reply_text(WELCOME_MESSAGE, reply_markup=get_main_menu_keyboard(), parse_mode="HTML")
-        logger.info(f"User {update.effective_user.id} started bot")
-    except Exception as e:
-        logger.error(f"Error in start_command: {e}")
-        await update.message.reply_text("❌ Có lỗi xảy ra. Vui lòng thử lại.")
+    """Command: /start - Khởi động bot và lưu user"""
+    user = update.effective_user
+    logger.info(f"User {user.id} started bot")
+    
+    # Gửi welcome message
+    message = (
+        f"👋 Chào mừng <b>{user.first_name}</b>!\n\n"
+        "🎰 <b>Bot Xổ Số Ba Miền</b>\n\n"
+        "🔹 Xem kết quả mới nhất\n"
+        "🔹 Thống kê Lô 2 số, Lô 3 số\n"
+        "🔹 Phân tích Đầu/Đuôi Lô\n"
+        "🔹 Lô Gan (số lâu không về)\n"
+        "🔔 Đăng ký nhận thông báo tự động\n\n"
+        "📅 Chọn miền để bắt đầu:"
+    )
+    
+    await update.message.reply_text(
+        message,
+        reply_markup=get_main_menu_keyboard(),
+        parse_mode="HTML",
+    )
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Xử lý lệnh /help - Hiển thị hướng dẫn"""
-    try:
-        await update.message.reply_text(HELP_MESSAGE, reply_markup=get_main_menu_keyboard(), parse_mode="HTML")
-        logger.info(f"User {update.effective_user.id} requested help")
-    except Exception as e:
-        logger.error(f"Error in help_command: {e}")
-        await update.message.reply_text("❌ Có lỗi xảy ra. Vui lòng thử lại.")
+    """Command: /help - Hiển thị trợ giúp"""
+    message = (
+        "📖 <b>HƯỚNG DẪN SỬ DỤNG</b>\n\n"
+        "<b>Commands:</b>\n"
+        "• /start - Khởi động bot\n"
+        "• /help - Xem hướng dẫn\n"
+        "• /mb - Xổ số Miền Bắc\n"
+        "• /mt - Xổ số Miền Trung\n"
+        "• /mn - Xổ số Miền Nam\n"
+        "• /subscriptions - Quản lý đăng ký\n"
+        "• /testnotify - Test gửi thông báo (admin)\n\n"
+        "<b>Tính năng:</b>\n"
+        "🎰 Kết quả xổ số mới nhất\n"
+        "📊 Thống kê Lô 2 số, Lô 3 số\n"
+        "🔢 Phân tích Đầu/Đuôi Lô\n"
+        "🔥 Lô Gan (số lâu không về)\n"
+        "🔔 Nhận thông báo tự động\n\n"
+        "💡 Chọn nút bên dưới để bắt đầu!"
+    )
+    
+    await update.message.reply_text(
+        message,
+        reply_markup=get_main_menu_keyboard(),
+        parse_mode="HTML",
+    )
 
 
 async def mb_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Xử lý lệnh /mb - Kết quả Miền Bắc hôm nay"""
-    try:
-        # Hiển thị loading
-        loading_msg = await update.message.reply_text("⏳ Đang tải kết quả Miền Bắc...")
-
-        # Lấy mock data
-        result_data = get_mock_lottery_result("MB")
-        formatted_result = format_lottery_result("MB", result_data)
-
-        # Cập nhật message
-        await loading_msg.edit_text(formatted_result, parse_mode="HTML")
-
-        logger.info(f"User {update.effective_user.id} requested MB results")
-    except Exception as e:
-        logger.error(f"Error in mb_command: {e}")
-        await update.message.reply_text("❌ Có lỗi xảy ra. Vui lòng thử lại.")
+    """Command: /mb - Xổ số Miền Bắc"""
+    from app.ui.keyboards import get_region_keyboard
+    
+    message = (
+        "🎰 <b>XỔ SỐ MIỀN BẮC</b>\n\n"
+        "Chọn tỉnh để xem kết quả:"
+    )
+    
+    await update.message.reply_text(
+        message,
+        reply_markup=get_region_keyboard("MB"),
+        parse_mode="HTML",
+    )
 
 
 async def mt_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Xử lý lệnh /mt - Kết quả Miền Trung hôm nay"""
-    try:
-        # Hiển thị loading
-        loading_msg = await update.message.reply_text("⏳ Đang tải kết quả Miền Trung...")
-
-        # Lấy mock data (DANA - Đà Nẵng làm ví dụ)
-        result_data = get_mock_lottery_result("DANA")
-        formatted_result = format_lottery_result("DANA", result_data)
-
-        # Cập nhật message
-        await loading_msg.edit_text(formatted_result, parse_mode="HTML")
-
-        logger.info(f"User {update.effective_user.id} requested MT results")
-    except Exception as e:
-        logger.error(f"Error in mt_command: {e}")
-        await update.message.reply_text("❌ Có lỗi xảy ra. Vui lòng thử lại.")
+    """Command: /mt - Xổ số Miền Trung"""
+    from app.ui.keyboards import get_region_keyboard
+    
+    message = (
+        "🎰 <b>XỔ SỐ MIỀN TRUNG</b>\n\n"
+        "Chọn tỉnh để xem kết quả:"
+    )
+    
+    await update.message.reply_text(
+        message,
+        reply_markup=get_region_keyboard("MT"),
+        parse_mode="HTML",
+    )
 
 
 async def mn_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Xử lý lệnh /mn - Kết quả Miền Nam hôm nay"""
-    try:
-        # Hiển thị loading
-        loading_msg = await update.message.reply_text("⏳ Đang tải kết quả Miền Nam...")
+    """Command: /mn - Xổ số Miền Nam"""
+    from app.ui.keyboards import get_region_keyboard
+    
+    message = (
+        "�� <b>XỔ SỐ MIỀN NAM</b>\n\n"
+        "Chọn tỉnh để xem kết quả:"
+    )
+    
+    await update.message.reply_text(
+        message,
+        reply_markup=get_region_keyboard("MN"),
+        parse_mode="HTML",
+    )
 
-        # Lấy mock data (TPHCM làm ví dụ)
-        result_data = get_mock_lottery_result("TPHCM")
-        formatted_result = format_lottery_result("TPHCM", result_data)
 
-        # Cập nhật message
-        await loading_msg.edit_text(formatted_result, parse_mode="HTML")
-
-        logger.info(f"User {update.effective_user.id} requested MN results")
-    except Exception as e:
-        logger.error(f"Error in mn_command: {e}")
-        await update.message.reply_text("❌ Có lỗi xảy ra. Vui lòng thử lại.")
 async def subscriptions_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Command: /subscriptions - Quản lý đăng ký"""
     from app.services.subscription_service import SubscriptionService
@@ -131,7 +153,7 @@ async def test_notify_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     user = update.effective_user
     
     # Admin check
-    ADMIN_IDS = [6747306809]  # ID của bạn từ log
+    ADMIN_IDS = [6747306809]  # Thay bằng user ID của bạn
     
     if user.id not in ADMIN_IDS:
         await update.message.reply_text("❌ Bạn không có quyền sử dụng lệnh này")
