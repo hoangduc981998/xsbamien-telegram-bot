@@ -81,12 +81,16 @@ def get_today_schedule_actions() -> InlineKeyboardMarkup:
 
 
 def get_main_menu_keyboard() -> InlineKeyboardMarkup:
-    """Main menu keyboard"""
+    """Main menu keyboard - 2x2 grid layout"""
     keyboard = [
-        [InlineKeyboardButton("🔥 Lịch quay hôm nay", callback_data="schedule_today")],
-        [InlineKeyboardButton("📅 Lịch quay cả tuần", callback_data="schedule_week")],
-        [InlineKeyboardButton("🔍 Xem kết quả", callback_data="results_menu")],
-        [InlineKeyboardButton("ℹ️ Hướng dẫn", callback_data="help")],
+        [
+            InlineKeyboardButton("🔥 Lịch quay hôm nay", callback_data="schedule_today"),
+            InlineKeyboardButton("📅 Lịch quay cả tuần", callback_data="schedule_week"),
+        ],
+        [
+            InlineKeyboardButton("🔍 Xem kết quả 3 Miền", callback_data="results_menu"),
+            InlineKeyboardButton("ℹ️ Hướng dẫn", callback_data="help"),
+        ],
     ]
     return InlineKeyboardMarkup(keyboard)
 
