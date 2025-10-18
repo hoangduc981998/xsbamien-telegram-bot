@@ -48,28 +48,39 @@ class NotificationService:
         
         # 1. Kiểm tra đã gửi chưa (tránh gửi trùng)
         if await self._already_sent(province_code, check_date):
-            logger.info(f"⏭️ Already sent {province_code} - {check_date}, skipping")
+            logger.info(f"⏭️  Already sent {province_code} - {check_date}, skipping")
             return None
         
         # 2. Kiểm tra có kết quả mới không
         result = await self.lottery_service.get_latest_result(province_code)
         
         if not result:
-            logger.info(f"ℹ️ No result found for {province_code}")
+            logger.info(f"ℹ️  No result found for {province_code}")
             return None
         
-        result_date = result.get('date')
+        # 3. Parse result date và so sánh
+        result_date_str = result.get('date')
         
-        # 3. Chỉ gửi nếu là kết quả của ngày check_date
-        if isinstance(result_date, str):
-            from datetime import datetime as dt
-            result_date = dt.strptime(result_date, '%Y-%m-%d').date()
+        # Convert to date object for comparison
+        try:
+            # Try dd/mm/yyyy format first (API format)
+            result_date = datetime.strptime(result_date_str, '%d/%m/%Y').date()
+        except (ValueError, TypeError):
+            try:
+                # Try yyyy-mm-dd format (DB format)
+                result_date = datetime.strptime(result_date_str, '%Y-%m-%d').date()
+            except (ValueError, TypeError):
+                logger.error(f"❌ Cannot parse date: {result_date_str}")
+                return None
         
+        # Chỉ gửi nếu là kết quả của ngày check_date
         if result_date != check_date:
-            logger.info(f"ℹ️ Result date {result_date} != check date {check_date}, skipping")
+            logger.info(f"⏭️  Result date {result_date} != check date {check_date}, skipping")
             return None
         
-        # 4. ✅ MỚI: Kiểm tra đủ số giải chưa
+        logger.info(f"✅ Result date {result_date} matches check date {check_date}")
+        
+        # 4. Kiểm tra đủ số giải chưa
         province = PROVINCES.get(province_code, {})
         region = province.get("region", "MN")
         
@@ -77,10 +88,47 @@ class NotificationService:
             logger.info(f"⏳ Result incomplete for {province_code}, waiting...")
             return None
         
-        # 5. ✅ ĐỦ GIẢI → GỬI NGAY!
-        await self._mark_as_sent(province_code, check_date, summary)
+        logger.info(f"✅ Result complete for {province_code}, sending notifications...")
+        
+        # 5. ĐỦ GIẢI → GỬI NGAY!
+        summary = await self.send_result_notification(
+            province_code=province_code,
+            result_date=check_date
+        )
+        
+        # 6. Đánh dấu đã gửi
+        if summary and summary.get('success', 0) > 0:
+            await self._mark_as_sent(province_code, check_date, summary)
         
         return summary
+    
+    def _is_result_complete(self, result: dict, region: str) -> bool:
+        """
+        Kiểm tra kết quả đã đủ số giải chưa
+        
+        Args:
+            result: Dict kết quả xổ số
+            region: Vùng (MB/MN/MT)
+            
+        Returns:
+            True nếu đủ giải, False nếu thiếu
+        """
+        prizes = result.get('prizes', {})
+        
+        if not prizes:
+            return False
+        
+        # Miền Bắc: 27 giải
+        if region == 'MB':
+            required_count = 27
+            total_prizes = sum(len(v) if isinstance(v, list) else 1 for v in prizes.values())
+            return total_prizes >= required_count
+        
+        # Miền Nam/Miền Trung: 18 giải
+        else:
+            required_count = 18
+            total_prizes = sum(len(v) if isinstance(v, list) else 1 for v in prizes.values())
+            return total_prizes >= required_count
     
     async def send_result_notification(
         self,
