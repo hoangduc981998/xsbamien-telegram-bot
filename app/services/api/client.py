@@ -16,7 +16,8 @@ class MU88APIClient:
     PROVINCE_MAP = {
         # Miền Bắc
         "MB": "miba",
-        # Miền Nam
+        
+        # Miền Nam (Short codes)
         "TPHCM": "tphc",
         "BALI": "bali",
         "BETR": "betr",
@@ -38,7 +39,29 @@ class MU88APIClient:
         "TRVI": "trvi",
         "VILO": "vilo",
         "VUTA": "vuta",
-        # Miền Trung
+        
+        # Miền Nam (Full names - ALIASES)
+        "BACLIEU": "bali",
+        "BENTRE": "betr",
+        "ANGIANG": "angi",
+        "BINHDUONG": "bidu",
+        "BINHPHUOC": "biph",
+        "BINHTHUAN": "bith",
+        "CAMAU": "cama",
+        "CANTHO": "cath",
+        "DONGNAI": "dona",
+        "DONGTHAP": "doth",
+        "HAUGIANG": "hagi",
+        "KIENGIANG": "kigi",
+        "LONGAN": "loan",
+        "SOCTRANG": "sotr",
+        "TAYNINH": "tani",
+        "TIENGIANG": "tigi",
+        "TRAVINH": "trvi",
+        "VINHLONG": "vilo",
+        "VUNGTAU": "vuta",
+        
+        # Miền Trung (Short codes)
         "DANA": "dana",
         "BIDI": "bidi",
         "DALAK": "dalak",
@@ -53,6 +76,22 @@ class MU88APIClient:
         "QUNG": "qung",
         "QUTR": "qutr",
         "THTH": "thth",
+        
+        # Miền Trung (Full names - ALIASES)
+        "DANANG": "dana",
+        "BINHDINH": "bidi",
+        "DAKLAK": "dalak",
+        "DAKNONG": "dano",
+        "GIALAI": "gila",
+        "KHANHHOA": "khho",
+        "KONTUM": "kotu",
+        "NINHTHUAN": "nith",
+        "PHUYEN": "phye",
+        "QUANGBINH": "qubi",
+        "QUANGNAM": "quna",
+        "QUANGNGAI": "qung",
+        "QUANGTRI": "qutr",
+        "THUATHIEN": "thth",
     }
 
     def __init__(self, timeout: float = 30.0):

@@ -75,34 +75,34 @@ PROVINCES = {
     "THTH": {"name": "Thừa T. Huế", "code": "thth", "region": "MT", "emoji": "📍"},
 }
 
-# Lịch quay theo ngày trong tuần (0=CN, 6=T7)
+# Lịch quay số theo ngày (schedule_day: 0=CN, 1=T2, ..., 6=T7)
 SCHEDULE = {
+    "MB": {
+        0: ["MB"],  # Chủ nhật
+        1: ["MB"],  # Thứ 2
+        2: ["MB"],  # Thứ 3
+        3: ["MB"],  # Thứ 4
+        4: ["MB"],  # Thứ 5
+        5: ["MB"],  # Thứ 6
+        6: ["MB"],  # Thứ 7
+    },
     "MN": {
-        0: ["TIGI", "KIGI", "DALAT"],  # Chủ nhật
-        1: ["TPHCM", "DOTH", "CAMA"],  # Thứ 2
-        2: ["BETR", "VUTA", "BALI"],  # Thứ 3
-        3: ["DONA", "CATH", "SOTR"],  # Thứ 4
-        4: ["TANI", "ANGI", "BITH"],  # Thứ 5
-        5: ["VILO", "BIDU", "TRVI"],  # Thứ 6
-        6: ["TPHCM", "LOAN", "BIPH", "HAGI"],  # Thứ 7
+        0: ["TIGI", "KIGI", "DALAT"],           # Chủ nhật: Tiền Giang, Kiên Giang, Đà Lạt
+        1: ["TPHCM", "DOTH", "CAMA"],           # Thứ 2: TP.HCM, Đồng Tháp, Cà Mau
+        2: ["BETR", "VUTA", "BALI"],            # Thứ 3: Bến Tre, Vũng Tàu, Bạc Liêu
+        3: ["DONA", "CATH", "SOTR"],            # Thứ 4: Đồng Nai, Cần Thơ, Sóc Trăng
+        4: ["TANI", "ANGI", "BITH"],            # Thứ 5: Tây Ninh, An Giang, Bình Thuận
+        5: ["VILO", "BIDU", "TRVI"],            # Thứ 6: Vĩnh Long, Bình Dương, Trà Vinh
+        6: ["TPHCM", "LOAN", "BIPH", "HAGI"],   # Thứ 7: TP.HCM, Long An, Bình Phước, Hậu Giang
     },
     "MT": {
-        0: ["THTH", "KHHO", "KOTU"],
-        1: ["THTH", "PHYE"],
-        2: ["QUNA", "DALAK"],
-        3: ["DANA", "KHHO"],
-        4: ["BIDI", "QUBI", "QUTR"],
-        5: ["GILA", "NITH"],
-        6: ["DANA", "QUNG", "DANO"],
-    },
-    "MB": {
-        0: ["MB"],
-        1: ["MB"],
-        2: ["MB"],
-        3: ["MB"],
-        4: ["MB"],
-        5: ["MB"],
-        6: ["MB"],  # Hàng ngày
+        0: ["THTH", "KHHO", "KOTU"],            # Chủ nhật: Thừa T.Huế, Khánh Hòa, Kon Tum
+        1: ["THTH", "PHYE"],                    # Thứ 2: Thừa T.Huế, Phú Yên
+        2: ["QUNA", "DALAK"],                   # Thứ 3: Quảng Nam, Đắk Lắk
+        3: ["DANA", "KHHO"],                    # Thứ 4: Đà Nẵng, Khánh Hòa
+        4: ["BIDI", "QUBI", "QUTR"],            # Thứ 5: Bình Định, Quảng Bình, Quảng Trị
+        5: ["GILA", "NITH"],                    # Thứ 6: Gia Lai, Ninh Thuận
+        6: ["DANA", "QUNG", "DANO"],            # Thứ 7: Đà Nẵng, Quảng Ngãi, Đắk Nông
     },
 }
 

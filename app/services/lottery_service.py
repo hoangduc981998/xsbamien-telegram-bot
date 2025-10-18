@@ -29,32 +29,85 @@ class LotteryService:
                 logger.warning(f"⚠️  Database integration disabled: {e}")
                 self.use_database = False
 
-    async def get_latest_result(self, province_code: str) -> Dict:
+    async def get_latest_result(self, province_code: str, force_api: bool = False) -> Dict:
         """
         Get latest lottery result for a province
-
+        
+        Strategy:
+        1. Check DB first - if has TODAY's result → return immediately (cached)
+        2. If no today's result or force_api=True → fetch from API
+        3. Save new API result to DB
+        4. Fallback to DB if API fails
+        5. Fallback to mock data if both fail
+        
         Args:
             province_code: Province code (MB, TPHCM, GILA, etc.)
-
+            force_api: Force fetch from API even if DB has data (default: False)
         Returns:
             Standardized result dict
         """
         try:
             logger.info(f"🎯 Getting latest result for {province_code}")
+            
+            # ✅ SMART CACHING: Check DB first unless forced
+            if not force_api and self.use_database and self.db_service:
+                db_result = await self.db_service.get_latest_result(province_code)
+                
+                if db_result:
+                    # Check if it's today's result
+                    from datetime import date
+                    today = date.today()
+                    
+                    if db_result.draw_date == today:
+                        logger.info(f"💾 Using cached result from DB for {province_code}: {db_result.draw_date}")
+                        result = db_result.to_dict()
+                        if "prizes" not in result:
+                            result["prizes"] = result.get("prizes", {})
+                        return result
+                    else:
+                        logger.info(f"🔄 DB has old result ({db_result.draw_date}), fetching from API...")
 
-            # Try database first if enabled
+            # ✅ Fetch from API if no today's result in DB
+            logger.info(f"📡 Fetching from API for {province_code}...")
+            api_response = await self.api_client.fetch_results(province_code, limit=1)
+
+            if api_response:
+                # Transform results
+                results = self.transformer.transform_results(api_response)
+                
+                if results:
+                    # Return latest (first in list)
+                    latest = results[0]
+                    logger.info(f"✅ Got latest result from API for {province_code}: {latest.get('date')}")
+                    
+                    # Save to database if enabled
+                    if self.use_database and self.db_service:
+                        try:
+                            from app.config import PROVINCES
+                            province_info = PROVINCES.get(province_code, {})
+                            latest["province_code"] = province_code
+                            latest["region"] = province_info.get("region", "MN")
+                            await self.db_service.save_result(latest)
+                            logger.info(f"💾 Saved {province_code} result to DB: {latest.get('date')}")
+                        except Exception as e:
+                            logger.warning(f"⚠️  Failed to save to DB: {e}")
+                    
+                    return latest
+
+            # ⚠️ API failed, try database as fallback
+            logger.warning(f"⚠️ API failed for {province_code}, trying DB fallback...")
+            
             if self.use_database and self.db_service:
                 db_result = await self.db_service.get_latest_result(province_code)
                 if db_result:
-                    logger.info(f"✅ Got latest result from DB for {province_code}: {db_result.draw_date}")
+                    logger.info(f"✅ Got result from DB fallback for {province_code}: {db_result.draw_date}")
                     result = db_result.to_dict()
-                    # Add prizes key if not present (for backwards compatibility)
                     if "prizes" not in result:
                         result["prizes"] = result.get("prizes", {})
                     return result
 
-            # Fetch from API (limit 1 for latest only)
-            api_response = await self.api_client.fetch_results(province_code, limit=1)
+            # ❌ Both API and DB failed, use mock data
+            logger.warning(f"⚠️ Both API and DB failed for {province_code}, using mock data")
 
             if not api_response:
                 logger.warning(f"⚠️ API failed for {province_code}, using mock data")
