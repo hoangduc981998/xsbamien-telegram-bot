@@ -950,3 +950,50 @@ async def handle_unsubscribe_callback(update: Update, context: ContextTypes.DEFA
             )
         except:
             pass
+async def handle_stats_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE, callback_data: str):
+    """Xử lý tất cả stats callbacks"""
+    query = update.callback_query
+    
+    if callback_data.startswith("stats2_"):
+        province_key = callback_data.split("_")[1]
+        province = PROVINCES.get(province_key, {})
+        
+        try:
+            logger.info(f"Getting lo2so streak analysis for {province_key}")
+            streaks_data = await statistics_service.get_lo2so_streaks(
+                province_key, draws=200, min_streak=2
+            )
+            
+            from app.ui.formatters_stats import format_lo_2_so_streaks
+            message = format_lo_2_so_streaks(streaks_data, province.get("name", ""))
+            
+            await safe_edit_message(query, message, get_province_detail_keyboard(province_key))
+        except Exception as e:
+            logger.exception(f"Error in stats2 for {province_key}: {e}")
+            await query.edit_message_text(
+                f"❌ Lỗi: {str(e)}",
+                reply_markup=get_province_detail_keyboard(province_key),
+                parse_mode="HTML",
+            )
+    
+    elif callback_data.startswith("stats3_"):
+        province_key = callback_data.split("_")[1]
+        province = PROVINCES.get(province_key, {})
+        
+        try:
+            logger.info(f"Getting lo3so streak analysis for {province_key}")
+            streaks_data = await statistics_service.get_lo3so_streaks(
+                province_key, draws=200, min_streak=2
+            )
+            
+            from app.ui.formatters_stats import format_lo_3_so_streaks
+            message = format_lo_3_so_streaks(streaks_data, province.get("name", ""))
+            
+            await safe_edit_message(query, message, get_province_detail_keyboard(province_key))
+        except Exception as e:
+            logger.exception(f"Error in stats3 for {province_key}: {e}")
+            await query.edit_message_text(
+                f"❌ Lỗi: {str(e)}",
+                reply_markup=get_province_detail_keyboard(province_key),
+                parse_mode="HTML",
+            )

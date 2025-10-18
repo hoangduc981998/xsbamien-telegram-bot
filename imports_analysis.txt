@@ -1,0 +1,29 @@
+app/handlers/callbacks.py-920-        subscriptions = await subscription_service.get_user_subscriptions(user.id)
+app/handlers/callbacks.py-921-        
+app/handlers/callbacks.py-922-        from app.ui.keyboards import get_subscription_management_keyboard
+app/handlers/commands.py:70:async def mb_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+app/handlers/commands.py-71-    """Command: /mb - Xổ số Miền Bắc"""
+app/handlers/commands.py-72-    from app.ui.keyboards import get_region_keyboard
+app/handlers/commands.py:86:async def mt_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+app/handlers/commands.py-87-    """Command: /mt - Xổ số Miền Trung"""
+app/handlers/commands.py-88-    from app.ui.keyboards import get_region_keyboard
+app/handlers/commands.py:102:async def mn_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+app/handlers/commands.py-103-    """Command: /mn - Xổ số Miền Nam"""
+app/handlers/commands.py-104-    from app.ui.keyboards import get_region_keyboard
+app/handlers/commands.py:118:async def subscriptions_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+app/handlers/commands.py-119-    """Command: /subscriptions - Quản lý đăng ký"""
+app/handlers/commands.py-120-    from app.services.subscription_service import SubscriptionService
+app/handlers/commands.py-121-    from app.ui.keyboards import get_subscription_management_keyboard
+app/handlers/commands.py-122-    from app.config import PROVINCES
+app/handlers/commands.py-166-    
+app/handlers/commands.py-167-    try:
+app/handlers/commands.py-168-        from app.services.notification_service import NotificationService
+app/handlers/commands.py-213-    
+app/handlers/commands.py-214-    try:
+app/handlers/commands.py-215-        from app.services.admin_service import AdminService
+app/handlers/commands.py-271-    
+app/handlers/commands.py-272-    try:
+app/handlers/commands.py-273-        from app.services.admin_service import AdminService
+app/handlers/commands.py-319-    
+app/handlers/commands.py-320-    try:
+app/handlers/commands.py-321-        from app.services.admin_service import AdminService
