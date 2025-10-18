@@ -5,6 +5,15 @@ import logging
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
+from app.ui.keyboards import get_subscription_management_keyboard
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from datetime import datetime, timedelta
+from app.ui.messages import WELCOME_MESSAGE
+from app.ui.keyboards import (
+    get_main_menu_keyboard,
+    get_results_menu_keyboard,
+)
+from app.database import DatabaseSession
 
 from app.config import PROVINCES
 from app.services.lottery_service import LotteryService
@@ -93,8 +102,6 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Back to main menu
         if callback_data == "back_to_main":
             await query.answer()
-            from app.ui.messages import WELCOME_MESSAGE
-            from app.ui.keyboards import get_main_menu_keyboard
             
             message = WELCOME_MESSAGE
             keyboard = get_main_menu_keyboard()
@@ -107,7 +114,6 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Results menu
         elif callback_data == "results_menu":
             await query.answer()
-            from app.ui.keyboards import get_results_menu_keyboard
             
             message = "🎯 <b>XEM KẾT QUẢ XỔ SỐ</b>\n\n"
             message += "Chọn khu vực để xem kết quả:"
@@ -749,7 +755,6 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """
         try:
             async with DatabaseSession() as session:
-                from datetime import datetime, timedelta
                 
                 end_date = date.today()
                 start_date = end_date - timedelta(days=days)
@@ -841,9 +846,7 @@ async def handle_beautiful_numbers_callback(update: Update, context: ContextType
     await query.answer()
     
     try:
-        from app.services.lottery_service import LotteryService
-        from app.config import PROVINCES
-        
+
         lottery_service = LotteryService(use_database=True)
         beautiful_service = BeautifulNumbersService()
         
@@ -893,8 +896,6 @@ async def handle_unsubscribe_callback(update: Update, context: ContextTypes.DEFA
     await query.answer()
     
     try:
-        from app.services.subscription_service import SubscriptionService
-        from app.config import PROVINCES
         
         user = update.effective_user
         subscription_service = SubscriptionService()
@@ -918,7 +919,6 @@ async def handle_unsubscribe_callback(update: Update, context: ContextTypes.DEFA
         # Refresh subscription list
         subscriptions = await subscription_service.get_user_subscriptions(user.id)
         
-        from app.ui.keyboards import get_subscription_management_keyboard
         
         full_message = "🔔 <b>QUẢN LÝ ĐĂNG KÝ</b>\n\n"
         

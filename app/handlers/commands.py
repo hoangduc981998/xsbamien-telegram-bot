@@ -7,6 +7,12 @@ from telegram.ext import ContextTypes
 
 from app.utils.sanitize import sanitize_text, is_valid_province_code
 from app.ui.keyboards import get_main_menu_keyboard
+from app.ui.keyboards import (
+    get_subscription_management_keyboard,
+)
+from app.services.subscription_service import SubscriptionService
+from app.services.notification_service import NotificationService
+from app.services.admin_service import AdminService
 from app.config import PROVINCES
 
 logger = logging.getLogger(__name__)
@@ -69,7 +75,6 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def mb_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Command: /mb - Xổ số Miền Bắc"""
-    from app.ui.keyboards import get_region_keyboard
     
     message = (
         "🎰 <b>XỔ SỐ MIỀN BẮC</b>\n\n"
@@ -85,7 +90,6 @@ async def mb_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def mt_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Command: /mt - Xổ số Miền Trung"""
-    from app.ui.keyboards import get_region_keyboard
     
     message = (
         "🎰 <b>XỔ SỐ MIỀN TRUNG</b>\n\n"
@@ -101,7 +105,6 @@ async def mt_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def mn_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Command: /mn - Xổ số Miền Nam"""
-    from app.ui.keyboards import get_region_keyboard
     
     message = (
         "💫💫 <b>XỔ SỐ MIỀN NAM</b>\n\n"
@@ -117,9 +120,6 @@ async def mn_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def subscriptions_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Command: /subscriptions - Quản lý đăng ký"""
-    from app.services.subscription_service import SubscriptionService
-    from app.ui.keyboards import get_subscription_management_keyboard
-    from app.config import PROVINCES
     
     user = update.effective_user
     subscription_service = SubscriptionService()
@@ -165,7 +165,6 @@ async def test_notify_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
     
     try:
-        from app.services.notification_service import NotificationService
         
         notification_service = NotificationService(bot=context.bot)
         
@@ -212,7 +211,6 @@ async def admin_dashboard_command(update: Update, context: ContextTypes.DEFAULT_
         return
     
     try:
-        from app.services.admin_service import AdminService
         
         admin_service = AdminService()
         stats = await admin_service.get_dashboard_stats()
@@ -270,7 +268,6 @@ async def admin_subscribers_command(update: Update, context: ContextTypes.DEFAUL
         return
     
     try:
-        from app.services.admin_service import AdminService
         
         admin_service = AdminService()
         subscribers = await admin_service.get_all_subscribers()
@@ -318,7 +315,6 @@ async def admin_broadcast_command(update: Update, context: ContextTypes.DEFAULT_
     message_text = ' '.join(context.args)
     
     try:
-        from app.services.admin_service import AdminService
         
         admin_service = AdminService()
         
