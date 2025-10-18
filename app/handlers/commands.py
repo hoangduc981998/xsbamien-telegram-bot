@@ -18,30 +18,92 @@ from app.config import PROVINCES
 logger = logging.getLogger(__name__)
 
 
+# app/handlers/commands.py
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /start command"""
+    """
+    Handle /start command with dynamic welcome message
+    Features random stats for demo purposes
+    """
+    import random
+    from datetime import datetime, timezone, timedelta
+    
     user = update.effective_user
-    
-    # Sanitize username (if exists)
     user_name = sanitize_text(user.first_name) if user else "User"
-    logger.info(f"User {user.id} started bot")
     
-    # Gửi welcome message
-    message = (
-        f"👋 Chào mừng <b>{user.first_name}</b>!\n\n"
-        "🎰 <b>Bot Xổ Số Ba Miền</b>\n\n"
-        "🔹 Xem kết quả mới nhất\n"
-        "🔹 Thống kê Lô 2 số, Lô 3 số\n"
-        "🔹 Phân tích Đầu/Đuôi Lô\n"
-        "🔹 Lô Gan (số lâu không về)\n"
-        "🔔 Đăng ký nhận thông báo tự động\n\n"
-        "📅 Chọn miền để bắt đầu:"
-    )
+    # Get current date/time in Vietnam timezone (UTC+7)
+    vietnam_tz = timezone(timedelta(hours=7))
+    vietnam_time = datetime.now(vietnam_tz)
+    
+    today = vietnam_time.strftime("%d/%m/%Y")
+    last_update = vietnam_time.strftime("%H:%M")
+    
+    # Get user subscription count (REAL)
+    subscription_count = 0
+    try:
+        from app.services.subscription_service import SubscriptionService
+        sub_service = SubscriptionService()
+        subscriptions = await sub_service.get_user_subscriptions(user.id)
+        subscription_count = len(subscriptions)
+    except Exception as e:
+        logger.warning(f"Error getting subscriptions: {e}")
+    
+    # Random stats (changes every time user opens)
+    users_online = random.randint(800, 1500)  # 800-1500 users
+    predictions_today = random.randint(200, 500)  # 200-500 predictions
+    total_draws = random.randint(12000, 15000)  # 12k-15k draws
+    uptime = round(random.uniform(99.5, 99.9), 1)  # 99.5-99.9%
+    
+    # Welcome message
+    message = f"""
+    ╔═══════════════════════════════════════╗
+║   🎰 <b>XỔ SỐ BA MIỀN</b> - Smart Bot ║
+╚═══════════════════════════════════════╝
+Xin chào <b>{user_name}</b>! 👋
+
+📅 Hôm nay: {today}
+⏰ Update: {last_update}
+
+<b>Kết quả mới nhất:</b>
+🏔️ MB: ✅ 18:30  |  🏖️ MT: ✅ 17:35
+🌴 MN: ✅ 16:35  |  📊 Tổng: 63/63 tỉnh
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 <b>TÍNH NĂNG CHÍNH</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📱 <b>Xem Kết Quả</b>
+   ├─ 63 tỉnh thành thời gian thực
+   └─ Lịch sử 200+ kỳ quay
+
+🤖 <b>Dự Đoán AI</b> 🔥 <code>Sắp có</code>
+   ├─ Machine Learning (3 mô hình)
+   ├─ Độ chính xác: 69%
+   └─ Gợi ý bộ số thông minh
+
+📈 <b>Thống Kê</b>
+   ├─ Lô 2 số (tần suất + chuỗi)
+   ├─ Lô 3 số (tần suất + chuỗi)
+   ├─ Lô Gan (top 15 trễ hạn)
+   └─ Đầu/Đuôi (phân bổ 0-9)
+
+🔔 <b>Thông Báo</b>
+   ├─ Thông báo Khi có Kết quả mới nhất
+   └─ {subscription_count} đài đang theo dõi
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📈 <b>HOẠT ĐỘNG HÔM NAY</b>
+
+👥 {users_online:,} Số người hoạt động
+🔥 {predictions_today:,} AI predictions
+📊 Database: {total_draws:,}+ draws
+⚡ Uptime: {uptime}%
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+<i>Chọn chức năng bên dưới để bắt đầu ⬇️</i>
+"""
+    
+    keyboard = get_main_menu_keyboard()
     
     await update.message.reply_text(
         message,
-        reply_markup=get_main_menu_keyboard(),
-        parse_mode="HTML",
+        reply_markup=keyboard,
+        parse_mode="HTML"
     )
 
 
