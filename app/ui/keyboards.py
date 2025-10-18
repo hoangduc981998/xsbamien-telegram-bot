@@ -179,9 +179,9 @@ def get_stats_menu_keyboard() -> InlineKeyboardMarkup:
 
 
 def get_province_detail_keyboard(province_key: str) -> InlineKeyboardMarkup:
-    """Keyboard with 9 buttons: 7 stats + 2 navigation"""
+    """Keyboard with 10 buttons: 7 stats + notification + 2 navigation"""
     keyboard = [
-        # NEW: 4 buttons - Quick actions
+        # 4 buttons - Quick actions
         [
             InlineKeyboardButton("📊 Lô 2 số", callback_data=f"stats_lo2_{province_key}"),
             InlineKeyboardButton("🎰 Lô 3 số", callback_data=f"stats_lo3_{province_key}"),
@@ -190,13 +190,17 @@ def get_province_detail_keyboard(province_key: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton("🔢 Đầu Lô", callback_data=f"stats_dau_{province_key}"),
             InlineKeyboardButton("🔢 Đuôi Lô", callback_data=f"stats_duoi_{province_key}"),
         ],
-        # OLD: 3 buttons - Analysis
+        # 3 buttons - Analysis
         [
             InlineKeyboardButton("📊 Thống kê Lô 2 số", callback_data=f"stats2_{province_key}"),
             InlineKeyboardButton("📊 Thống kê Lô 3 số", callback_data=f"stats3_{province_key}"),
         ],
         [
             InlineKeyboardButton("🔥 Lô Gan", callback_data=f"stats_gan_{province_key}"),
+        ],
+        # NEW: Notification button
+        [
+            InlineKeyboardButton("🔔 Đăng ký nhận KQ", callback_data=f"subscribe_{province_key}"),
         ],
         # Navigation
         [InlineKeyboardButton("🔙 Quay lại", callback_data=f"result_{province_key}")],
@@ -235,5 +239,53 @@ def get_schedule_back_button() -> InlineKeyboardMarkup:
     keyboard = [
         [InlineKeyboardButton("🔙 Quay lại", callback_data="schedule_menu")],
         [InlineKeyboardButton("🏠 Về trang chủ", callback_data="back_to_main")],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_subscription_management_keyboard(user_subscriptions: list) -> InlineKeyboardMarkup:
+    """
+    Keyboard hiển thị danh sách subscriptions của user
+    
+    Args:
+        user_subscriptions: List of UserSubscription objects
+    """
+    keyboard = []
+    
+    if user_subscriptions:
+        # Hiển thị từng subscription (2 nút/hàng)
+        for sub in user_subscriptions:
+            button = InlineKeyboardButton(
+                text=f"❌ {sub.province_code}",
+                callback_data=f"unsub_{sub.province_code}"
+            )
+            
+            if not keyboard or len(keyboard[-1]) == 2:
+                keyboard.append([button])
+            else:
+                keyboard[-1].append(button)
+    else:
+        keyboard.append([
+            InlineKeyboardButton("ℹ️ Chưa có đăng ký nào", callback_data="noop")
+        ])
+    
+    # Navigation
+    keyboard.append([
+        InlineKeyboardButton("🔙 Quay lại", callback_data="back_to_main")
+    ])
+    
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_subscribe_confirm_keyboard(province_key: str) -> InlineKeyboardMarkup:
+    """Keyboard xác nhận đăng ký"""
+    keyboard = [
+        [
+            InlineKeyboardButton("✅ Xác nhận", callback_data=f"confirm_sub_{province_key}"),
+            InlineKeyboardButton("❌ Hủy", callback_data=f"result_{province_key}"),
+        ],
+        [
+            InlineKeyboardButton("🔙 Quay lại", callback_data=f"result_{province_key}"),
+        ]
     ]
     return InlineKeyboardMarkup(keyboard)

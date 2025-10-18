@@ -3,6 +3,7 @@
 from datetime import datetime
 from typing import Dict
 
+from sqlalchemy import Column, Integer, BigInteger, String, Date, JSON, DateTime, Boolean
 from sqlalchemy import (
     Column,
     Integer,
@@ -12,6 +13,8 @@ from sqlalchemy import (
     JSON,
     ForeignKey,
     Index,
+    BigInteger,
+    Boolean,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
@@ -153,3 +156,38 @@ class Lo3SoHistory(Base):
     def __repr__(self):
         return f"<Lo3SoHistory(number={self.number}, province={self.province_code}, date={self.draw_date})>"
 
+
+
+class UserSubscription(Base):
+    """User subscription for lottery result notifications"""
+    
+    __tablename__ = "user_subscriptions"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(BigInteger, nullable=False, index=True)
+    username = Column(String(255), nullable=True)
+    province_code = Column(String(10), nullable=False, index=True)
+    notification_time = Column(String(5), nullable=True, comment="HH:MM format, e.g., 18:30")
+    is_active = Column(Boolean, default=True, nullable=False, index=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=True, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f"<UserSubscription(user_id={self.user_id}, province={self.province_code}, active={self.is_active})>"
+
+
+class NotificationLog(Base):
+    """Log các lần gửi thông báo để tránh gửi trùng"""
+    
+    __tablename__ = "notification_log"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    province_code = Column(String(10), nullable=False, index=True)
+    result_date = Column(Date, nullable=False)
+    sent_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    total_sent = Column(Integer, default=0)
+    success_count = Column(Integer, default=0)
+    failed_count = Column(Integer, default=0)
+    
+    def __repr__(self):
+        return f"<NotificationLog(province={self.province_code}, date={self.result_date}, sent={self.total_sent})>"

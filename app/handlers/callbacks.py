@@ -8,6 +8,8 @@ from telegram.ext import ContextTypes
 
 from app.config import PROVINCES
 from app.services.lottery_service import LotteryService
+from app.services.subscription_service import SubscriptionService
+
 from app.services.statistics_service import StatisticsService
 from app.services.mock_data import get_mock_lo_gan
 from app.ui.formatters import (
@@ -50,6 +52,8 @@ logger = logging.getLogger(__name__)
 # Initialize services
 lottery_service = LotteryService(use_database=True)
 statistics_service = StatisticsService(use_database=True)
+
+subscription_service = SubscriptionService()
 
 async def safe_edit_message(query, message, reply_markup, parse_mode="HTML"):
     """
@@ -398,22 +402,6 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     parse_mode="HTML",
                 )
 
-        # Đăng ký nhắc nhở
-        elif callback_data.startswith("subscribe_"):
-            province_key = callback_data.split("_")[1]
-            province = PROVINCES.get(province_key, {})
-
-            message = "🔔 <b>ĐĂNG KÝ NHẮC NHỞ</b>\n\n"
-            message += f"Bạn muốn nhận thông báo khi có kết quả <b>{province.get('name', '')}</b>?\n\n"
-            message += "⚠️ <i>Tính năng đang phát triển...</i>\n"
-            message += "Sẽ sớm ra mắt trong phiên bản tiếp theo!"
-
-            await query.edit_message_text(
-                message,
-                reply_markup=get_province_detail_keyboard(province_key),
-                parse_mode="HTML",
-            )
-
         # ✅ KẾT QUẢ ĐẦY ĐỦ - DÙNG API
         elif callback_data.startswith("result_full_"):
             province_code = callback_data.replace("result_full_", "")
@@ -651,6 +639,106 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "❌ Có lỗi xảy ra",
                     get_province_detail_keyboard(province_code)
                 )
+        # ========== SUBSCRIPTION HANDLERS ==========
+        
+        elif callback_data.startswith("subscribe_"):
+            """🔔 Đăng ký nhận thông báo"""
+            province_code = callback_data.replace("subscribe_", "")
+            province = PROVINCES.get(province_code, {})
+            
+            from app.ui.keyboards import get_subscribe_confirm_keyboard
+            
+            message = f"🔔 <b>ĐĂNG KÝ NHẬN THÔNG BÁO</b>\n\n"
+            message += f"📍 Tỉnh: <b>{province.get('name', province_code)}</b>\n\n"
+            message += "Bạn sẽ nhận thông báo tự động khi có kết quả mới!\n\n"
+            message += "⏰ Thời gian gửi: Sau khi có kết quả chính thức\n"
+            message += "🔕 Bạn có thể hủy đăng ký bất kỳ lúc nào\n\n"
+            message += "Xác nhận đăng ký?"
+            
+            await safe_edit_message(
+                query,
+                message,
+                get_subscribe_confirm_keyboard(province_code)
+            )
+        
+        elif callback_data.startswith("confirm_sub_"):
+            """✅ Xác nhận đăng ký"""
+            province_code = callback_data.replace("confirm_sub_", "")
+            province = PROVINCES.get(province_code, {})
+            user = update.effective_user
+            
+            try:
+                success = await subscription_service.subscribe(
+                    user_id=user.id,
+                    province_code=province_code,
+                    username=user.username
+                )
+                
+                if success:
+                    message = f"✅ <b>ĐĂNG KÝ THÀNH CÔNG!</b>\n\n"
+                    message += f"📍 Tỉnh: <b>{province.get('name', province_code)}</b>\n\n"
+                    message += "Bạn sẽ nhận thông báo khi có kết quả mới 🎉\n\n"
+                    message += "💡 <i>Quản lý đăng ký: /subscriptions</i>"
+                else:
+                    message = "❌ Có lỗi xảy ra. Vui lòng thử lại sau!"
+                
+                await safe_edit_message(
+                    query,
+                    message,
+                    get_province_detail_keyboard(province_code)
+                )
+                
+            except Exception as e:
+                logger.error(f"Error confirming subscription: {e}")
+                await safe_edit_message(
+                    query,
+                    "❌ Có lỗi xảy ra. Vui lòng thử lại!",
+                    get_province_detail_keyboard(province_code)
+                )
+        
+        elif callback_data.startswith("unsub_"):
+            """❌ Hủy đăng ký"""
+            province_code = callback_data.replace("unsub_", "")
+            province = PROVINCES.get(province_code, {})
+            user = update.effective_user
+            
+            try:
+                success = await subscription_service.unsubscribe(
+                    user_id=user.id,
+                    province_code=province_code
+                )
+                
+                if success:
+                    message = f"✅ Đã hủy đăng ký <b>{province.get('name', province_code)}</b>"
+                else:
+                    message = "❌ Không tìm thấy đăng ký này"
+                
+                # Refresh subscription list
+                subscriptions = await subscription_service.get_user_subscriptions(user.id)
+                
+                from app.ui.keyboards import get_subscription_management_keyboard
+                
+                full_message = "🔔 <b>QUẢN LÝ ĐĂNG KÝ</b>\n\n"
+                if subscriptions:
+                    full_message += f"Bạn đang đăng ký <b>{len(subscriptions)}</b> tỉnh:\n\n"
+                    for sub in subscriptions:
+                        prov = PROVINCES.get(sub.province_code, {})
+                        full_message += f"  📍 {prov.get('name', sub.province_code)}\n"
+                    full_message += f"\n{message}\n\n"
+                    full_message += "Nhấn tỉnh để hủy đăng ký"
+                else:
+                    full_message += "Bạn chưa đăng ký tỉnh nào\n\n"
+                    full_message += "💡 Đăng ký tại menu của từng tỉnh"
+                
+                await safe_edit_message(
+                    query,
+                    full_message,
+                    get_subscription_management_keyboard(subscriptions)
+                )
+                
+            except Exception as e:
+                logger.error(f"Error unsubscribing: {e}")
+                await query.answer("❌ Có lỗi xảy ra!", show_alert=True)
 
         # Fallback
         else:
