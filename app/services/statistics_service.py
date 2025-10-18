@@ -340,3 +340,200 @@ class StatisticsService:
             lines.append(f"• <b>{num}</b>: {count} lần")
 
         return "\n".join(lines)
+    async def get_lo2so_streaks(self, province_code: str, draws: int = 200, min_streak: int = 2) -> dict:
+        """
+        Phân tích chuỗi liên tiếp cho lô 2 số
+        
+        Args:
+            province_code: Mã tỉnh (MB, TPHCM, etc.)
+            draws: Số kỳ quay phân tích
+            min_streak: Ngưỡng tối thiểu (mặc định 2 kỳ)
+            
+        Returns:
+            Dict {current_streaks: [...], max_streaks: [...]}
+        """
+        from app.database import DatabaseSession
+        from app.models import Lo2SoHistory
+        from sqlalchemy import select, and_
+        
+        try:
+            async with DatabaseSession() as session:
+                # Lấy danh sách ngày quay
+                date_query = select(Lo2SoHistory.draw_date).where(
+                    Lo2SoHistory.province_code == province_code
+                ).distinct().order_by(Lo2SoHistory.draw_date.desc()).limit(draws)
+                
+                date_result = await session.execute(date_query)
+                draw_dates = sorted([row[0] for row in date_result.fetchall()])
+                
+                if not draw_dates:
+                    return {"current_streaks": [], "max_streaks": []}
+                
+                # Lấy dữ liệu lô 2 số
+                data_query = select(Lo2SoHistory.draw_date, Lo2SoHistory.number).where(
+                    and_(Lo2SoHistory.province_code == province_code, Lo2SoHistory.draw_date.in_(draw_dates))
+                ).order_by(Lo2SoHistory.draw_date.asc())
+                
+                data_result = await session.execute(data_query)
+                all_data = data_result.fetchall()
+                
+                # Tổ chức theo ngày
+                draws_by_date = {}
+                for draw_date, number in all_data:
+                    if draw_date not in draws_by_date:
+                        draws_by_date[draw_date] = set()
+                    draws_by_date[draw_date].add(number)
+                
+                # Phân tích streak cho tất cả số 00-99
+                all_numbers = [f"{i:02d}" for i in range(100)]
+                current_streaks = {}
+                max_streaks = {}
+                
+                for number in all_numbers:
+                    temp_streak = 0
+                    temp_start = None
+                    max_streak_val = 0
+                    max_streak_date = None
+                    
+                    for draw_date in draw_dates:
+                        if number in draws_by_date.get(draw_date, set()):
+                            if temp_streak == 0:
+                                temp_start = draw_date
+                            temp_streak += 1
+                            if temp_streak > max_streak_val:
+                                max_streak_val = temp_streak
+                                max_streak_date = draw_date
+                        else:
+                            temp_streak = 0
+                    
+                    # Current streak (cuối cùng)
+                    if temp_streak >= min_streak:
+                        current_streaks[number] = {
+                            "streak": temp_streak,
+                            "start_date": temp_start,
+                            "end_date": draw_dates[-1]
+                        }
+                    
+                    # Max streak (lịch sử)
+                    if max_streak_val >= min_streak:
+                        max_streaks[number] = {
+                            "max_streak": max_streak_val,
+                            "last_streak_date": max_streak_date
+                        }
+                
+                # Format kết quả
+                current_list = [
+                    {
+                        "number": n,
+                        "streak": d["streak"],
+                        "start_date": d["start_date"].strftime("%d/%m/%Y"),
+                        "end_date": d["end_date"].strftime("%d/%m/%Y")
+                    }
+                    for n, d in sorted(current_streaks.items(), key=lambda x: x[1]["streak"], reverse=True)
+                ][:15]
+                
+                max_list = [
+                    {
+                        "number": n,
+                        "max_streak": d["max_streak"],
+                        "last_streak_date": d["last_streak_date"].strftime("%d/%m/%Y")
+                    }
+                    for n, d in sorted(max_streaks.items(), key=lambda x: x[1]["max_streak"], reverse=True)
+                ][:15]
+                
+                logger.info(f"✅ Lo2so streaks: {len(current_list)} current, {len(max_list)} max")
+                return {"current_streaks": current_list, "max_streaks": max_list}
+        except Exception as e:
+            logger.error(f"Error in get_lo2so_streaks: {e}")
+            return {"current_streaks": [], "max_streaks": []}
+    
+    async def get_lo3so_streaks(self, province_code: str, draws: int = 200, min_streak: int = 2) -> dict:
+        """Phân tích chuỗi liên tiếp cho lô 3 số"""
+        from app.database import DatabaseSession
+        from app.models import Lo3SoHistory
+        from sqlalchemy import select, and_
+        
+        try:
+            async with DatabaseSession() as session:
+                date_query = select(Lo3SoHistory.draw_date).where(
+                    Lo3SoHistory.province_code == province_code
+                ).distinct().order_by(Lo3SoHistory.draw_date.desc()).limit(draws)
+                
+                date_result = await session.execute(date_query)
+                draw_dates = sorted([row[0] for row in date_result.fetchall()])
+                
+                if not draw_dates:
+                    return {"current_streaks": [], "max_streaks": []}
+                
+                data_query = select(Lo3SoHistory.draw_date, Lo3SoHistory.number).where(
+                    and_(Lo3SoHistory.province_code == province_code, Lo3SoHistory.draw_date.in_(draw_dates))
+                ).order_by(Lo3SoHistory.draw_date.asc())
+                
+                data_result = await session.execute(data_query)
+                all_data = data_result.fetchall()
+                
+                draws_by_date = {}
+                unique_numbers = set()
+                for draw_date, number in all_data:
+                    if draw_date not in draws_by_date:
+                        draws_by_date[draw_date] = set()
+                    draws_by_date[draw_date].add(number)
+                    unique_numbers.add(number)
+                
+                current_streaks = {}
+                max_streaks = {}
+                
+                for number in unique_numbers:
+                    temp_streak = 0
+                    temp_start = None
+                    max_streak_val = 0
+                    max_streak_date = None
+                    
+                    for draw_date in draw_dates:
+                        if number in draws_by_date.get(draw_date, set()):
+                            if temp_streak == 0:
+                                temp_start = draw_date
+                            temp_streak += 1
+                            if temp_streak > max_streak_val:
+                                max_streak_val = temp_streak
+                                max_streak_date = draw_date
+                        else:
+                            temp_streak = 0
+                    
+                    if temp_streak >= min_streak:
+                        current_streaks[number] = {
+                            "streak": temp_streak,
+                            "start_date": temp_start,
+                            "end_date": draw_dates[-1]
+                        }
+                    
+                    if max_streak_val >= min_streak:
+                        max_streaks[number] = {
+                            "max_streak": max_streak_val,
+                            "last_streak_date": max_streak_date
+                        }
+                
+                current_list = [
+                    {
+                        "number": n,
+                        "streak": d["streak"],
+                        "start_date": d["start_date"].strftime("%d/%m/%Y"),
+                        "end_date": d["end_date"].strftime("%d/%m/%Y")
+                    }
+                    for n, d in sorted(current_streaks.items(), key=lambda x: x[1]["streak"], reverse=True)
+                ][:15]
+                
+                max_list = [
+                    {
+                        "number": n,
+                        "max_streak": d["max_streak"],
+                        "last_streak_date": d["last_streak_date"].strftime("%d/%m/%Y")
+                    }
+                    for n, d in sorted(max_streaks.items(), key=lambda x: x[1]["max_streak"], reverse=True)
+                ][:15]
+                
+                logger.info(f"✅ Lo3so streaks: {len(current_list)} current, {len(max_list)} max")
+                return {"current_streaks": current_list, "max_streaks": max_list}
+        except Exception as e:
+            logger.error(f"Error in get_lo3so_streaks: {e}")
+            return {"current_streaks": [], "max_streaks": []}

@@ -179,13 +179,18 @@ def get_stats_menu_keyboard() -> InlineKeyboardMarkup:
 
 
 def get_province_detail_keyboard(province_key: str) -> InlineKeyboardMarkup:
-    """
-    Keyboard for province detail view with statistics options
-
-    Args:
-        province_key: Province code (e.g., TPHCM, DANA, MB)
-    """
+    """Keyboard with 9 buttons: 7 stats + 2 navigation"""
     keyboard = [
+        # NEW: 4 buttons - Quick actions
+        [
+            InlineKeyboardButton("📊 Lô 2 số", callback_data=f"stats_lo2_{province_key}"),
+            InlineKeyboardButton("🎰 Lô 3 số", callback_data=f"stats_lo3_{province_key}"),
+        ],
+        [
+            InlineKeyboardButton("🔢 Đầu Lô", callback_data=f"stats_dau_{province_key}"),
+            InlineKeyboardButton("🔢 Đuôi Lô", callback_data=f"stats_duoi_{province_key}"),
+        ],
+        # OLD: 3 buttons - Analysis
         [
             InlineKeyboardButton("📊 Thống kê Lô 2 số", callback_data=f"stats2_{province_key}"),
             InlineKeyboardButton("📊 Thống kê Lô 3 số", callback_data=f"stats3_{province_key}"),
@@ -193,7 +198,8 @@ def get_province_detail_keyboard(province_key: str) -> InlineKeyboardMarkup:
         [
             InlineKeyboardButton("🔥 Lô Gan", callback_data=f"stats_gan_{province_key}"),
         ],
-        [InlineKeyboardButton("🔙 Quay lại", callback_data="results_menu")],
+        # Navigation
+        [InlineKeyboardButton("🔙 Quay lại", callback_data=f"result_{province_key}")],
         [InlineKeyboardButton("🏠 Về trang chủ", callback_data="back_to_main")],
     ]
     return InlineKeyboardMarkup(keyboard)

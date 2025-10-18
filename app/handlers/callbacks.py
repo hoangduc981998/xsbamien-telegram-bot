@@ -3,6 +3,7 @@
 import logging
 
 from telegram import Update
+from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
 from app.config import PROVINCES
@@ -270,72 +271,58 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     parse_mode="HTML",
                 )
 
-        # Thống kê lô 2 số theo tỉnh
+        # Thống kê lô 2 số - STREAK ANALYSIS
         elif callback_data.startswith("stats2_"):
             province_key = callback_data.split("_")[1]
             province = PROVINCES.get(province_key, {})
 
             try:
-                # Query frequency từ database (50 ngày)
-                frequency = await statistics_service.get_frequency_stats(province_key, days=200)
+                logger.info(f"Getting lo2so streak analysis for {province_key}")
                 
-                # Format message
-                if frequency:
-                    sorted_freq = sorted(frequency.items(), key=lambda x: x[1], reverse=True)[:30]
-                    
-                    message = f"📊 <b>THỐNG KÊ LÔ 2 SỐ - {province.get('name', '')}</b>\n"
-                    message += f"📅 Dữ liệu: 50 ngày gần nhất từ database\n\n"
-                    
-                    message += "🔥 <b>Top 30 số hay về:</b>\n"
-                    for idx, (num, count) in enumerate(sorted_freq, 1):
-                        message += f"  {idx:2d}. <code>{num}</code> - {count:2d} lần\n"
-                    
-                    message += f"\n💾 Tổng: {len(frequency)} số đã xuất hiện"
-                else:
-                    message = "⚠️ Chưa có dữ liệu trong database"
+                # Gọi streak analysis
+                streaks_data = await statistics_service.get_lo2so_streaks(
+                    province_key, 
+                    draws=200, 
+                    min_streak=2
+                )
+                
+                # Import formatter
+                from app.ui.formatters_stats import format_lo_2_so_streaks
+                message = format_lo_2_so_streaks(streaks_data, province.get("name", ""))
                 
                 await safe_edit_message(query, message, get_province_detail_keyboard(province_key))
             except Exception as e:
                 logger.error(f"Error in stats2 for {province_key}: {e}")
                 await query.edit_message_text(
-                    f"❌ Lỗi khi lấy thống kê: {str(e)}",
+                    f"❌ Lỗi: {str(e)}",
                     reply_markup=get_province_detail_keyboard(province_key),
                     parse_mode="HTML",
                 )
 
-        # Thống kê lô 3 số theo tỉnh
+        # Thống kê lô 3 số - STREAK ANALYSIS
         elif callback_data.startswith("stats3_"):
             province_key = callback_data.split("_")[1]
             province = PROVINCES.get(province_key, {})
 
             try:
-                # Query frequency từ database (50 ngày)
-                frequency = await statistics_service.get_lo3so_frequency_stats(province_key, days=200)
+                logger.info(f"Getting lo3so streak analysis for {province_key}")
                 
-                # Format message
-                if frequency:
-                    sorted_freq = sorted(frequency.items(), key=lambda x: x[1], reverse=True)[:30]
-                    
-                    message = f"📊 <b>THỐNG KÊ LÔ 3 SỐ (BA CÀNG) - {province.get('name', '')}</b>\n"
-                    message += f"📅 Dữ liệu: 50 ngày gần nhất từ database\n\n"
-                    
-                    message += "🔥 <b>Top 30 số hay về:</b>\n"
-                    for i, (num, count) in enumerate(sorted_freq, 1):
-                        message += f"  {i:2d}. <code>{num}</code> - {count:2d} lần\n"
-                    
-                    message += f"\n💾 Tổng: {len(frequency)} số đã xuất hiện"
-                else:
-                    # Fallback to 1-day stats if no database data
-                    result = await lottery_service.get_latest_result(province_key)
-                    stats = statistics_service.analyze_lo_3_so(result)
-                    message = format_lo_3_so_stats(stats, province.get("name", ""))
-                    message += "\n\n⚠️ <i>Chưa có dữ liệu dài hạn trong database</i>"
+                # Gọi streak analysis
+                streaks_data = await statistics_service.get_lo3so_streaks(
+                    province_key, 
+                    draws=200, 
+                    min_streak=2
+                )
+                
+                # Import formatter
+                from app.ui.formatters_stats import format_lo_3_so_streaks
+                message = format_lo_3_so_streaks(streaks_data, province.get("name", ""))
                 
                 await safe_edit_message(query, message, get_province_detail_keyboard(province_key))
             except Exception as e:
                 logger.error(f"Error in stats3 for {province_key}: {e}")
                 await query.edit_message_text(
-                    f"❌ Lỗi khi lấy thống kê: {str(e)}",
+                    f"❌ Lỗi: {str(e)}",
                     reply_markup=get_province_detail_keyboard(province_key),
                     parse_mode="HTML",
                 )
@@ -551,6 +538,119 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=get_region_provinces_keyboard("MN"),
                 parse_mode="HTML",
             )
+        # ========== 4 NEW BUTTONS: Quick Stats ==========
+        
+        elif callback_data.startswith("stats_lo2_"):
+            """📊 Lô 2 số button - Quick display"""
+            province_code = callback_data.replace("stats_lo2_", "")
+            await query.answer()
+            
+            try:
+                result = await lottery_service.get_latest_result(province_code)
+                if not result:
+                    await query.edit_message_text(
+                        text=f"❌ Không tìm thấy kết quả cho {province_code}",
+                        reply_markup=get_province_detail_keyboard(province_code),
+                        parse_mode=ParseMode.HTML
+                    )
+                    return
+                
+                region = result.get('region', 'MN')
+                
+                if region == 'MB':
+                    text = format_lo_2_so_mb(result)
+                else:
+                    text = format_lo_2_so_mn_mt(result)
+                
+                await safe_edit_message(query, text, get_province_detail_keyboard(province_code))
+            except Exception as e:
+                logger.error(f"Error in stats_lo2: {e}")
+                await safe_edit_message(
+                    query,
+                    "❌ Có lỗi xảy ra",
+                    get_province_detail_keyboard(province_code)
+                )
+        
+        elif callback_data.startswith("stats_lo3_"):
+            """🎰 Lô 3 số button"""
+            province_code = callback_data.replace("stats_lo3_", "")
+            await query.answer()
+            
+            try:
+                result = await lottery_service.get_latest_result(province_code)
+                if not result:
+                    await query.edit_message_text(
+                        text=f"❌ Không tìm thấy kết quả cho {province_code}",
+                        reply_markup=get_province_detail_keyboard(province_code),
+                        parse_mode=ParseMode.HTML
+                    )
+                    return
+                
+                region = result.get('region', 'MN')
+                
+                if region == 'MB':
+                    text = format_lo_3_so_mb(result)
+                else:
+                    text = format_lo_3_so_mn_mt(result)
+                
+                await safe_edit_message(query, text, get_province_detail_keyboard(province_code))
+            except Exception as e:
+                logger.error(f"Error in stats_lo3: {e}")
+                await safe_edit_message(
+                    query,
+                    "❌ Có lỗi xảy ra",
+                    get_province_detail_keyboard(province_code)
+                )
+        
+        elif callback_data.startswith("stats_dau_"):
+            """🔢 Đầu Lô button"""
+            province_code = callback_data.replace("stats_dau_", "")
+            await query.answer()
+            
+            try:
+                result = await lottery_service.get_latest_result(province_code)
+                if not result:
+                    await query.edit_message_text(
+                        text=f"❌ Không tìm thấy kết quả cho {province_code}",
+                        reply_markup=get_province_detail_keyboard(province_code),
+                        parse_mode=ParseMode.HTML
+                    )
+                    return
+                
+                text = format_dau_lo(result)
+                await safe_edit_message(query, text, get_province_detail_keyboard(province_code))
+            except Exception as e:
+                logger.error(f"Error in stats_dau: {e}")
+                await safe_edit_message(
+                    query,
+                    "❌ Có lỗi xảy ra",
+                    get_province_detail_keyboard(province_code)
+                )
+        
+        elif callback_data.startswith("stats_duoi_"):
+            """🔢 Đuôi Lô button"""
+            province_code = callback_data.replace("stats_duoi_", "")
+            await query.answer()
+            
+            try:
+                result = await lottery_service.get_latest_result(province_code)
+                if not result:
+                    await query.edit_message_text(
+                        text=f"❌ Không tìm thấy kết quả cho {province_code}",
+                        reply_markup=get_province_detail_keyboard(province_code),
+                        parse_mode=ParseMode.HTML
+                    )
+                    return
+                
+                text = format_duoi_lo(result)
+                await safe_edit_message(query, text, get_province_detail_keyboard(province_code))
+            except Exception as e:
+                logger.error(f"Error in stats_duoi: {e}")
+                await safe_edit_message(
+                    query,
+                    "❌ Có lỗi xảy ra",
+                    get_province_detail_keyboard(province_code)
+                )
 
         # Fallback
         else:
