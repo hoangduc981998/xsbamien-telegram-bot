@@ -1,11 +1,11 @@
-"""Lottery Service - Main service layer for bot"""
-
 from typing import Dict, List, Optional
-import logging
 from datetime import date, datetime, timedelta
+import logging
+
 from .api.client import MU88APIClient
 from .api.transformer import DataTransformer
 from .mock_data import get_mock_lottery_result  # Fallback
+from app.services.cache import CacheService
 
 logger = logging.getLogger(__name__)
 
@@ -31,56 +31,71 @@ class LotteryService:
 
     async def get_latest_result(self, province_code: str, force_api: bool = False) -> Dict:
         """
-        Get latest lottery result for a province
+        Get latest lottery result with 3-layer caching
         
-        Strategy:
-        1. Check DB first - if has TODAY's result → return immediately (cached)
-        2. If no today's result or force_api=True → fetch from API
-        3. Save new API result to DB
-        4. Fallback to DB if API fails
-        5. Fallback to mock data if both fail
+        CACHE LAYERS:
+        1. Redis (1 hour TTL) - ⚡ FASTEST (~0.001s)
+        2. Database (if today) - 🚀 FAST (~0.02s)  
+        3. API fetch - 🐌 SLOW (~2s)
         
         Args:
             province_code: Province code (MB, TPHCM, GILA, etc.)
-            force_api: Force fetch from API even if DB has data (default: False)
+            force_api: Force fetch from API even if cached (default: False)
+            
         Returns:
             Standardized result dict
         """
         try:
             logger.info(f"🎯 Getting latest result for {province_code}")
             
-            # ✅ SMART CACHING: Check DB first unless forced
+            today = date.today()
+            cache_key = f"lottery:result:{province_code}:{today}"
+            
+            # Layer 1: Redis cache (FASTEST)
+            if not force_api:
+                try:
+                    cache_service = CacheService()
+                    if cache_service.available:
+                        cached_result = cache_service.get(cache_key)
+                        if cached_result:
+                            logger.info(f"⚡ Redis cache HIT for {province_code} (0.001s)")
+                            return cached_result
+                except Exception as e:
+                    logger.warning(f"Redis cache failed: {e}")
+            
+            # Layer 2: Database cache (FAST)
             if not force_api and self.use_database and self.db_service:
                 db_result = await self.db_service.get_latest_result(province_code)
                 
-                if db_result:
-                    # Check if it's today's result
-                    from datetime import date
-                    today = date.today()
+                if db_result and db_result.draw_date == today:
+                    result_dict = db_result.to_dict()
                     
-                    if db_result.draw_date == today:
-                        logger.info(f"💾 Using cached result from DB for {province_code}: {db_result.draw_date}")
-                        result = db_result.to_dict()
-                        if "prizes" not in result:
-                            result["prizes"] = result.get("prizes", {})
-                        return result
-                    else:
-                        logger.info(f"🔄 DB has old result ({db_result.draw_date}), fetching from API...")
+                    # Save to Redis for next request
+                    try:
+                        cache_service = CacheService()
+                        if cache_service.available:
+                            cache_service.set(cache_key, result_dict, ttl=3600)
+                            logger.info(f"💾 Saved to Redis cache: {province_code}")
+                    except Exception as e:
+                        logger.warning(f"Failed to cache: {e}")
+                    
+                    logger.info(f"🚀 DB cache HIT for {province_code} (0.02s)")
+                    return result_dict
+                elif db_result:
+                    logger.info(f"🔄 DB has old result ({db_result.draw_date}), fetching from API...")
 
-            # ✅ Fetch from API if no today's result in DB
+            # Layer 3: API fetch (SLOW)
             logger.info(f"📡 Fetching from API for {province_code}...")
             api_response = await self.api_client.fetch_results(province_code, limit=1)
 
             if api_response:
-                # Transform results
                 results = self.transformer.transform_results(api_response)
                 
                 if results:
-                    # Return latest (first in list)
                     latest = results[0]
                     logger.info(f"✅ Got latest result from API for {province_code}: {latest.get('date')}")
                     
-                    # Save to database if enabled
+                    # Save to database
                     if self.use_database and self.db_service:
                         try:
                             from app.config import PROVINCES
@@ -89,57 +104,35 @@ class LotteryService:
                             latest["region"] = province_info.get("region", "MN")
                             await self.db_service.save_result(latest)
                             logger.info(f"💾 Saved {province_code} result to DB: {latest.get('date')}")
+                            
+                            # Also save to Redis cache
+                            try:
+                                cache_service = CacheService()
+                                if cache_service.available:
+                                    cache_service.set(cache_key, latest, ttl=3600)
+                                    logger.info(f"⚡ Saved to Redis: {province_code}")
+                            except Exception as e:
+                                logger.warning(f"Redis cache save failed: {e}")
+                                
                         except Exception as e:
                             logger.warning(f"⚠️  Failed to save to DB: {e}")
                     
                     return latest
 
-            # ⚠️ API failed, try database as fallback
+            # Fallback to DB (any date)
             logger.warning(f"⚠️ API failed for {province_code}, trying DB fallback...")
-            
             if self.use_database and self.db_service:
                 db_result = await self.db_service.get_latest_result(province_code)
                 if db_result:
-                    logger.info(f"✅ Got result from DB fallback for {province_code}: {db_result.draw_date}")
-                    result = db_result.to_dict()
-                    if "prizes" not in result:
-                        result["prizes"] = result.get("prizes", {})
-                    return result
+                    logger.info(f"✅ Got result from DB fallback: {db_result.draw_date}")
+                    return db_result.to_dict()
 
-            # ❌ Both API and DB failed, use mock data
-            logger.warning(f"⚠️ Both API and DB failed for {province_code}, using mock data")
-
-            if not api_response:
-                logger.warning(f"⚠️ API failed for {province_code}, using mock data")
-                return get_mock_lottery_result(province_code)
-
-            # Transform results
-            results = self.transformer.transform_results(api_response)
-
-            if not results:
-                logger.warning(f"⚠️ No results for {province_code}, using mock data")
-                return get_mock_lottery_result(province_code)
-
-            # Return latest (first in list)
-            latest = results[0]
-            logger.info(f"✅ Got latest result for {province_code}: {latest.get('date')}")
-            
-            # Save to database if enabled
-            if self.use_database and self.db_service:
-                try:
-                    from app.config import PROVINCES
-                    province_info = PROVINCES.get(province_code, {})
-                    latest["province_code"] = province_code
-                    latest["region"] = province_info.get("region", "MN")
-                    await self.db_service.save_result(latest)
-                except Exception as e:
-                    logger.warning(f"⚠️  Failed to save to DB: {e}")
-            
-            return latest
+            # Last resort: mock data
+            logger.warning(f"⚠️ All sources failed for {province_code}, using mock data")
+            return get_mock_lottery_result(province_code)
 
         except Exception as e:
-            logger.error(f"❌ Error getting latest result for {province_code}: {e}")
-            # Fallback to mock data
+            logger.exception(f"❌ Error getting latest result for {province_code}")
             return get_mock_lottery_result(province_code)
 
     async def get_history(self, province_code: str, limit: int = 60) -> List[Dict]:
@@ -195,10 +188,9 @@ class LotteryService:
             return results
 
         except Exception as e:
-            logger.error(f"❌ Error getting history for {province_code}: {e}")
+            logger.exception(f"❌ Error getting history for {province_code}")
             return []
 
     async def close(self):
         """Close resources"""
-        # Future: close any connections if needed
         pass
