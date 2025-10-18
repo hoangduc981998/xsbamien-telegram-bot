@@ -5,6 +5,7 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from app.utils.sanitize import sanitize_text, is_valid_province_code
 from app.ui.keyboards import get_main_menu_keyboard
 from app.config import PROVINCES
 
@@ -12,8 +13,11 @@ logger = logging.getLogger(__name__)
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Command: /start - Khởi động bot và lưu user"""
+    """Handle /start command"""
     user = update.effective_user
+    
+    # Sanitize username (if exists)
+    user_name = sanitize_text(user.first_name) if user else "User"
     logger.info(f"User {user.id} started bot")
     
     # Gửi welcome message
@@ -142,7 +146,7 @@ async def subscriptions_command(update: Update, context: ContextTypes.DEFAULT_TY
         )
         
     except Exception as e:
-        logger.error(f"Error in subscriptions command: {e}")
+        logger.exception(f"Error in subscriptions command: {e}")
         await update.message.reply_text(
             "❌ Có lỗi xảy ra. Vui lòng thử lại sau!",
             parse_mode="HTML"
@@ -183,7 +187,7 @@ async def test_notify_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         await update.message.reply_text(message, parse_mode="HTML")
         
     except Exception as e:
-        logger.error(f"Error in test_notify: {e}")
+        logger.exception(f"Error in test_notify: {e}")
         await update.message.reply_text(f"❌ Lỗi: {str(e)}")
 
 
@@ -224,7 +228,7 @@ async def admin_dashboard_command(update: Update, context: ContextTypes.DEFAULT_
         # Users & Subscriptions
         message += f"👥 <b>Tổng users đăng ký:</b> {stats['total_users']}\n"
         message += f"📍 <b>Tổng subscriptions:</b> {stats['total_subscriptions']}\n"
-        message += f"�� <b>Trung bình:</b> {stats['avg_subs_per_user']} tỉnh/user\n\n"
+        message += f"💫💫 <b>Trung bình:</b> {stats['avg_subs_per_user']} tỉnh/user\n\n"
         
         # Top provinces
         if stats['top_provinces']:
@@ -253,7 +257,7 @@ async def admin_dashboard_command(update: Update, context: ContextTypes.DEFAULT_
         await update.message.reply_text(message, parse_mode='HTML')
         
     except Exception as e:
-        logger.error(f"Error in admin_dashboard: {e}")
+        logger.exception(f"Error in admin_dashboard: {e}")
         await update.message.reply_text(f"❌ Lỗi: {str(e)}")
 
 
@@ -289,7 +293,7 @@ async def admin_subscribers_command(update: Update, context: ContextTypes.DEFAUL
         await update.message.reply_text(message, parse_mode='HTML')
         
     except Exception as e:
-        logger.error(f"Error in admin_subscribers: {e}")
+        logger.exception(f"Error in admin_subscribers: {e}")
         await update.message.reply_text(f"❌ Lỗi: {str(e)}")
 
 
@@ -336,5 +340,5 @@ async def admin_broadcast_command(update: Update, context: ContextTypes.DEFAULT_
         await update.message.reply_text(result_msg, parse_mode='HTML')
         
     except Exception as e:
-        logger.error(f"Error in broadcast: {e}")
+        logger.exception(f"Error in broadcast: {e}")
         await update.message.reply_text(f"❌ Lỗi: {str(e)}")

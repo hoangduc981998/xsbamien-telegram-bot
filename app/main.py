@@ -65,19 +65,47 @@ def main():
     # Error handler
     app.add_error_handler(error_handler)
 
+    # Khối code mới cho GRACEFUL SHUTDOWN
+    import signal
+    import sys
+    
+    # Cần phải định nghĩa signal_handler trước khi sử dụng
+    def signal_handler(sig, frame):
+        # Tín hiệu SIGINT (Ctrl+C) hoặc SIGTERM (Lệnh tắt máy chủ)
+        logger.info(f"🛑 Received signal {sig}, initiating graceful shutdown...")
+        try:
+            # 1. Dừng Telegram Application (Ngừng lắng nghe update)
+            # Dùng stop() để dừng polling của telegram.ext
+            app.stop() 
+            
+            # 2. Dừng Scheduler
+            scheduler.shutdown()
+            
+            logger.info("✅ Bot shutdown complete.")
+        except Exception as e:
+            logger.exception(f"Error during shutdown: {e}")
+        finally:
+            # Thoát chương trình
+            sys.exit(0)
+    
+    # Đăng ký handler cho các tín hiệu dừng
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    
     # Khởi động bot
     logger.info("✅ Bot đã khởi động thành công!")
     logger.info("🎯 Đang lắng nghe updates từ Telegram...")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
 
+    # Chạy Polling
     try:
-        # Khởi động bot
-        logger.info("✅ Bot đã khởi động thành công!")
-        logger.info("🎯 Đang lắng nghe updates từ Telegram...")
+        # app.run_polling sẽ chạy cho đến khi app.stop() được gọi
         app.run_polling(allowed_updates=Update.ALL_TYPES)
-    except KeyboardInterrupt:
-        logger.info("🛑 Shutting down...")
-        scheduler.shutdown()
+        
+    except Exception as e:
+        # Bắt các lỗi nghiêm trọng không liên quan đến tín hiệu dừng (ví dụ: lỗi mạng)
+        logger.exception("❌ Fatal error in main loop. Exiting...")
+    
+    # Khối logic đã lặp lại và xử lý KeyboardInterrupt cũ đã được loại bỏ.
 
 if __name__ == "__main__":
     main()

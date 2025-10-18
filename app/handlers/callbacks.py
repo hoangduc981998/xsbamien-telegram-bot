@@ -268,7 +268,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     parse_mode="HTML",
                 )
             except Exception as e:
-                logger.error(f"Error in stats by region: {e}")
+                logger.exception(f"Error in stats by region: {e}")
                 await query.edit_message_text(
                     f"❌ Lỗi khi lấy thống kê: {str(e)}",
                     reply_markup=get_back_to_menu_keyboard(),
@@ -296,7 +296,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 
                 await safe_edit_message(query, message, get_province_detail_keyboard(province_key))
             except Exception as e:
-                logger.error(f"Error in stats2 for {province_key}: {e}")
+                logger.exception(f"Error in stats2 for {province_key}: {e}")
                 await query.edit_message_text(
                     f"❌ Lỗi: {str(e)}",
                     reply_markup=get_province_detail_keyboard(province_key),
@@ -324,7 +324,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 
                 await safe_edit_message(query, message, get_province_detail_keyboard(province_key))
             except Exception as e:
-                logger.error(f"Error in stats3 for {province_key}: {e}")
+                logger.exception(f"Error in stats3 for {province_key}: {e}")
                 await query.edit_message_text(
                     f"❌ Lỗi: {str(e)}",
                     reply_markup=get_province_detail_keyboard(province_key),
@@ -351,7 +351,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     parse_mode="HTML",
                 )
             except Exception as e:
-                logger.error(f"Error in stats_headtail: {e}")
+                logger.exception(f"Error in stats_headtail: {e}")
                 await query.edit_message_text(
                     f"❌ Lỗi khi lấy thống kê: {str(e)}",
                     reply_markup=get_back_to_menu_keyboard(),
@@ -372,7 +372,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 
                 await safe_edit_message(query, message, get_province_detail_keyboard(province_key))
             except Exception as e:
-                logger.error(f"Error in stats_gan for {province_key}: {e}")
+                logger.exception(f"Error in stats_gan for {province_key}: {e}")
                 await query.edit_message_text(
                     f"❌ Lỗi khi lấy thống kê lô gan: {str(e)}",
                     reply_markup=get_province_detail_keyboard(province_key),
@@ -395,7 +395,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     parse_mode="HTML",
                 )
             except Exception as e:
-                logger.error(f"Error in stats_gan: {e}")
+                logger.exception(f"Error in stats_gan: {e}")
                 await query.edit_message_text(
                     f"❌ Lỗi khi lấy thống kê lô gan: {str(e)}",
                     reply_markup=get_back_to_menu_keyboard(),
@@ -552,7 +552,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 
                 await safe_edit_message(query, text, get_province_detail_keyboard(province_code))
             except Exception as e:
-                logger.error(f"Error in stats_lo2: {e}")
+                logger.exception(f"Error in stats_lo2: {e}")
                 await safe_edit_message(
                     query,
                     "❌ Có lỗi xảy ra",
@@ -583,7 +583,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 
                 await safe_edit_message(query, text, get_province_detail_keyboard(province_code))
             except Exception as e:
-                logger.error(f"Error in stats_lo3: {e}")
+                logger.exception(f"Error in stats_lo3: {e}")
                 await safe_edit_message(
                     query,
                     "❌ Có lỗi xảy ra",
@@ -608,7 +608,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text = format_dau_lo(result)
                 await safe_edit_message(query, text, get_province_detail_keyboard(province_code))
             except Exception as e:
-                logger.error(f"Error in stats_dau: {e}")
+                logger.exception(f"Error in stats_dau: {e}")
                 await safe_edit_message(
                     query,
                     "❌ Có lỗi xảy ra",
@@ -633,7 +633,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text = format_duoi_lo(result)
                 await safe_edit_message(query, text, get_province_detail_keyboard(province_code))
             except Exception as e:
-                logger.error(f"Error in stats_duoi: {e}")
+                logger.exception(f"Error in stats_duoi: {e}")
                 await safe_edit_message(
                     query,
                     "❌ Có lỗi xảy ra",
@@ -689,7 +689,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
                 
             except Exception as e:
-                logger.error(f"Error confirming subscription: {e}")
+                logger.exception(f"Error confirming subscription: {e}")
                 await safe_edit_message(
                     query,
                     "❌ Có lỗi xảy ra. Vui lòng thử lại!",
@@ -715,7 +715,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
     except Exception as e:
-        logger.error(f"Error in button_callback: {e}")
+        logger.exception(f"Error in button_callback: {e}")
         try:
             await query.edit_message_text(
                 "❌ Có lỗi xảy ra. Vui lòng thử lại.",
@@ -877,7 +877,7 @@ async def handle_beautiful_numbers_callback(update: Update, context: ContextType
         logger.info(f"✨ Beautiful numbers sent for {province_code}")
         
     except Exception as e:
-        logger.error(f"Error in beautiful numbers callback: {e}")
+        logger.exception(f"Error in beautiful numbers callback: {e}")
         try:
             await query.message.reply_text(
                 "❌ Có lỗi xảy ra khi tìm số đẹp. Vui lòng thử lại!",
@@ -942,7 +942,7 @@ async def handle_unsubscribe_callback(update: Update, context: ContextTypes.DEFA
         )
         
     except Exception as e:
-        logger.error(f"Error in unsubscribe callback: {e}", exc_info=True)
+        logger.exception(f"Error in unsubscribe callback: {e}", exc_info=True)
         try:
             await query.message.reply_text(
                 "❌ Có lỗi xảy ra. Vui lòng thử lại!",
