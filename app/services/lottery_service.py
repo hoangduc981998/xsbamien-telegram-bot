@@ -156,14 +156,19 @@ class LotteryService:
         try:
             logger.info(f"📊 Getting {limit} results for {province_code}")
 
-            # Try database first if enabled
+            # Check database first if enabled
             if self.use_database and self.db_service:
                 db_results = await self.db_service.get_history(province_code, limit)
-                if db_results:
+                
+                # Only use DB if we have enough data
+                if db_results and len(db_results) >= limit:
                     logger.info(f"✅ Got {len(db_results)} historical results from DB for {province_code}")
                     return [r.to_dict() for r in db_results]
+                elif db_results:
+                    logger.info(f"⚠️  DB only has {len(db_results)}/{limit} results, fetching from API...")
 
             # Fetch from API
+            logger.info(f"📡 Fetching {limit} results from API for {province_code}...")
             api_response = await self.api_client.fetch_results(province_code, limit)
 
             if not api_response:
