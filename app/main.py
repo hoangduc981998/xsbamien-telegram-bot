@@ -14,7 +14,10 @@ from app.handlers.commands import (
     mt_command,
     start_command,
     subscriptions_command,
-    test_notify_command
+    test_notify_command,
+    admin_dashboard_command,
+    admin_subscribers_command,
+    admin_broadcast_command
 )
 from app.handlers.errors import error_handler
 
@@ -51,7 +54,11 @@ def main():
     app.add_handler(CommandHandler("mn", mn_command))
     app.add_handler(CommandHandler("subscriptions", subscriptions_command))
     app.add_handler(CommandHandler("testnotify", test_notify_command))
-
+    # Admin commands
+    app.add_handler(CommandHandler("admin", admin_dashboard_command))
+    app.add_handler(CommandHandler("admin_subs", admin_subscribers_command))
+    app.add_handler(CommandHandler("broadcast", admin_broadcast_command))
+    
     # Callback handlers (tất cả nút bấm)
     app.add_handler(CallbackQueryHandler(button_callback))
 
