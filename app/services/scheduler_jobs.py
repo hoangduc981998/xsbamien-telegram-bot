@@ -25,49 +25,49 @@ class SchedulerJobs:
         # ✅ Định nghĩa timezone Việt Nam
         vietnam_tz = ZoneInfo("Asia/Ho_Chi_Minh")
         
-        # ✅ MIỀN BẮC: Check mỗi 5 phút từ 18:25-18:45
+        # Miền Bắc: 18:30-18:48 (mỗi 3 phút, 6 lần)
         self.scheduler.add_job(
             self.check_mb_new_results,
-            trigger=CronTrigger(
-                hour=18, 
-                minute='25,30,35,40,45',
+            CronTrigger(
+                hour=18,
+                minute='30,33,36,39,42,45',
                 timezone=vietnam_tz
             ),
             id='check_mb_results',
-            name='Check Miền Bắc (18:25-18:45, mỗi 5 phút)',
+            name='Check Miền Bắc (18:30-18:48, mỗi 3 phút)',
             replace_existing=True
         )
         
-        # ✅ MIỀN TRUNG: Check mỗi 5 phút từ 17:20-17:45
+        # Miền Trung: 17:30-17:48 (mỗi 3 phút, 6 lần)
         self.scheduler.add_job(
             self.check_mt_new_results,
-            trigger=CronTrigger(
-                hour=17, 
-                minute='20,25,30,35,40,45', 
+            CronTrigger(
+                hour=17,
+                minute='30,33,36,39,42,45',
                 timezone=vietnam_tz
             ),
             id='check_mt_results',
-            name='Check Miền Trung (17:20-17:45, mỗi 5 phút)',
+            name='Check Miền Trung (17:30-17:48, mỗi 3 phút)',
             replace_existing=True
         )
         
-        # ✅ MIỀN NAM: Check mỗi 5 phút từ 16:20-16:45
+        # Miền Nam: 16:30-16:48 (mỗi 3 phút, 6 lần)
         self.scheduler.add_job(
             self.check_mn_new_results,
-            trigger=CronTrigger(
-                hour=16, 
-                minute='20,25,30,35,40,45', 
+            CronTrigger(
+                hour=16,
+                minute='30,33,36,39,42,45',
                 timezone=vietnam_tz
-                ),
+            ),
             id='check_mn_results',
-            name='Check Miền Nam (16:20-16:45, mỗi 5 phút)',
+            name='Check Miền Nam (16:30-16:48, mỗi 3 phút)',
             replace_existing=True
         )
         
-        logger.info("✅ Scheduler jobs đã được thiết lập (OPTIMIZED MODE - GIỜ VIỆT NAM)")
-        logger.info("   🕐 MB: 18:20-18:45 VN (mỗi 5 phút)")
-        logger.info("   🕐 MT: 17:20-17:45 VN (mỗi 5 phút)")
-        logger.info("   🕐 MN: 16:20-16:45 VN (mỗi 5 phút)")
+        logger.info("✅ Scheduler jobs đã được thiết lập (HIGH FREQUENCY MODE - GIỜ VIỆT NAM)")
+        logger.info("   🕐 MB: 18:30-18:48 VN (mỗi 3 phút, 6 lần)")
+        logger.info("   🕐 MT: 17:30-17:48 VN (mỗi 3 phút, 6 lần)")
+        logger.info("   🕐 MN: 16:30-16:48 VN (mỗi 3 phút, 6 lần)")
     
     async def check_mb_new_results(self):
         """Check kết quả Miền Bắc mới (18:10-18:45)"""
