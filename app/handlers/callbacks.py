@@ -9,7 +9,7 @@ from telegram.ext import ContextTypes
 from app.config import PROVINCES
 from app.services.lottery_service import LotteryService
 from app.services.subscription_service import SubscriptionService
-
+from app.services.beautiful_numbers_service import BeautifulNumbersService
 from app.services.statistics_service import StatisticsService
 from app.services.mock_data import get_mock_lo_gan
 from app.ui.formatters import (
@@ -696,49 +696,15 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     get_province_detail_keyboard(province_code)
                 )
         
+        elif callback_data.startswith("beautiful_"):
+            province_code = callback_data.replace("beautiful_", "")
+            await handle_beautiful_numbers_callback(update, context, province_code)
+        
         elif callback_data.startswith("unsub_"):
             """❌ Hủy đăng ký"""
             province_code = callback_data.replace("unsub_", "")
-            province = PROVINCES.get(province_code, {})
+            await handle_unsubscribe_callback(update, context, province_code)
             user = update.effective_user
-            
-            try:
-                success = await subscription_service.unsubscribe(
-                    user_id=user.id,
-                    province_code=province_code
-                )
-                
-                if success:
-                    message = f"✅ Đã hủy đăng ký <b>{province.get('name', province_code)}</b>"
-                else:
-                    message = "❌ Không tìm thấy đăng ký này"
-                
-                # Refresh subscription list
-                subscriptions = await subscription_service.get_user_subscriptions(user.id)
-                
-                from app.ui.keyboards import get_subscription_management_keyboard
-                
-                full_message = "🔔 <b>QUẢN LÝ ĐĂNG KÝ</b>\n\n"
-                if subscriptions:
-                    full_message += f"Bạn đang đăng ký <b>{len(subscriptions)}</b> tỉnh:\n\n"
-                    for sub in subscriptions:
-                        prov = PROVINCES.get(sub.province_code, {})
-                        full_message += f"  📍 {prov.get('name', sub.province_code)}\n"
-                    full_message += f"\n{message}\n\n"
-                    full_message += "Nhấn tỉnh để hủy đăng ký"
-                else:
-                    full_message += "Bạn chưa đăng ký tỉnh nào\n\n"
-                    full_message += "💡 Đăng ký tại menu của từng tỉnh"
-                
-                await safe_edit_message(
-                    query,
-                    full_message,
-                    get_subscription_management_keyboard(subscriptions)
-                )
-                
-            except Exception as e:
-                logger.error(f"Error unsubscribing: {e}")
-                await query.answer("❌ Có lỗi xảy ra!", show_alert=True)
 
         # Fallback
         else:
@@ -867,3 +833,120 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             logger.error(f"❌ Error getting lo gan: {e}")
             return []
+
+
+async def handle_beautiful_numbers_callback(update: Update, context: ContextTypes.DEFAULT_TYPE, province_code: str):
+    """Xử lý callback lọc số đẹp"""
+    query = update.callback_query
+    await query.answer()
+    
+    try:
+        from app.services.lottery_service import LotteryService
+        from app.config import PROVINCES
+        
+        lottery_service = LotteryService(use_database=True)
+        beautiful_service = BeautifulNumbersService()
+        
+        # Gửi loading message
+        loading_msg = await query.message.reply_text("⏳ Đang tìm số đẹp...")
+        
+        # Lấy kết quả
+        result = await lottery_service.get_latest_result(province_code)
+        
+        if not result:
+            await loading_msg.edit_text(
+                f"❌ Chưa có kết quả mới nhất cho {province_code}",
+                parse_mode="HTML"
+            )
+            return
+        
+        # Tìm số đẹp
+        beautiful_numbers = beautiful_service.find_beautiful_numbers(result)
+        
+        # Format message
+        province = PROVINCES.get(province_code, {})
+        province_name = province.get('name', province_code)
+        date_str = result.get('date', 'N/A')
+        
+        message = beautiful_service.format_beautiful_numbers(beautiful_numbers, province_name)
+        message += f"\n📅 <b>Ngày:</b> {date_str}"
+        
+        # Gửi kết quả
+        await loading_msg.edit_text(message, parse_mode="HTML")
+        
+        logger.info(f"✨ Beautiful numbers sent for {province_code}")
+        
+    except Exception as e:
+        logger.error(f"Error in beautiful numbers callback: {e}")
+        try:
+            await query.message.reply_text(
+                "❌ Có lỗi xảy ra khi tìm số đẹp. Vui lòng thử lại!",
+                parse_mode="HTML"
+            )
+        except:
+            pass
+
+
+async def handle_unsubscribe_callback(update: Update, context: ContextTypes.DEFAULT_TYPE, province_code: str):
+    """Xử lý hủy đăng ký nhận thông báo"""
+    query = update.callback_query
+    await query.answer()
+    
+    try:
+        from app.services.subscription_service import SubscriptionService
+        from app.config import PROVINCES
+        
+        user = update.effective_user
+        subscription_service = SubscriptionService()
+        
+        logger.info(f"User {user.id} requesting unsubscribe from {province_code}")
+        
+        # Hủy đăng ký
+        success = await subscription_service.unsubscribe(
+            user_id=user.id,
+            province_code=province_code
+        )
+        
+        province = PROVINCES.get(province_code, {})
+        province_name = province.get('name', province_code)
+        
+        if success:
+            logger.info(f"✅ User {user.id} unsubscribed from {province_code}")
+        else:
+            logger.warning(f"⚠️ User {user.id} unsubscribe failed for {province_code}")
+        
+        # Refresh subscription list
+        subscriptions = await subscription_service.get_user_subscriptions(user.id)
+        
+        from app.ui.keyboards import get_subscription_management_keyboard
+        
+        full_message = "🔔 <b>QUẢN LÝ ĐĂNG KÝ</b>\n\n"
+        
+        if success:
+            full_message += f"✅ <b>Đã hủy đăng ký {province_name}</b>\n\n"
+        
+        if subscriptions:
+            full_message += f"Bạn đang đăng ký <b>{len(subscriptions)}</b> tỉnh:\n\n"
+            for sub in subscriptions:
+                prov = PROVINCES.get(sub.province_code, {})
+                full_message += f"  📍 {prov.get('name', sub.province_code)}\n"
+            full_message += "\n❌ Nhấn tỉnh để hủy đăng ký"
+        else:
+            full_message += "Bạn chưa đăng ký tỉnh nào\n\n"
+            full_message += "💡 <i>Đăng ký tại menu của từng tỉnh</i>"
+        
+        await query.edit_message_text(
+            full_message,
+            reply_markup=get_subscription_management_keyboard(subscriptions),
+            parse_mode="HTML"
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in unsubscribe callback: {e}", exc_info=True)
+        try:
+            await query.message.reply_text(
+                "❌ Có lỗi xảy ra. Vui lòng thử lại!",
+                parse_mode="HTML"
+            )
+        except:
+            pass
