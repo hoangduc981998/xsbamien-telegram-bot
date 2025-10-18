@@ -353,7 +353,7 @@ class StatisticsService:
             Dict {current_streaks: [...], max_streaks: [...]}
         """
         from app.database import DatabaseSession
-        from app.models import Lo2SoHistory
+        from app.models.lottery_result import Lo2SoHistory, Lo3SoHistory
         from sqlalchemy import select, and_
         
         try:
@@ -450,7 +450,7 @@ class StatisticsService:
     async def get_lo3so_streaks(self, province_code: str, draws: int = 200, min_streak: int = 2) -> dict:
         """Phân tích chuỗi liên tiếp cho lô 3 số"""
         from app.database import DatabaseSession
-        from app.models import Lo3SoHistory
+        from app.models.lottery_result import Lo2SoHistory, Lo3SoHistory
         from sqlalchemy import select, and_
         
         try:

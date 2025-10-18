@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Statistics formatters - Format streak analysis results"""
 
 
@@ -20,13 +21,27 @@ def format_lo_2_so_streaks(streaks_data: dict, province_name: str = "") -> str:
             number = item["number"]
             streak = item["streak"]
             end_date = item["end_date"]
-            emoji = "🔥" if streak >= 10 else "🟠" if streak >= 7 else "��"
+            
+            # Chọn emoji dựa vào streak
+            if streak >= 10:
+                emoji = "🔥"
+            elif streak >= 7:
+                emoji = "🟠"
+            elif streak >= 5:
+                emoji = "🟡"
+            elif streak >= 3:
+                emoji = "⭐"
+            else:
+                emoji = "💫"
+            
             result += f"{emoji} {i}. <b>{number}</b> - {streak} kỳ liên tiếp\n"
             result += f"   └ Lần cuối: {end_date}\n"
     else:
         result += "<i>Không có lô nào đạt ngưỡng ≥2 kỳ</i>\n"
     
-    result += "\n🏆 <b>CHUỖI DÀI NHẤT (Lịch sử 200 kỳ):</b>\n"
+    result += "\n"
+    
+    result += "🏆 <b>CHUỖI DÀI NHẤT (Lịch sử 200 kỳ):</b>\n"
     result += "━━━━━━━━━━━━━━━━━━━━\n"
     
     if max_streaks:
@@ -34,7 +49,19 @@ def format_lo_2_so_streaks(streaks_data: dict, province_name: str = "") -> str:
             number = item["number"]
             max_streak = item["max_streak"]
             last_date = item["last_streak_date"]
-            emoji = "💎" if max_streak >= 9 else "🥇" if max_streak >= 7 else "🥈"
+            
+            # Chọn emoji dựa vào max_streak
+            if max_streak >= 15:
+                emoji = "🏆"
+            elif max_streak >= 10:
+                emoji = "��"
+            elif max_streak >= 7:
+                emoji = "🥇"
+            elif max_streak >= 5:
+                emoji = "🥈"
+            else:
+                emoji = "🥉"
+            
             result += f"{emoji} {i}. <b>{number}</b> - {max_streak} kỳ liên tiếp\n"
             result += f"   └ Lần cuối: {last_date}\n"
     else:
@@ -67,13 +94,26 @@ def format_lo_3_so_streaks(streaks_data: dict, province_name: str = "") -> str:
             number = item["number"]
             streak = item["streak"]
             end_date = item["end_date"]
-            emoji = "🔥" if streak >= 10 else "🟠" if streak >= 7 else "🌟"
+            
+            if streak >= 10:
+                emoji = "🔥"
+            elif streak >= 7:
+                emoji = "🟠"
+            elif streak >= 5:
+                emoji = "🟡"
+            elif streak >= 3:
+                emoji = "⭐"
+            else:
+                emoji = "💫"
+            
             result += f"{emoji} {i}. <b>{number}</b> - {streak} kỳ liên tiếp\n"
             result += f"   └ Lần cuối: {end_date}\n"
     else:
         result += "<i>Không có lô nào đạt ngưỡng ≥2 kỳ</i>\n"
     
-    result += "\n🏆 <b>CHUỖI DÀI NHẤT (Lịch sử 200 kỳ):</b>\n"
+    result += "\n"
+    
+    result += "🏆 <b>CHUỖI DÀI NHẤT (Lịch sử 200 kỳ):</b>\n"
     result += "━━━━━━━━━━━━━━━━━━━━\n"
     
     if max_streaks:
@@ -81,7 +121,18 @@ def format_lo_3_so_streaks(streaks_data: dict, province_name: str = "") -> str:
             number = item["number"]
             max_streak = item["max_streak"]
             last_date = item["last_streak_date"]
-            emoji = "💎" if max_streak >= 9 else "🥇" if max_streak >= 7 else "🥈"
+            
+            if max_streak >= 15:
+                emoji = "🏆"
+            elif max_streak >= 10:
+                emoji = "💎"
+            elif max_streak >= 7:
+                emoji = "🥇"
+            elif max_streak >= 5:
+                emoji = "🥈"
+            else:
+                emoji = "🥉"
+            
             result += f"{emoji} {i}. <b>{number}</b> - {max_streak} kỳ liên tiếp\n"
             result += f"   └ Lần cuối: {last_date}\n"
     else:
